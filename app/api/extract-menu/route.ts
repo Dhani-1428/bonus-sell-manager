@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
     // Get API key from environment variable
     const apiKey = process.env.OPENAI_API_KEY
 
-    if (!apiKey) {
+    if (!apiKey || apiKey === "your_openai_api_key_here") {
       // Fallback: Return error with instructions
       return NextResponse.json(
         {
           error: "OpenAI API key not configured",
-          message: "Please set OPENAI_API_KEY in your environment variables",
+          message: "Please set OPENAI_API_KEY in your .env.local file with a valid API key",
         },
         { status: 500 }
       )
@@ -75,8 +75,23 @@ Return ONLY the JSON array, no other text or explanation.`,
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error("OpenAI API Error:", errorData)
+      
+      // Provide more helpful error messages
+      let errorMessage = "Failed to process image with AI"
+      if (errorData.error?.message) {
+        errorMessage = errorData.error.message
+      } else if (errorData.error?.code === "invalid_api_key") {
+        errorMessage = "Invalid OpenAI API key. Please check your API key in .env.local"
+      } else if (errorData.error?.code === "insufficient_quota") {
+        errorMessage = "OpenAI API quota exceeded. Please check your account balance"
+      } else if (response.status === 401) {
+        errorMessage = "Unauthorized: Invalid API key"
+      } else if (response.status === 429) {
+        errorMessage = "Rate limit exceeded. Please try again in a moment"
+      }
+      
       return NextResponse.json(
-        { error: "Failed to process image with AI", details: errorData },
+        { error: errorMessage, details: errorData },
         { status: response.status }
       )
     }

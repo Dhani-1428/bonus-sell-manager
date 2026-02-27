@@ -258,10 +258,15 @@ export default function MenuPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        if (errorData.error === "OpenAI API key not configured") {
-          throw new Error("AI vision not configured. Please set OPENAI_API_KEY environment variable.")
+        console.error("API Error Response:", errorData)
+        
+        if (errorData.error === "OpenAI API key not configured" || errorData.error?.includes("API key")) {
+          throw new Error("AI vision not configured. Please set OPENAI_API_KEY in .env.local and restart the dev server.")
         }
-        throw new Error(errorData.error || "Failed to extract menu with AI")
+        
+        // Show more detailed error message
+        const errorMessage = errorData.error || errorData.message || "Failed to extract menu with AI"
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -698,7 +703,14 @@ export default function MenuPage() {
           setExtractedItems([])
         }
       } else {
-        toast.error(`Failed to extract menu: ${error.message || "Unknown error"}`)
+        // Show detailed error message
+        const errorMsg = error.message || "Unknown error"
+        console.error("Full error details:", error)
+        toast.error(`Failed to extract menu: ${errorMsg}`, {
+          description: errorMsg.includes("API key") 
+            ? "Make sure OPENAI_API_KEY is set in .env.local and restart the dev server"
+            : "Check the console for more details"
+        })
         setExtractedItems([])
       }
       setProcessingStep("")
