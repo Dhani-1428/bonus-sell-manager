@@ -98,3 +98,20 @@ export function addOrder(userId: string, order: Omit<Order, "id" | "orderNumber"
   saveOrders(userId, orders)
   return newOrder
 }
+
+export function updateOrder(userId: string, id: string, data: Partial<Omit<Order, "id" | "orderNumber" | "createdAt">>): Order | null {
+  const orders = getOrders(userId)
+  const index = orders.findIndex((order) => order.id === id)
+  if (index === -1) return null
+  orders[index] = { ...orders[index], ...data }
+  saveOrders(userId, orders)
+  return orders[index]
+}
+
+export function deleteOrder(userId: string, id: string): boolean {
+  const orders = getOrders(userId)
+  const filtered = orders.filter((order) => order.id !== id)
+  if (filtered.length === orders.length) return false
+  saveOrders(userId, filtered)
+  return true
+}
