@@ -38,3 +38,9 @@ export interface AuthSession {
   email: string
   name: string
 }
+
+export interface RestaurantSettings {
+  name: string
+  address: string
+  contactNumber: string
+}

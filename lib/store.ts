@@ -1,4 +1,4 @@
-import type { MenuItem, Order } from "./types"
+import type { MenuItem, Order, RestaurantSettings } from "./types"
 import { generateId } from "./seed-data"
 
 function getKey(userId: string, collection: string): string {
@@ -114,4 +114,26 @@ export function deleteOrder(userId: string, id: string): boolean {
   if (filtered.length === orders.length) return false
   saveOrders(userId, filtered)
   return true
+}
+
+// Restaurant Settings
+export function getRestaurantSettings(userId: string): RestaurantSettings | null {
+  if (typeof window === "undefined") return null
+  const data = localStorage.getItem(getKey(userId, "restaurantSettings"))
+  return data ? JSON.parse(data) : null
+}
+
+export function saveRestaurantSettings(userId: string, settings: RestaurantSettings): void {
+  localStorage.setItem(getKey(userId, "restaurantSettings"), JSON.stringify(settings))
+}
+
+export function initializeRestaurantSettings(userId: string, name: string): void {
+  const existing = getRestaurantSettings(userId)
+  if (!existing) {
+    saveRestaurantSettings(userId, {
+      name,
+      address: "",
+      contactNumber: "",
+    })
+  }
 }

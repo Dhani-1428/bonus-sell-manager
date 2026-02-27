@@ -2,7 +2,7 @@
 
 import { useMemo, useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { getOrders, updateOrder, getMenuItems } from "@/lib/store"
+import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/store"
 import type { Order, OrderItem } from "@/lib/types"
 import { Download, Search, Pencil, Printer, Plus, Minus, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -169,6 +169,13 @@ export default function AllOrdersPage() {
   }
 
   const handlePrint = (order: Order) => {
+    if (!session) return
+    
+    const restaurantSettings = getRestaurantSettings(session.userId)
+    const restaurantName = restaurantSettings?.name || session.name || "Restaurant"
+    const restaurantAddress = restaurantSettings?.address || ""
+    const restaurantContact = restaurantSettings?.contactNumber || ""
+
     const printWindow = window.open("", "_blank")
     if (!printWindow) return
 
@@ -179,105 +186,284 @@ export default function AllOrdersPage() {
           <title>Order ${order.orderNumber}</title>
           <style>
             @media print {
-              @page { margin: 20mm; }
-              body { margin: 0; }
+              @page {
+                margin: 5mm;
+                size: auto;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+              }
+              /* Hide printer selection UI */
+              @media print {
+                .printer-selector { display: none !important; }
+              }
             }
+            
+            /* Responsive receipt - adapts to printer width */
             body {
-              font-family: Arial, sans-serif;
-              max-width: 80mm;
-              margin: 0 auto;
-              padding: 20px;
+              font-family: 'Courier New', monospace;
+              margin: 0;
+              padding: 10px;
+              font-size: 12px;
+              line-height: 1.4;
             }
+            
+            /* Thermal printer (58mm) - default */
+            @media print {
+              body {
+                max-width: 58mm;
+                margin: 0 auto;
+                font-size: 11px;
+              }
+            }
+            
+            /* Thermal printer (80mm) */
+            @media print and (min-width: 80mm) {
+              body {
+                max-width: 80mm;
+                font-size: 12px;
+              }
+            }
+            
+            /* Standard A4/Letter */
+            @media print and (min-width: 200mm) {
+              body {
+                max-width: 80mm;
+                margin: 0 auto;
+                font-size: 14px;
+              }
+            }
+            
+            .receipt {
+              width: 100%;
+            }
+            
             .header {
               text-align: center;
               border-bottom: 2px solid #000;
               padding-bottom: 10px;
-              margin-bottom: 20px;
-            }
-            .order-info {
               margin-bottom: 15px;
             }
-            .items {
-              margin: 20px 0;
+            
+            .restaurant-name {
+              font-size: 1.4em;
+              font-weight: bold;
+              margin-bottom: 5px;
+              text-transform: uppercase;
             }
+            
+            .restaurant-info {
+              font-size: 0.9em;
+              line-height: 1.6;
+              margin-bottom: 5px;
+            }
+            
+            .restaurant-info p {
+              margin: 2px 0;
+            }
+            
+            .order-info {
+              margin-bottom: 15px;
+              padding: 8px 0;
+              border-bottom: 1px dashed #000;
+            }
+            
+            .order-info p {
+              margin: 3px 0;
+              font-size: 0.95em;
+            }
+            
+            .items {
+              margin: 15px 0;
+            }
+            
             .item-row {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 8px;
+              margin-bottom: 6px;
+              padding: 2px 0;
             }
+            
+            .item-name {
+              flex: 1;
+              margin-right: 10px;
+            }
+            
+            .item-quantity {
+              margin-right: 5px;
+            }
+            
+            .item-price {
+              text-align: right;
+              font-weight: bold;
+            }
+            
             .totals {
               border-top: 1px solid #000;
               padding-top: 10px;
-              margin-top: 20px;
+              margin-top: 15px;
             }
+            
             .total-row {
               display: flex;
               justify-content: space-between;
               margin-bottom: 5px;
+              font-size: 0.95em;
             }
+            
             .final-total {
               font-weight: bold;
-              font-size: 1.2em;
+              font-size: 1.3em;
               border-top: 2px solid #000;
               padding-top: 10px;
               margin-top: 10px;
             }
+            
             .footer {
               text-align: center;
-              margin-top: 30px;
-              font-size: 0.9em;
-              color: #666;
+              margin-top: 20px;
+              padding-top: 15px;
+              border-top: 1px dashed #000;
+              font-size: 0.85em;
+            }
+            
+            .footer p {
+              margin: 5px 0;
+            }
+            
+            .divider {
+              text-align: center;
+              margin: 10px 0;
+              font-size: 0.8em;
+            }
+            
+            /* Printer selector (hidden when printing) */
+            .printer-selector {
+              position: fixed;
+              top: 10px;
+              right: 10px;
+              background: white;
+              padding: 15px;
+              border: 2px solid #000;
+              border-radius: 8px;
+              z-index: 1000;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            
+            .printer-selector h3 {
+              margin: 0 0 10px 0;
+              font-size: 14px;
+            }
+            
+            .printer-selector button {
+              display: block;
+              width: 100%;
+              padding: 8px;
+              margin: 5px 0;
+              background: #000;
+              color: white;
+              border: none;
+              cursor: pointer;
+              border-radius: 4px;
+            }
+            
+            .printer-selector button:hover {
+              background: #333;
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>SalesRocket</h1>
-            <p>Order Receipt</p>
+          <div class="printer-selector">
+            <h3>Select Printer Size</h3>
+            <button onclick="setPrinterSize('58mm')">Thermal 58mm</button>
+            <button onclick="setPrinterSize('80mm')">Thermal 80mm</button>
+            <button onclick="setPrinterSize('a4')">Standard A4</button>
+            <button onclick="window.print()">Print Now</button>
           </div>
-          <div class="order-info">
-            <p><strong>Order #:</strong> ${order.orderNumber}</p>
-            <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}</p>
-            <p><strong>Payment:</strong> ${order.paymentMethod.toUpperCase()}</p>
-          </div>
-          <div class="items">
-            ${order.items
-              .map(
-                (item) => `
-              <div class="item-row">
-                <span>${item.menuItemName} × ${item.quantity}</span>
-                <span>${formatter.format(item.price * item.quantity)}</span>
+          
+          <div class="receipt">
+            <div class="header">
+              <div class="restaurant-name">${restaurantName}</div>
+              ${restaurantAddress ? `<div class="restaurant-info"><p>${restaurantAddress}</p></div>` : ""}
+              ${restaurantContact ? `<div class="restaurant-info"><p>Tel: ${restaurantContact}</p></div>` : ""}
+              <div class="divider">━━━━━━━━━━━━━━━━</div>
+            </div>
+            
+            <div class="order-info">
+              <p><strong>Order #:</strong> ${order.orderNumber}</p>
+              <p><strong>Date:</strong> ${new Date(order.date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}</p>
+              <p><strong>Time:</strong> ${new Date(order.createdAt).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}</p>
+              <p><strong>Payment:</strong> ${order.paymentMethod.toUpperCase()}</p>
+            </div>
+            
+            <div class="divider">━━━━━━━━━━━━━━━━</div>
+            
+            <div class="items">
+              ${order.items
+                .map(
+                  (item) => `
+                <div class="item-row">
+                  <span class="item-name">${item.menuItemName}</span>
+                  <span class="item-quantity">×${item.quantity}</span>
+                  <span class="item-price">${formatter.format(item.price * item.quantity)}</span>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+            
+            <div class="divider">━━━━━━━━━━━━━━━━</div>
+            
+            <div class="totals">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>${formatter.format(order.totalAmount)}</span>
               </div>
-            `
-              )
-              .join("")}
-          </div>
-          <div class="totals">
-            <div class="total-row">
-              <span>Subtotal:</span>
-              <span>${formatter.format(order.totalAmount)}</span>
+              ${order.discountAmount > 0
+                ? `
+              <div class="total-row">
+                <span>Discount:</span>
+                <span>-${formatter.format(order.discountAmount)}</span>
+              </div>
+              `
+                : ""}
+              <div class="total-row final-total">
+                <span>TOTAL:</span>
+                <span>${formatter.format(order.finalAmount)}</span>
+              </div>
             </div>
-            ${order.discountAmount > 0
-              ? `
-            <div class="total-row">
-              <span>Discount:</span>
-              <span>-${formatter.format(order.discountAmount)}</span>
-            </div>
-            `
-              : ""}
-            <div class="total-row final-total">
-              <span>Total:</span>
-              <span>${formatter.format(order.finalAmount)}</span>
+            
+            <div class="footer">
+              <p>Thank you for your order!</p>
+              <p>Visit us again soon!</p>
+              <p style="margin-top: 10px; font-size: 0.75em;">Printed: ${new Date().toLocaleString()}</p>
             </div>
           </div>
-          <div class="footer">
-            <p>Thank you for your order!</p>
-            <p>${new Date().toLocaleString()}</p>
-          </div>
+          
+          <script>
+            function setPrinterSize(size) {
+              const body = document.body;
+              body.className = 'printer-' + size;
+              if (size === '58mm') {
+                body.style.maxWidth = '58mm';
+                body.style.fontSize = '11px';
+              } else if (size === '80mm') {
+                body.style.maxWidth = '80mm';
+                body.style.fontSize = '12px';
+              } else if (size === 'a4') {
+                body.style.maxWidth = '80mm';
+                body.style.fontSize = '14px';
+              }
+            }
+          </script>
         </body>
       </html>
     `
@@ -286,8 +472,9 @@ export default function AllOrdersPage() {
     printWindow.document.close()
     printWindow.focus()
     setTimeout(() => {
-      printWindow.print()
-      printWindow.close()
+      // Auto-print after a short delay
+      // printWindow.print()
+      // printWindow.close()
     }, 250)
   }
 

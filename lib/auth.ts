@@ -1,6 +1,6 @@
 import type { User, AuthSession } from "./types"
 import { generateId } from "./seed-data"
-import { saveMenuItems, saveOrders } from "./store"
+import { saveMenuItems, saveOrders, initializeRestaurantSettings } from "./store"
 
 const USERS_KEY = "restaurant_users"
 const SESSION_KEY = "restaurant_session"
@@ -47,6 +47,9 @@ export function signup(name: string, email: string, password: string): { success
   // Initialize empty arrays for menu items and orders
   saveMenuItems(newUser.id, [])
   saveOrders(newUser.id, [])
+  
+  // Initialize restaurant settings with the restaurant name
+  initializeRestaurantSettings(newUser.id, name)
 
   // Set session
   const session: AuthSession = { userId: newUser.id, email: newUser.email, name: newUser.name }
