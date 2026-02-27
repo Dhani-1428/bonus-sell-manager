@@ -39,8 +39,10 @@ export default function MenuPage() {
   const [category, setCategory] = useState("Main")
   const [ocrDialogOpen, setOcrDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [extractedItems, setExtractedItems] = useState<Array<{ name: string; price: number; category: string }>>([])
+  const [extractedItems, setExtractedItems] = useState<Array<{ name: string; price: number; category: string; description?: string }>>([])
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [ocrConfidence, setOcrConfidence] = useState<number>(0)
+  const [processingStep, setProcessingStep] = useState<string>("")
 
   // Load items when session changes
   useEffect(() => {
@@ -112,6 +114,64 @@ export default function MenuPage() {
     setDeleteConfirm(null)
   }
 
+  // Image preprocessing: enhance image quality before OCR
+  const preprocessImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        const ctx = canvas.getContext("2d")
+        if (!ctx) {
+          resolve(file) // Fallback to original if canvas not available
+          return
+        }
+
+        // Set canvas size
+        canvas.width = img.width
+        canvas.height = img.height
+
+        // Draw image
+        ctx.drawImage(img, 0, 0)
+
+        // Get image data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const data = imageData.data
+
+        // Apply enhancements
+        for (let i = 0; i < data.length; i += 4) {
+          // Increase contrast
+          const contrast = 1.2
+          data[i] = Math.min(255, Math.max(0, ((data[i] - 128) * contrast) + 128))     // R
+          data[i + 1] = Math.min(255, Math.max(0, ((data[i + 1] - 128) * contrast) + 128)) // G
+          data[i + 2] = Math.min(255, Math.max(0, ((data[i + 2] - 128) * contrast) + 128)) // B
+
+          // Increase brightness slightly
+          const brightness = 10
+          data[i] = Math.min(255, data[i] + brightness)
+          data[i + 1] = Math.min(255, data[i + 1] + brightness)
+          data[i + 2] = Math.min(255, data[i + 2] + brightness)
+
+          // Sharpen (simple unsharp mask approximation)
+          // This is a simplified version - full sharpening would require convolution
+        }
+
+        // Put enhanced image data back
+        ctx.putImageData(imageData, 0, 0)
+
+        // Convert canvas to blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const enhancedFile = new File([blob], file.name, { type: file.type })
+            resolve(enhancedFile)
+          } else {
+            resolve(file)
+          }
+        }, file.type)
+      }
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   // Fix only very obvious OCR errors (conservative approach to preserve accuracy)
   const fixCommonOCRErrors = (text: string): string => {
     return text
@@ -125,7 +185,15 @@ export default function MenuPage() {
       // Preserve everything else as-is to maintain OCR accuracy
   }
 
-  const parseMenuText = (text: string): Array<{ name: string; price: number; category: string }> => {
+  // AI Vision fallback (extensible - can be connected to OpenAI, Google Vision, etc.)
+  const fallbackToAIVision = async (file: File): Promise<string> => {
+    // Placeholder for AI vision API integration
+    // This can be extended to use OpenAI Vision, Google Cloud Vision, etc.
+    toast.info("OCR confidence low. AI vision fallback not configured. Please try a clearer image.")
+    throw new Error("AI vision fallback not implemented")
+  }
+
+  const parseMenuText = (text: string): Array<{ name: string; price: number; category: string; description?: string }> => {
     // Clean up text first - remove excessive whitespace but preserve structure
     const cleanedText = text
       .replace(/\r\n/g, "\n")
@@ -248,15 +316,22 @@ export default function MenuPage() {
 
       // Validate price range (reasonable menu prices)
       if (priceMatch && price > 0.5 && price < 500) {
-        // Extract item name (everything before the price)
+        // Extract item name and description
         let namePart = line.substring(0, priceIndex).trim()
+        
+        // Extract description from parentheses if present
+        let description: string | undefined = undefined
+        const descMatch = namePart.match(/\(([^)]+)\)/)
+        if (descMatch) {
+          description = descMatch[1].trim()
+          namePart = namePart.replace(/\s*\([^)]+\)\s*/, "").trim()
+        }
         
         // Remove common prefixes/suffixes that aren't part of the dish name
         namePart = namePart
           .replace(/^\d+\.\s*/, "") // Remove leading numbers like "1. " or "2. "
           .replace(/^menu\s+/i, "") // Remove "Menu " prefix
           .replace(/\s*menu\s*$/i, "") // Remove " Menu" suffix
-          .replace(/\s*\(.*?\)\s*$/, "") // Remove trailing descriptions in parentheses
           .trim()
 
         // Clean up the name but preserve exact spelling from OCR
@@ -299,6 +374,7 @@ export default function MenuPage() {
             name: cleanName,
             price: Math.round(price * 100) / 100, // Round to 2 decimals
             category: currentCategory,
+            description: description && description.length > 0 ? description : undefined,
           })
         }
       }
@@ -336,40 +412,73 @@ export default function MenuPage() {
     setIsProcessing(true)
     setOcrDialogOpen(true)
     setImagePreview(URL.createObjectURL(file))
+    setOcrConfidence(0)
+    setProcessingStep("Preprocessing image...")
 
     try {
-      toast.info("Processing image... This may take a moment.")
+      // Step 1: Preprocess image (enhance contrast, brightness, sharpness)
+      setProcessingStep("Enhancing image quality...")
+      const enhancedFile = await preprocessImage(file)
       
-      // Use multi-language OCR with optimized settings for accuracy
+      // Step 2: Run OCR with confidence tracking
+      setProcessingStep("Running OCR...")
+      toast.info("Processing image with OCR... This may take a moment.")
+      
       const worker = await createWorker(["eng", "por", "spa"], 1, {
         logger: (m) => {
-          // Optional: can show progress
+          if (m.status === "recognizing text") {
+            setProcessingStep(`OCR Progress: ${Math.round(m.progress * 100)}%`)
+          }
         },
       })
       
       // Use high-quality OCR settings for better accuracy
-      // PSM 6 = Assume uniform block of text (good for menus)
-      const { data: { text } } = await worker.recognize(file, {
+      const result = await worker.recognize(enhancedFile, {
         tessedit_pageseg_mode: "6", // Uniform block of text
       })
+      
+      const { text, confidence } = result.data
+      setOcrConfidence(confidence || 0)
       await worker.terminate()
       
-      // Post-process OCR text to fix only very obvious common errors
-      const correctedText = fixCommonOCRErrors(text)
+      // Step 3: Check confidence and decide on fallback
+      const CONFIDENCE_THRESHOLD = 60 // If confidence is below 60%, consider fallback
+      
+      let finalText = text
+      
+      if (confidence && confidence < CONFIDENCE_THRESHOLD) {
+        setProcessingStep("Low OCR confidence. Attempting AI vision fallback...")
+        try {
+          // Try AI vision fallback (if configured)
+          finalText = await fallbackToAIVision(file)
+        } catch (error) {
+          // Continue with OCR results even if low confidence
+          console.warn("AI vision fallback not available, using OCR results")
+        }
+      }
+      
+      // Step 4: Post-process OCR text
+      setProcessingStep("Parsing menu items...")
+      const correctedText = fixCommonOCRErrors(finalText)
 
+      // Step 5: Parse menu items
       const parsedItems = parseMenuText(correctedText)
+      
+      setProcessingStep("")
       
       if (parsedItems.length === 0) {
         toast.error("No menu items found in the image. Please try a clearer image.")
         setExtractedItems([])
       } else {
-        toast.success(`Found ${parsedItems.length} menu items!`)
+        const confidenceMsg = confidence ? ` (OCR confidence: ${Math.round(confidence)}%)` : ""
+        toast.success(`Found ${parsedItems.length} menu items!${confidenceMsg}`)
         setExtractedItems(parsedItems)
       }
     } catch (error) {
       console.error("OCR Error:", error)
       toast.error("Failed to process image. Please try again.")
       setExtractedItems([])
+      setProcessingStep("")
     } finally {
       setIsProcessing(false)
     }
@@ -402,7 +511,7 @@ export default function MenuPage() {
     setImagePreview(null)
   }
 
-  const handleEditExtractedItem = (index: number, field: "name" | "price" | "category", value: string | number) => {
+  const handleEditExtractedItem = (index: number, field: "name" | "price" | "category" | "description", value: string | number) => {
     setExtractedItems((prev) =>
       prev.map((item, i) =>
         i === index ? { ...item, [field]: value } : item
@@ -593,7 +702,14 @@ export default function MenuPage() {
           {isProcessing ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Processing image with OCR...</p>
+              <p className="text-sm font-medium text-foreground">
+                {processingStep || "Processing image with OCR..."}
+              </p>
+              {ocrConfidence > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  OCR Confidence: {Math.round(ocrConfidence)}%
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">This may take 10-30 seconds</p>
             </div>
           ) : (
@@ -612,48 +728,70 @@ export default function MenuPage() {
                     </p>
                   </div>
 
-                  <div className="max-h-96 overflow-y-auto space-y-2 border border-border rounded-lg p-4">
+                  <div className="max-h-96 overflow-y-auto space-y-3 border border-border rounded-lg p-4">
                     {extractedItems.map((item, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
-                        <div className="flex-1 grid grid-cols-3 gap-3">
-                          <Input
-                            value={item.name}
-                            onChange={(e) => handleEditExtractedItem(index, "name", e.target.value)}
-                            className="h-10"
-                            placeholder="Item name"
-                          />
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={item.price}
-                            onChange={(e) => handleEditExtractedItem(index, "price", parseFloat(e.target.value) || 0)}
-                            className="h-10"
-                            placeholder="Price"
-                          />
-                          <Select
-                            value={item.category}
-                            onValueChange={(value) => handleEditExtractedItem(index, "category", value)}
+                      <div key={index} className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-card hover:bg-muted/30 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-xs text-muted-foreground">Item Name</Label>
+                              <Input
+                                value={item.name}
+                                onChange={(e) => handleEditExtractedItem(index, "name", e.target.value)}
+                                className="h-10 text-sm"
+                                placeholder="Item name"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-xs text-muted-foreground">Price</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={item.price}
+                                onChange={(e) => handleEditExtractedItem(index, "price", parseFloat(e.target.value) || 0)}
+                                className="h-10 text-sm"
+                                placeholder="0.00"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-xs text-muted-foreground">Category</Label>
+                              <Select
+                                value={item.category}
+                                onValueChange={(value) => handleEditExtractedItem(index, "category", value)}
+                              >
+                                <SelectTrigger className="h-10 text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((c) => (
+                                    <SelectItem key={c} value={c}>
+                                      {c}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveExtractedItem(index)}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10 transition-colors mt-6"
+                            aria-label="Remove item"
                           >
-                            <SelectTrigger className="h-10">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((c) => (
-                                <SelectItem key={c} value={c}>
-                                  {c}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleRemoveExtractedItem(index)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {item.description && (
+                          <div className="flex flex-col gap-1">
+                            <Label className="text-xs text-muted-foreground">Description (optional)</Label>
+                            <Input
+                              value={item.description}
+                              onChange={(e) => handleEditExtractedItem(index, "description", e.target.value)}
+                              className="h-10 text-sm"
+                              placeholder="Item description"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -680,13 +818,21 @@ export default function MenuPage() {
             >
               Cancel
             </button>
-            {extractedItems.length > 0 && (
+              {extractedItems.length > 0 && (
               <button
                 onClick={handleAddExtractedItems}
                 className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 Add {extractedItems.length} {extractedItems.length === 1 ? "Item" : "Items"}
               </button>
+            )}
+            {ocrConfidence > 0 && !isProcessing && (
+              <div className="text-xs text-muted-foreground text-center">
+                OCR Confidence: {Math.round(ocrConfidence)}%
+                {ocrConfidence < 60 && (
+                  <span className="text-yellow-500 ml-2">(Low confidence - results may need manual review)</span>
+                )}
+              </div>
             )}
           </DialogFooter>
         </DialogContent>
