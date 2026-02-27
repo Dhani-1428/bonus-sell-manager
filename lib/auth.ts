@@ -1,6 +1,7 @@
 import type { User, AuthSession } from "./types"
 import { generateId } from "./seed-data"
 import { saveMenuItems, saveOrders, initializeRestaurantSettings } from "./store"
+import { initializeTrial } from "./subscription"
 
 const USERS_KEY = "restaurant_users"
 const SESSION_KEY = "restaurant_session"
@@ -38,6 +39,8 @@ export function signup(name: string, email: string, password: string): { success
     email: email.toLowerCase(),
     password: simpleHash(password),
     createdAt: new Date().toISOString(),
+    subscriptionStatus: "trial",
+    trialStartDate: new Date().toISOString(),
   }
 
   users.push(newUser)
@@ -50,6 +53,9 @@ export function signup(name: string, email: string, password: string): { success
   
   // Initialize restaurant settings with the restaurant name
   initializeRestaurantSettings(newUser.id, name)
+
+  // Initialize 15-day free trial
+  initializeTrial(newUser.id)
 
   // Set session
   const session: AuthSession = { userId: newUser.id, email: newUser.email, name: newUser.name }

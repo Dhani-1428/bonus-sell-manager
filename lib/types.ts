@@ -4,6 +4,10 @@ export interface User {
   email: string
   password: string
   createdAt: string
+  trialStartDate?: string // ISO date string when trial started
+  subscriptionStatus: "trial" | "active" | "expired" | "cancelled"
+  subscriptionEndDate?: string // ISO date string when subscription ends
+  subscriptionPlan?: "monthly" | "yearly" // Plan type if subscribed
 }
 
 export interface MenuItem {

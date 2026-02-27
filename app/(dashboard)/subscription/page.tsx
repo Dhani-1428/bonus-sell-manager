@@ -1,0 +1,269 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import { useAuth } from "@/components/auth-provider"
+import { getUserById, getSubscriptionStatus, activateSubscription } from "@/lib/subscription"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Check, X, Clock, CreditCard, Zap, Crown } from "lucide-react"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+
+export default function SubscriptionPage() {
+  const { session } = useAuth()
+  const router = useRouter()
+  const [subscriptionStatus, setSubscriptionStatus] = useState<ReturnType<typeof getSubscriptionStatus> | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  const refreshStatus = useCallback(() => {
+    if (session) {
+      const user = getUserById(session.userId)
+      if (user) {
+        setSubscriptionStatus(getSubscriptionStatus(user))
+      }
+    }
+  }, [session])
+
+  useEffect(() => {
+    refreshStatus()
+    // Refresh status every minute to update days remaining
+    const interval = setInterval(refreshStatus, 60000)
+    return () => clearInterval(interval)
+  }, [refreshStatus])
+
+  const handleSubscribe = async (plan: "monthly" | "yearly") => {
+    if (!session) return
+
+    setIsProcessing(true)
+    try {
+      // Simulate subscription activation
+      // In a real app, you would integrate with a payment provider (Stripe, PayPal, etc.)
+      const durationDays = plan === "monthly" ? 30 : 365
+      const success = activateSubscription(session.userId, plan, durationDays)
+
+      if (success) {
+        toast.success(`Successfully subscribed to ${plan === "monthly" ? "Monthly" : "Yearly"} plan!`)
+        
+        // Update status
+        refreshStatus()
+
+        // Redirect to dashboard after a moment
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 1500)
+      } else {
+        toast.error("Failed to activate subscription. Please try again.")
+      }
+    } catch (error) {
+      console.error("Subscription error:", error)
+      toast.error("An error occurred. Please try again.")
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  if (!subscriptionStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-muted-foreground">Loading subscription status...</div>
+      </div>
+    )
+  }
+
+  const plans = [
+    {
+      name: "Monthly",
+      price: "$29",
+      period: "per month",
+      plan: "monthly" as const,
+      features: [
+        "Full access to admin panel",
+        "Unlimited orders",
+        "Unlimited menu items",
+        "Order management",
+        "Reports & analytics",
+        "Email support",
+      ],
+      popular: false,
+    },
+    {
+      name: "Yearly",
+      price: "$290",
+      period: "per year",
+      plan: "yearly" as const,
+      features: [
+        "Everything in Monthly",
+        "Save $58 per year",
+        "Priority support",
+        "Advanced analytics",
+        "API access",
+        "Custom integrations",
+      ],
+      popular: true,
+    },
+  ]
+
+  return (
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
+      <div>
+        <h2 className="text-2xl font-bold text-foreground">Subscription</h2>
+        <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>
+      </div>
+
+      {/* Current Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Current Status</CardTitle>
+          <CardDescription>Your subscription and trial information</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                subscriptionStatus.hasAccess
+                  ? "bg-green-500/10 text-green-500"
+                  : "bg-red-500/10 text-red-500"
+              }`}
+            >
+              {subscriptionStatus.hasAccess ? (
+                <Check className="h-6 w-6" />
+              ) : (
+                <X className="h-6 w-6" />
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-foreground">
+                  {subscriptionStatus.status === "trial" && "Free Trial"}
+                  {subscriptionStatus.status === "active" && "Active Subscription"}
+                  {subscriptionStatus.status === "expired" && "Subscription Expired"}
+                  {subscriptionStatus.status === "cancelled" && "Subscription Cancelled"}
+                </p>
+                {subscriptionStatus.status === "trial" && (
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-500">
+                    Trial
+                  </span>
+                )}
+                {subscriptionStatus.status === "active" && (
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                    Active
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">{subscriptionStatus.message}</p>
+              {subscriptionStatus.daysRemaining > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {subscriptionStatus.daysRemaining} day{subscriptionStatus.daysRemaining !== 1 ? "s" : ""} remaining
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Subscription Plans */}
+      {!subscriptionStatus.hasAccess && (
+        <div>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Plan</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {plans.map((plan) => (
+              <Card key={plan.name} className={plan.popular ? "border-primary border-2" : ""}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {plan.name}
+                        {plan.popular && (
+                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                            Popular
+                          </span>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="mt-2">
+                        <span className="text-2xl font-bold text-foreground">{plan.price}</span>
+                        <span className="text-muted-foreground"> {plan.period}</span>
+                      </CardDescription>
+                    </div>
+                    {plan.name === "Monthly" && <Zap className="h-8 w-8 text-muted-foreground" />}
+                    {plan.name === "Yearly" && <Crown className="h-8 w-8 text-primary" />}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={() => handleSubscribe(plan.plan)}
+                    disabled={isProcessing}
+                    className="w-full"
+                    variant={plan.popular ? "default" : "outline"}
+                  >
+                    {isProcessing ? "Processing..." : `Subscribe to ${plan.name}`}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active Subscription Info */}
+      {subscriptionStatus.hasAccess && subscriptionStatus.status === "active" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription Details</CardTitle>
+            <CardDescription>Your active subscription information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Plan</span>
+                <span className="font-medium text-foreground capitalize">
+                  {subscriptionStatus.plan || "Monthly"}
+                </span>
+              </div>
+              {subscriptionStatus.subscriptionEndDate && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Renews on</span>
+                  <span className="font-medium text-foreground">
+                    {new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                  Active
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Note about payment integration */}
+      <Card className="bg-muted/50">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-3">
+            <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-foreground mb-1">Payment Integration</p>
+              <p className="text-xs text-muted-foreground">
+                This is a demo subscription system. In production, integrate with a payment provider like Stripe or
+                PayPal to process real payments. The subscription is activated immediately for demonstration purposes.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

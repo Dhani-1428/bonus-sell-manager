@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, X } from "lucide-react"
+import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, X, CreditCard } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/all-orders", label: "All Orders", icon: Receipt },
   { href: "/menu", label: "Menu", icon: UtensilsCrossed },
   { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/subscription", label: "Subscription", icon: CreditCard },
 ]
 
 export function DashboardSidebar({

@@ -5,13 +5,31 @@ import { useAuth } from "@/components/auth-provider"
 import { CookingLoader } from "@/components/cooking-loader"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { useState, type ReactNode } from "react"
+import { useState, useEffect, type ReactNode } from "react"
+import { getUserById, getSubscriptionStatus } from "@/lib/subscription"
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { session, isLoading, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [subscriptionCheck, setSubscriptionCheck] = useState<{ hasAccess: boolean; message: string } | null>(null)
+
+  useEffect(() => {
+    if (session) {
+      const user = getUserById(session.userId)
+      if (user) {
+        const status = getSubscriptionStatus(user)
+        setSubscriptionCheck({ hasAccess: status.hasAccess, message: status.message })
+        
+        // Redirect to subscription page if no access (except if already on subscription page)
+        // Allow subscription page to be accessible even without active subscription
+        if (!status.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
+          router.push("/subscription")
+        }
+      }
+    }
+  }, [session, pathname, router])
 
   if (isLoading) {
     return <CookingLoader text="Loading dashboard..." />
@@ -20,6 +38,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!session) {
     router.push("/")
     return <CookingLoader text="Redirecting..." />
+  }
+
+  // Show subscription page if no access (unless already on subscription page)
+  // Allow subscription page to be accessible even without active subscription
+  if (subscriptionCheck && !subscriptionCheck.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
+    return <CookingLoader text="Checking subscription..." />
   }
 
   return (
