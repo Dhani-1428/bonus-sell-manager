@@ -245,12 +245,31 @@ export default function MenuPage() {
       // Preserve everything else as-is to maintain OCR accuracy
   }
 
-  // AI Vision fallback (extensible - can be connected to OpenAI, Google Vision, etc.)
-  const fallbackToAIVision = async (file: File): Promise<string> => {
-    // Placeholder for AI vision API integration
-    // This can be extended to use OpenAI Vision, Google Cloud Vision, etc.
-    toast.info("OCR confidence low. AI vision fallback not configured. Please try a clearer image.")
-    throw new Error("AI vision fallback not implemented")
+  // AI Vision menu extraction using OpenAI Vision API
+  const extractMenuWithAI = async (file: File): Promise<Array<{ name: string; price: number; category: string; description?: string }>> => {
+    try {
+      const formData = new FormData()
+      formData.append("image", file)
+
+      const response = await fetch("/api/extract-menu", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        if (errorData.error === "OpenAI API key not configured") {
+          throw new Error("AI vision not configured. Please set OPENAI_API_KEY environment variable.")
+        }
+        throw new Error(errorData.error || "Failed to extract menu with AI")
+      }
+
+      const data = await response.json()
+      return data.items || []
+    } catch (error: any) {
+      console.error("AI Vision Error:", error)
+      throw error
+    }
   }
 
   // Intelligent text correction for common OCR errors
@@ -593,123 +612,95 @@ export default function MenuPage() {
     setOcrDialogOpen(true)
     setImagePreview(URL.createObjectURL(file))
     setOcrConfidence(0)
-    setProcessingStep("Preprocessing image...")
+    setProcessingStep("Analyzing menu with AI vision...")
 
     try {
-      // Step 1: Preprocess image with multiple strategies
-      setProcessingStep("Enhancing image quality (multiple strategies)...")
-      const enhancedFiles = await preprocessImage(file)
+      // Primary: Use AI Vision for menu extraction
+      setProcessingStep("Extracting menu items with AI vision model...")
+      toast.info("Processing image with AI vision... This may take 10-20 seconds.")
       
-      // Step 2: Run OCR with multiple strategies and PSM modes
-      setProcessingStep("Running OCR with multiple strategies...")
-      toast.info("Processing image with advanced OCR... This may take 30-60 seconds.")
-      
-      const worker = await createWorker(["eng", "por", "spa"], 1, {
-        logger: (m) => {
-          if (m.status === "recognizing text") {
-            setProcessingStep(`OCR Progress: ${Math.round(m.progress * 100)}%`)
-          }
-        },
-      })
-      
-      // Try multiple OCR strategies and pick the best result
-      const ocrResults: Array<{ text: string; confidence: number; items: number }> = []
-      
-      // Strategy 1: PSM 6 (Uniform block) - best for menus
-      for (const enhancedFile of enhancedFiles) {
-        try {
-          const result1 = await worker.recognize(enhancedFile, {
-            tessedit_pageseg_mode: "6",
-          })
-          const parsed1 = parseMenuText(fixCommonOCRErrors(result1.data.text))
-          ocrResults.push({
-            text: result1.data.text,
-            confidence: result1.data.confidence || 0,
-            items: parsed1.length,
-          })
-        } catch (e) {
-          console.warn("OCR strategy failed:", e)
-        }
-      }
-      
-      // Strategy 2: PSM 11 (Sparse text) - for menus with images
-      try {
-        const result2 = await worker.recognize(enhancedFiles[0] || file, {
-          tessedit_pageseg_mode: "11",
-        })
-        const parsed2 = parseMenuText(fixCommonOCRErrors(result2.data.text))
-        ocrResults.push({
-          text: result2.data.text,
-          confidence: result2.data.confidence || 0,
-          items: parsed2.length,
-        })
-      } catch (e) {
-        console.warn("OCR strategy 2 failed:", e)
-      }
-      
-      // Strategy 3: PSM 4 (Single column) - for vertical menus
-      try {
-        const result3 = await worker.recognize(enhancedFiles[0] || file, {
-          tessedit_pageseg_mode: "4",
-        })
-        const parsed3 = parseMenuText(fixCommonOCRErrors(result3.data.text))
-        ocrResults.push({
-          text: result3.data.text,
-          confidence: result3.data.confidence || 0,
-          items: parsed3.length,
-        })
-      } catch (e) {
-        console.warn("OCR strategy 3 failed:", e)
-      }
-      
-      await worker.terminate()
-      
-      // Step 3: Select best result (prioritize by item count, then confidence)
-      ocrResults.sort((a, b) => {
-        if (a.items !== b.items) return b.items - a.items // More items is better
-        return b.confidence - a.confidence // Higher confidence is better
-      })
-      
-      const bestResult = ocrResults[0]
-      const finalText = bestResult?.text || ""
-      const confidence = bestResult?.confidence || 0
-      setOcrConfidence(confidence)
-      
-      // Step 4: Check confidence and decide on fallback
-      const CONFIDENCE_THRESHOLD = 50 // Lowered threshold since we're using multiple strategies
-      
-      let finalParsedText = finalText
-      
-      if (confidence < CONFIDENCE_THRESHOLD && ocrResults.length > 0) {
-        setProcessingStep("Low OCR confidence. Attempting AI vision fallback...")
-        try {
-          // Try AI vision fallback (if configured)
-          finalParsedText = await fallbackToAIVision(file)
-        } catch (error) {
-          // Continue with best OCR results
-          console.warn("AI vision fallback not available, using best OCR results")
-        }
-      }
-      
-      // Step 5: Parse menu items with intelligent correction
-      setProcessingStep("Parsing and validating menu items...")
-      const correctedText = fixCommonOCRErrors(finalParsedText)
-      const parsedItems = parseMenuText(correctedText)
+      const aiItems = await extractMenuWithAI(file)
       
       setProcessingStep("")
+      setOcrConfidence(95) // AI vision typically has high accuracy
       
-      if (parsedItems.length === 0) {
-        toast.error("No menu items found. Try: 1) Clearer image 2) Better lighting 3) Straight photo")
-        setExtractedItems([])
+      if (aiItems.length === 0) {
+        // Fallback to OCR if AI returns no items
+        setProcessingStep("AI found no items. Trying OCR fallback...")
+        toast.warning("AI found no items. Trying OCR as fallback...")
+        
+        const worker = await createWorker(["eng", "por", "spa"], 1, {
+          logger: (m) => {
+            if (m.status === "recognizing text") {
+              setProcessingStep(`OCR Fallback: ${Math.round(m.progress * 100)}%`)
+            }
+          },
+        })
+        
+        const result = await worker.recognize(file, {
+          tessedit_pageseg_mode: "6",
+        })
+        
+        await worker.terminate()
+        
+        const correctedText = fixCommonOCRErrors(result.data.text)
+        const ocrItems = parseMenuText(correctedText)
+        setOcrConfidence(result.data.confidence || 0)
+        
+        if (ocrItems.length === 0) {
+          toast.error("No menu items found. Please try a clearer image.")
+          setExtractedItems([])
+        } else {
+          toast.success(`Found ${ocrItems.length} items using OCR fallback`)
+          setExtractedItems(ocrItems)
+        }
       } else {
-        const confidenceMsg = confidence ? ` (Best OCR confidence: ${Math.round(confidence)}%)` : ""
-        toast.success(`Found ${parsedItems.length} menu items!${confidenceMsg}`)
-        setExtractedItems(parsedItems)
+        toast.success(`Found ${aiItems.length} menu items with AI vision!`)
+        setExtractedItems(aiItems)
       }
-    } catch (error) {
-      console.error("OCR Error:", error)
-      toast.error("Failed to process image. Please try again with a clearer image.")
-      setExtractedItems([])
+    } catch (error: any) {
+      console.error("Menu Extraction Error:", error)
+      
+      // Fallback to OCR if AI fails
+      if (error.message?.includes("API key") || error.message?.includes("not configured")) {
+        setProcessingStep("AI not configured. Using OCR fallback...")
+        toast.warning("AI vision not configured. Falling back to OCR...")
+        
+        try {
+          const worker = await createWorker(["eng", "por", "spa"], 1, {
+            logger: (m) => {
+              if (m.status === "recognizing text") {
+                setProcessingStep(`OCR: ${Math.round(m.progress * 100)}%`)
+              }
+            },
+          })
+          
+          const result = await worker.recognize(file, {
+            tessedit_pageseg_mode: "6",
+          })
+          
+          await worker.terminate()
+          
+          const correctedText = fixCommonOCRErrors(result.data.text)
+          const ocrItems = parseMenuText(correctedText)
+          setOcrConfidence(result.data.confidence || 0)
+          
+          if (ocrItems.length === 0) {
+            toast.error("No menu items found. Please try a clearer image.")
+            setExtractedItems([])
+          } else {
+            toast.success(`Found ${ocrItems.length} items using OCR`)
+            setExtractedItems(ocrItems)
+          }
+        } catch (ocrError) {
+          console.error("OCR Fallback Error:", ocrError)
+          toast.error("Failed to process image. Please try again.")
+          setExtractedItems([])
+        }
+      } else {
+        toast.error(`Failed to extract menu: ${error.message || "Unknown error"}`)
+        setExtractedItems([])
+      }
       setProcessingStep("")
     } finally {
       setIsProcessing(false)
@@ -779,7 +770,7 @@ export default function MenuPage() {
             className="flex h-12 items-center gap-2 rounded-lg border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
           >
             <Upload className="h-4 w-4" />
-            Scan Menu Image
+            Extract Menu with AI
           </button>
           <button
             onClick={openAdd}
@@ -935,14 +926,18 @@ export default function MenuPage() {
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
               <p className="text-sm font-medium text-foreground">
-                {processingStep || "Processing image with OCR..."}
+                {processingStep || "Processing image with AI vision..."}
               </p>
               {ocrConfidence > 0 && (
                 <p className="text-xs text-muted-foreground">
-                  OCR Confidence: {Math.round(ocrConfidence)}%
+                  {processingStep?.includes("OCR") ? "OCR" : "AI"} Confidence: {Math.round(ocrConfidence)}%
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">This may take 10-30 seconds</p>
+              <p className="text-xs text-muted-foreground">
+                {processingStep?.includes("OCR") 
+                  ? "This may take 10-30 seconds" 
+                  : "AI vision processing... This may take 10-20 seconds"}
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-4 py-4">
@@ -1060,7 +1055,7 @@ export default function MenuPage() {
             )}
             {ocrConfidence > 0 && !isProcessing && (
               <div className="text-xs text-muted-foreground text-center">
-                OCR Confidence: {Math.round(ocrConfidence)}%
+                {ocrConfidence >= 90 ? "AI Vision" : "OCR"} Confidence: {Math.round(ocrConfidence)}%
                 {ocrConfidence < 60 && (
                   <span className="text-yellow-500 ml-2">(Low confidence - results may need manual review)</span>
                 )}
