@@ -113,77 +113,151 @@ export default function MenuPage() {
   }
 
   const parseMenuText = (text: string): Array<{ name: string; price: number; category: string }> => {
-    const lines = text.split("\n").filter((line) => line.trim().length > 0)
+    const lines = text.split("\n").map(line => line.trim()).filter((line) => line.length > 0)
     const items: Array<{ name: string; price: number; category: string }> = []
     let currentCategory = "Main"
 
-    for (const line of lines) {
-      const trimmed = line.trim()
+    // Patterns to exclude (phone numbers, addresses, delivery info, etc.)
+    const excludePatterns = [
+      /^\d{3}[\s\-]?\d{3}[\s\-]?\d{3,4}$/, // Phone numbers
+      /^\+?\d{1,4}[\s\-]?\d{1,4}[\s\-]?\d{1,4}[\s\-]?\d{1,9}$/, // International phone
+      /delivery|entrega|grátis|free|available|chamada|rede|móvel|nacional/i, // Delivery info
+      /halal|certified|certificação/i, // Certifications
+      /iva|taxa|legal|vigor|preços|prices/i, // Price disclaimers
+      /^[^\w]*$/, // Only special characters
+      /^.{1,2}$/, // Too short (1-2 chars)
+      /^[A-Z\s]{3,}$/, // All caps headers (likely not menu items)
+      /menu\s*[\d,\.]+€?/i, // "Menu 5,50€" pattern (combo meals)
+      /^\d+\.?\s*[A-Z]/i, // Numbered lists that aren't items
+    ]
+
+    // Category detection
+    const categoryKeywords: Record<string, string> = {
+      "starter": "Starter",
+      "appetizer": "Starter",
+      "entrée": "Starter",
+      "dessert": "Dessert",
+      "beverage": "Beverage",
+      "drink": "Beverage",
+      "bebida": "Beverage",
+      "soup": "Starter",
+      "salad": "Starter",
+      "salada": "Starter",
+      "pizza": "Main",
+      "pasta": "Main",
+      "burger": "Main",
+      "hamburger": "Main",
+      "hambúrguer": "Main",
+      "sandwich": "Main",
+      "kebab": "Main",
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
       
-      // Check if line is a category header (uppercase, short, common category names)
-      const categoryKeywords = ["main", "starter", "appetizer", "dessert", "beverage", "drink", "soup", "salad", "pizza", "pasta", "burger", "sandwich"]
-      const isCategory = categoryKeywords.some((keyword) => 
-        trimmed.toLowerCase().includes(keyword) && trimmed.length < 30
-      )
-      
-      if (isCategory) {
-        // Determine category
-        const lower = trimmed.toLowerCase()
-        if (lower.includes("starter") || lower.includes("appetizer")) currentCategory = "Starter"
-        else if (lower.includes("dessert")) currentCategory = "Dessert"
-        else if (lower.includes("beverage") || lower.includes("drink")) currentCategory = "Beverage"
-        else currentCategory = "Main"
+      // Skip excluded patterns
+      if (excludePatterns.some(pattern => pattern.test(line))) {
         continue
       }
 
-      // Extract price (look for currency symbols and numbers)
-      const priceMatch = trimmed.match(/(\$|USD|€|£|Rs\.?|₹)?\s*(\d+\.?\d*)/)
-      if (priceMatch) {
-        const price = parseFloat(priceMatch[2])
-        if (price > 0 && price < 10000) {
-          // Extract item name (everything before the price)
-          const name = trimmed.substring(0, priceMatch.index || trimmed.length).trim()
-          // Clean up name (remove extra spaces, special chars at start/end)
-          const cleanName = name.replace(/^[^\w\s]+|[^\w\s]+$/g, "").replace(/\s+/g, " ").trim()
-          
-          if (cleanName.length > 2 && cleanName.length < 100) {
-            items.push({
-              name: cleanName,
-              price,
-              category: currentCategory,
-            })
-          }
+      // Check for category headers
+      const lowerLine = line.toLowerCase()
+      for (const [keyword, category] of Object.entries(categoryKeywords)) {
+        if (lowerLine.includes(keyword) && line.length < 40 && !/\d/.test(line)) {
+          currentCategory = category
+          continue
         }
-      } else {
-        // Try to find item name without price (might be on next line)
-        const cleanName = trimmed.replace(/^[^\w\s]+|[^\w\s]+$/g, "").replace(/\s+/g, " ").trim()
-        if (cleanName.length > 2 && cleanName.length < 100 && !categoryKeywords.some(k => cleanName.toLowerCase().includes(k))) {
-          // Check if next line has price
-          const nextLineIndex = lines.indexOf(line) + 1
-          if (nextLineIndex < lines.length) {
-            const nextLine = lines[nextLineIndex].trim()
-            const nextPriceMatch = nextLine.match(/(\$|USD|€|£|Rs\.?|₹)?\s*(\d+\.?\d*)/)
-            if (nextPriceMatch) {
-              const price = parseFloat(nextPriceMatch[2])
-              if (price > 0 && price < 10000) {
-                items.push({
-                  name: cleanName,
-                  price,
-                  category: currentCategory,
-                })
-              }
-            }
-          }
+      }
+
+      // Price patterns: handle both $3.50 and €3,50 (European format with comma)
+      // Also handle prices like "3,50€", "3.50€", "$3.50", "€3,50"
+      const pricePatterns = [
+        /([€$£₹]|USD|Rs\.?)\s*(\d+[,\.]\d{2})/, // Currency symbol before: €3,50 or $3.50
+        /(\d+[,\.]\d{2})\s*([€$£₹])/, // Currency symbol after: 3,50€ or 3.50$
+        /([€$£₹]|USD)\s*(\d+)/, // Currency with whole number: €5
+        /(\d+)\s*([€$£₹])/, // Whole number with currency: 5€
+      ]
+
+      let priceMatch: RegExpMatchArray | null = null
+      let price = 0
+      let priceIndex = -1
+
+      for (const pattern of pricePatterns) {
+        const match = line.match(pattern)
+        if (match) {
+          // Extract the number part
+          const numStr = match[2] || match[1]
+          // Handle European format (comma as decimal) and US format (dot as decimal)
+          price = parseFloat(numStr.replace(",", "."))
+          priceIndex = match.index || 0
+          priceMatch = match
+          break
+        }
+      }
+
+      // Validate price range (reasonable menu prices)
+      if (priceMatch && price > 0.5 && price < 500) {
+        // Extract item name (everything before the price)
+        const namePart = line.substring(0, priceIndex).trim()
+        
+        // Clean up the name
+        let cleanName = namePart
+          .replace(/^[\d\.\)\-\s]+/, "") // Remove leading numbers, dots, parentheses, dashes
+          .replace(/[\-\|:]+$/, "") // Remove trailing separators
+          .replace(/\s+/g, " ") // Normalize spaces
+          .trim()
+
+        // Additional validation for menu item names
+        // Must have at least 3 characters, mostly letters, not all caps (unless short)
+        const letterCount = (cleanName.match(/[a-zA-ZÀ-ÿ]/g) || []).length
+        const totalChars = cleanName.length
+        
+        if (
+          cleanName.length >= 3 &&
+          cleanName.length <= 60 &&
+          letterCount >= totalChars * 0.4 && // At least 40% letters
+          !/^[A-Z\s]{10,}$/.test(cleanName) && // Not all caps long text (likely headers)
+          !excludePatterns.some(pattern => pattern.test(cleanName)) // Not in exclude list
+        ) {
+          // Capitalize first letter of each word for better presentation
+          cleanName = cleanName
+            .split(" ")
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(" ")
+
+          items.push({
+            name: cleanName,
+            price: Math.round(price * 100) / 100, // Round to 2 decimals
+            category: currentCategory,
+          })
         }
       }
     }
 
-    // Remove duplicates
-    const uniqueItems = items.filter((item, index, self) =>
-      index === self.findIndex((t) => t.name.toLowerCase() === item.name.toLowerCase())
-    )
+    // Remove duplicates (by name, case-insensitive)
+    const uniqueItems = items.filter((item, index, self) => {
+      const normalizedName = item.name.toLowerCase().trim()
+      const firstIndex = self.findIndex((t) => t.name.toLowerCase().trim() === normalizedName)
+      return index === firstIndex
+    })
 
-    return uniqueItems
+    // Filter out items that are too similar (likely OCR errors)
+    const filteredItems = uniqueItems.filter((item, index) => {
+      // Check if this item is too similar to others (likely OCR duplicate)
+      const similar = uniqueItems.some((other, otherIndex) => {
+        if (index === otherIndex) return false
+        const name1 = item.name.toLowerCase()
+        const name2 = other.name.toLowerCase()
+        // If names are very similar (80% match) and prices are close, likely duplicate
+        const similarity = name1.length > 0 && name2.length > 0 
+          ? (name1.split("").filter(c => name2.includes(c)).length / Math.max(name1.length, name2.length))
+          : 0
+        return similarity > 0.8 && Math.abs(item.price - other.price) < 0.5
+      })
+      return !similar
+    })
+
+    return filteredItems
   }
 
   const handleImageUpload = async (file: File) => {
@@ -196,7 +270,8 @@ export default function MenuPage() {
     try {
       toast.info("Processing image... This may take a moment.")
       
-      const worker = await createWorker("eng")
+      // Use multi-language OCR (English + Portuguese + Spanish for better menu recognition)
+      const worker = await createWorker(["eng", "por", "spa"])
       const { data: { text } } = await worker.recognize(file)
       await worker.terminate()
 
