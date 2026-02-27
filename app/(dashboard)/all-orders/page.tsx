@@ -4,7 +4,7 @@ import { useMemo, useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { getOrders, updateOrder, getMenuItems } from "@/lib/store"
 import type { Order, OrderItem } from "@/lib/types"
-import { Download, Search, Pencil, Printer } from "lucide-react"
+import { Download, Search, Pencil, Printer, Plus, Minus, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -31,7 +31,10 @@ export default function AllOrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingItems, setEditingItems] = useState<OrderItem[]>([])
+  const [selectedItem, setSelectedItem] = useState("")
   const [discount, setDiscount] = useState("")
+  const [orderDate, setOrderDate] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "online">("cash")
   const [menuItems, setMenuItems] = useState<{ id: string; name: string; price: number }[]>([])
 
@@ -97,22 +100,64 @@ export default function AllOrdersPage() {
 
   const openEditDialog = (order: Order) => {
     setEditingOrder(order)
+    setEditingItems([...order.items])
     setDiscount(order.discountAmount.toString())
+    setOrderDate(order.date)
     setPaymentMethod(order.paymentMethod)
+    setSelectedItem("")
     setDialogOpen(true)
   }
+
+  const addItemToOrder = () => {
+    const item = menuItems.find((m) => m.id === selectedItem)
+    if (!item) return
+
+    setEditingItems((prev) => {
+      const existing = prev.find((o) => o.menuItemId === item.id)
+      if (existing) {
+        return prev.map((o) =>
+          o.menuItemId === item.id ? { ...o, quantity: o.quantity + 1 } : o
+        )
+      }
+      return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
+    })
+    setSelectedItem("")
+  }
+
+  const updateItemQuantity = (menuItemId: string, delta: number) => {
+    setEditingItems((prev) =>
+      prev
+        .map((o) => (o.menuItemId === menuItemId ? { ...o, quantity: Math.max(0, o.quantity + delta) } : o))
+        .filter((o) => o.quantity > 0)
+    )
+  }
+
+  const removeItemFromOrder = (menuItemId: string) => {
+    setEditingItems((prev) => prev.filter((o) => o.menuItemId !== menuItemId))
+  }
+
+  const grossTotal = useMemo(() => editingItems.reduce((sum, i) => sum + i.price * i.quantity, 0), [editingItems])
+  const discountAmount = parseFloat(discount) || 0
+  const netTotal = Math.max(0, grossTotal - discountAmount)
 
   const handleSaveEdit = () => {
     if (!session || !editingOrder) return
 
-    const discountAmount = parseFloat(discount) || 0
-    const grossTotal = editingOrder.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const finalAmount = Math.max(0, grossTotal - discountAmount)
+    if (editingItems.length === 0) {
+      toast.error("Order must have at least one item")
+      return
+    }
+
+    const finalDiscountAmount = Math.round(discountAmount * 100) / 100
+    const finalGrossTotal = Math.round(grossTotal * 100) / 100
+    const finalNetTotal = Math.round(netTotal * 100) / 100
 
     updateOrder(session.userId, editingOrder.id, {
-      discountAmount: Math.round(discountAmount * 100) / 100,
-      finalAmount: Math.round(finalAmount * 100) / 100,
-      totalAmount: Math.round(grossTotal * 100) / 100,
+      date: orderDate,
+      items: editingItems,
+      discountAmount: finalDiscountAmount,
+      finalAmount: finalNetTotal,
+      totalAmount: finalGrossTotal,
       paymentMethod,
     })
 
@@ -120,6 +165,7 @@ export default function AllOrdersPage() {
     refreshOrders()
     setDialogOpen(false)
     setEditingOrder(null)
+    setEditingItems([])
   }
 
   const handlePrint = (order: Order) => {
@@ -385,36 +431,97 @@ export default function AllOrdersPage() {
 
       {/* Edit Order Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Order {editingOrder?.orderNumber}</DialogTitle>
           </DialogHeader>
           {editingOrder && (
             <div className="flex flex-col gap-4 py-4">
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Order Items</p>
-                <div className="space-y-1">
-                  {editingOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-sm">
-                      <span className="text-foreground">
-                        {item.menuItemName} × {item.quantity}
-                      </span>
-                      <span className="text-foreground">{formatter.format(item.price * item.quantity)}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 pt-3 border-t border-border">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal:</span>
-                    <span className="text-foreground font-medium">
-                      {formatter.format(
-                        editingOrder.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-                      )}
-                    </span>
-                  </div>
+              {/* Date */}
+              <div className="flex flex-col gap-2">
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={orderDate}
+                  onChange={(e) => setOrderDate(e.target.value)}
+                  className="h-12 text-base"
+                />
+              </div>
+
+              {/* Add Items */}
+              <div className="flex flex-col gap-2">
+                <Label>Add Item</Label>
+                <div className="flex gap-2">
+                  <Select value={selectedItem} onValueChange={setSelectedItem}>
+                    <SelectTrigger className="h-12 flex-1">
+                      <SelectValue placeholder="Select an item..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {menuItems.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name} - {formatter.format(item.price)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <button
+                    onClick={addItemToOrder}
+                    disabled={!selectedItem}
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
+                    aria-label="Add item"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
 
+              {/* Order Items */}
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Order Items</p>
+                {editingItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No items. Add items above.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {editingItems.map((item) => (
+                      <div key={item.menuItemId} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
+                          <p className="text-xs text-muted-foreground">{formatter.format(item.price)} each</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => updateItemQuantity(item.menuItemId, -1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
+                          <button
+                            onClick={() => updateItemQuantity(item.menuItemId, 1)}
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <p className="w-20 text-right text-sm font-semibold text-foreground">
+                          {formatter.format(item.price * item.quantity)}
+                        </p>
+                        <button
+                          onClick={() => removeItemFromOrder(item.menuItemId)}
+                          className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Discount */}
               <div className="flex flex-col gap-2">
                 <Label>Discount ($)</Label>
                 <Input
@@ -428,6 +535,7 @@ export default function AllOrdersPage() {
                 />
               </div>
 
+              {/* Payment Method */}
               <div className="flex flex-col gap-2">
                 <Label>Payment Method</Label>
                 <Select value={paymentMethod} onValueChange={(value: "cash" | "card" | "online") => setPaymentMethod(value)}>
@@ -442,32 +550,19 @@ export default function AllOrdersPage() {
                 </Select>
               </div>
 
+              {/* Totals */}
               <div className="rounded-lg border border-border bg-muted/30 p-4">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span className="text-foreground">
-                    {formatter.format(
-                      editingOrder.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-                    )}
-                  </span>
+                  <span className="text-foreground">{formatter.format(grossTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-muted-foreground">Discount:</span>
-                  <span className="text-destructive">
-                    -{formatter.format(parseFloat(discount) || 0)}
-                  </span>
+                  <span className="text-destructive">-{formatter.format(discountAmount)}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold mt-2 pt-2 border-t border-border">
                   <span className="text-foreground">Total:</span>
-                  <span className="text-foreground">
-                    {formatter.format(
-                      Math.max(
-                        0,
-                        editingOrder.items.reduce((sum, item) => sum + item.price * item.quantity, 0) -
-                          (parseFloat(discount) || 0)
-                      )
-                    )}
-                  </span>
+                  <span className="text-foreground">{formatter.format(netTotal)}</span>
                 </div>
               </div>
             </div>
@@ -477,6 +572,7 @@ export default function AllOrdersPage() {
               onClick={() => {
                 setDialogOpen(false)
                 setEditingOrder(null)
+                setEditingItems([])
               }}
               className="flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
@@ -484,7 +580,8 @@ export default function AllOrdersPage() {
             </button>
             <button
               onClick={handleSaveEdit}
-              className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              disabled={editingItems.length === 0}
+              className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
               Save Changes
             </button>
