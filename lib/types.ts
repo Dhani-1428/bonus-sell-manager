@@ -23,6 +23,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string
+  orderNumber: string // Sequential order number like "0001", "0002", etc.
   date: string
   items: OrderItem[]
   totalAmount: number

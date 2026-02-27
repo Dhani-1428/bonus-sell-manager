@@ -1,12 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, X } from "lucide-react"
+import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/new-order", label: "New Order", icon: PlusCircle },
+  { href: "/all-orders", label: "All Orders", icon: Receipt },
   { href: "/menu", label: "Menu", icon: UtensilsCrossed },
   { href: "/reports", label: "Reports", icon: BarChart3 },
 ]

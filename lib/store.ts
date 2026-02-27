@@ -49,18 +49,49 @@ export function deleteMenuItem(userId: string, id: string): boolean {
 export function getOrders(userId: string): Order[] {
   if (typeof window === "undefined") return []
   const data = localStorage.getItem(getKey(userId, "orders"))
-  return data ? JSON.parse(data) : []
+  if (!data) return []
+  const orders: Order[] = JSON.parse(data)
+  // Migrate old orders without orderNumber
+  let needsMigration = false
+  const migratedOrders = orders.map((order, index) => {
+    if (!order.orderNumber) {
+      needsMigration = true
+      // Generate order number based on position (oldest first)
+      const orderNum = String(index + 1).padStart(4, "0")
+      return { ...order, orderNumber: orderNum }
+    }
+    return order
+  })
+  if (needsMigration) {
+    saveOrders(userId, migratedOrders)
+  }
+  return needsMigration ? migratedOrders : orders
 }
 
 export function saveOrders(userId: string, orders: Order[]): void {
   localStorage.setItem(getKey(userId, "orders"), JSON.stringify(orders))
 }
 
-export function addOrder(userId: string, order: Omit<Order, "id" | "createdAt">): Order {
+function getNextOrderNumber(userId: string): string {
   const orders = getOrders(userId)
+  if (orders.length === 0) return "0001"
+  
+  // Find the highest order number
+  const maxOrderNum = orders.reduce((max, order) => {
+    const num = parseInt(order.orderNumber || "0", 10)
+    return num > max ? num : max
+  }, 0)
+  
+  return String(maxOrderNum + 1).padStart(4, "0")
+}
+
+export function addOrder(userId: string, order: Omit<Order, "id" | "orderNumber" | "createdAt">): Order {
+  const orders = getOrders(userId)
+  const orderNumber = getNextOrderNumber(userId)
   const newOrder: Order = {
     ...order,
     id: generateId(),
+    orderNumber,
     createdAt: new Date().toISOString(),
   }
   orders.unshift(newOrder)
