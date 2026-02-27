@@ -21,8 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Pencil, Trash2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { createWorker } from "tesseract.js"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 const categories = ["Main", "Starter", "Dessert", "Beverage"]
@@ -36,6 +37,10 @@ export default function MenuPage() {
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("Main")
+  const [ocrDialogOpen, setOcrDialogOpen] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [extractedItems, setExtractedItems] = useState<Array<{ name: string; price: number; category: string }>>([])
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   // Load items when session changes
   useEffect(() => {
@@ -107,6 +112,151 @@ export default function MenuPage() {
     setDeleteConfirm(null)
   }
 
+  const parseMenuText = (text: string): Array<{ name: string; price: number; category: string }> => {
+    const lines = text.split("\n").filter((line) => line.trim().length > 0)
+    const items: Array<{ name: string; price: number; category: string }> = []
+    let currentCategory = "Main"
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      
+      // Check if line is a category header (uppercase, short, common category names)
+      const categoryKeywords = ["main", "starter", "appetizer", "dessert", "beverage", "drink", "soup", "salad", "pizza", "pasta", "burger", "sandwich"]
+      const isCategory = categoryKeywords.some((keyword) => 
+        trimmed.toLowerCase().includes(keyword) && trimmed.length < 30
+      )
+      
+      if (isCategory) {
+        // Determine category
+        const lower = trimmed.toLowerCase()
+        if (lower.includes("starter") || lower.includes("appetizer")) currentCategory = "Starter"
+        else if (lower.includes("dessert")) currentCategory = "Dessert"
+        else if (lower.includes("beverage") || lower.includes("drink")) currentCategory = "Beverage"
+        else currentCategory = "Main"
+        continue
+      }
+
+      // Extract price (look for currency symbols and numbers)
+      const priceMatch = trimmed.match(/(\$|USD|€|£|Rs\.?|₹)?\s*(\d+\.?\d*)/)
+      if (priceMatch) {
+        const price = parseFloat(priceMatch[2])
+        if (price > 0 && price < 10000) {
+          // Extract item name (everything before the price)
+          const name = trimmed.substring(0, priceMatch.index || trimmed.length).trim()
+          // Clean up name (remove extra spaces, special chars at start/end)
+          const cleanName = name.replace(/^[^\w\s]+|[^\w\s]+$/g, "").replace(/\s+/g, " ").trim()
+          
+          if (cleanName.length > 2 && cleanName.length < 100) {
+            items.push({
+              name: cleanName,
+              price,
+              category: currentCategory,
+            })
+          }
+        }
+      } else {
+        // Try to find item name without price (might be on next line)
+        const cleanName = trimmed.replace(/^[^\w\s]+|[^\w\s]+$/g, "").replace(/\s+/g, " ").trim()
+        if (cleanName.length > 2 && cleanName.length < 100 && !categoryKeywords.some(k => cleanName.toLowerCase().includes(k))) {
+          // Check if next line has price
+          const nextLineIndex = lines.indexOf(line) + 1
+          if (nextLineIndex < lines.length) {
+            const nextLine = lines[nextLineIndex].trim()
+            const nextPriceMatch = nextLine.match(/(\$|USD|€|£|Rs\.?|₹)?\s*(\d+\.?\d*)/)
+            if (nextPriceMatch) {
+              const price = parseFloat(nextPriceMatch[2])
+              if (price > 0 && price < 10000) {
+                items.push({
+                  name: cleanName,
+                  price,
+                  category: currentCategory,
+                })
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Remove duplicates
+    const uniqueItems = items.filter((item, index, self) =>
+      index === self.findIndex((t) => t.name.toLowerCase() === item.name.toLowerCase())
+    )
+
+    return uniqueItems
+  }
+
+  const handleImageUpload = async (file: File) => {
+    if (!session) return
+
+    setIsProcessing(true)
+    setOcrDialogOpen(true)
+    setImagePreview(URL.createObjectURL(file))
+
+    try {
+      toast.info("Processing image... This may take a moment.")
+      
+      const worker = await createWorker("eng")
+      const { data: { text } } = await worker.recognize(file)
+      await worker.terminate()
+
+      const parsedItems = parseMenuText(text)
+      
+      if (parsedItems.length === 0) {
+        toast.error("No menu items found in the image. Please try a clearer image.")
+        setExtractedItems([])
+      } else {
+        toast.success(`Found ${parsedItems.length} menu items!`)
+        setExtractedItems(parsedItems)
+      }
+    } catch (error) {
+      console.error("OCR Error:", error)
+      toast.error("Failed to process image. Please try again.")
+      setExtractedItems([])
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleAddExtractedItems = () => {
+    if (!session) return
+
+    let addedCount = 0
+    extractedItems.forEach((item) => {
+      try {
+        addMenuItem(session.userId, {
+          name: item.name,
+          price: item.price,
+          category: item.category,
+        })
+        addedCount++
+      } catch (error) {
+        console.error("Error adding item:", error)
+      }
+    })
+
+    if (addedCount > 0) {
+      toast.success(`Added ${addedCount} menu items!`)
+      refreshItems()
+    }
+
+    setOcrDialogOpen(false)
+    setExtractedItems([])
+    setImagePreview(null)
+  }
+
+  const handleEditExtractedItem = (index: number, field: "name" | "price" | "category", value: string | number) => {
+    setExtractedItems((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      )
+    )
+  }
+
+  const handleRemoveExtractedItem = (index: number) => {
+    setExtractedItems((prev) => prev.filter((_, i) => i !== index))
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -114,13 +264,33 @@ export default function MenuPage() {
           <h2 className="text-2xl font-bold text-foreground">Menu</h2>
           <p className="text-sm text-muted-foreground">{items.length} items in your menu</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          <Plus className="h-4 w-4" />
-          Add Item
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const input = document.createElement("input")
+              input.type = "file"
+              input.accept = "image/*"
+              input.onchange = async (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0]
+                if (file) {
+                  await handleImageUpload(file)
+                }
+              }
+              input.click()
+            }}
+            className="flex h-12 items-center gap-2 rounded-lg border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+          >
+            <Upload className="h-4 w-4" />
+            Scan Menu Image
+          </button>
+          <button
+            onClick={openAdd}
+            className="flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Add Item
+          </button>
+        </div>
       </div>
 
       {Object.entries(groupedItems).map(([cat, catItems]) => (
@@ -252,6 +422,115 @@ export default function MenuPage() {
             >
               Delete
             </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* OCR Extraction Dialog */}
+      <Dialog open={ocrDialogOpen} onOpenChange={setOcrDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Extract Menu from Image</DialogTitle>
+          </DialogHeader>
+          
+          {isProcessing ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Processing image with OCR...</p>
+              <p className="text-xs text-muted-foreground">This may take 10-30 seconds</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 py-4">
+              {imagePreview && (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <img src={imagePreview} alt="Menu preview" className="w-full h-auto max-h-64 object-contain" />
+                </div>
+              )}
+
+              {extractedItems.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-foreground">
+                      Found {extractedItems.length} items. Review and edit before adding:
+                    </p>
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto space-y-2 border border-border rounded-lg p-4">
+                    {extractedItems.map((item, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
+                        <div className="flex-1 grid grid-cols-3 gap-3">
+                          <Input
+                            value={item.name}
+                            onChange={(e) => handleEditExtractedItem(index, "name", e.target.value)}
+                            className="h-10"
+                            placeholder="Item name"
+                          />
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={item.price}
+                            onChange={(e) => handleEditExtractedItem(index, "price", parseFloat(e.target.value) || 0)}
+                            className="h-10"
+                            placeholder="Price"
+                          />
+                          <Select
+                            value={item.category}
+                            onValueChange={(value) => handleEditExtractedItem(index, "category", value)}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((c) => (
+                                <SelectItem key={c} value={c}>
+                                  {c}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveExtractedItem(index)}
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-sm text-muted-foreground">
+                    No items found. Try uploading a clearer image with visible menu text.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <button
+              onClick={() => {
+                setOcrDialogOpen(false)
+                setExtractedItems([])
+                setImagePreview(null)
+              }}
+              className="flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              Cancel
+            </button>
+            {extractedItems.length > 0 && (
+              <button
+                onClick={handleAddExtractedItems}
+                className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                Add {extractedItems.length} {extractedItems.length === 1 ? "Item" : "Items"}
+              </button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
