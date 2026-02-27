@@ -112,44 +112,82 @@ export default function MenuPage() {
     setDeleteConfirm(null)
   }
 
+  // Fix only very obvious OCR errors (conservative approach to preserve accuracy)
+  const fixCommonOCRErrors = (text: string): string => {
+    return text
+      // Only fix very obvious character misreads in common menu words
+      .replace(/\bP1zza\b/gi, "Pizza")
+      .replace(/\bPizz@\b/gi, "Pizza")
+      .replace(/\bKeb@b\b/gi, "Kebab")
+      .replace(/\bFrang0\b/gi, "Frango")
+      .replace(/\bQueij0\b/gi, "Queijo")
+      .replace(/\bBocadill0s\b/gi, "Bocadillos")
+      // Preserve everything else as-is to maintain OCR accuracy
+  }
+
   const parseMenuText = (text: string): Array<{ name: string; price: number; category: string }> => {
-    const lines = text.split("\n").map(line => line.trim()).filter((line) => line.length > 0)
+    // Clean up text first - remove excessive whitespace but preserve structure
+    const cleanedText = text
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
+      .trim()
+    
+    const lines = cleanedText.split("\n").map(line => line.trim()).filter((line) => line.length > 0)
     const items: Array<{ name: string; price: number; category: string }> = []
     let currentCategory = "Main"
 
     // Patterns to exclude (phone numbers, addresses, delivery info, etc.)
     const excludePatterns = [
-      /^\d{3}[\s\-]?\d{3}[\s\-]?\d{3,4}$/, // Phone numbers
+      /^\d{3}[\s\-]?\d{3}[\s\-]?\d{3,4}$/, // Phone numbers like 960 096 661
       /^\+?\d{1,4}[\s\-]?\d{1,4}[\s\-]?\d{1,4}[\s\-]?\d{1,9}$/, // International phone
-      /delivery|entrega|grátis|free|available|chamada|rede|móvel|nacional/i, // Delivery info
+      /chamada\s+para\s+rede/i, // "Chamada para rede móvel nacional"
+      /delivery\s+available|entrega\s+grátis|grátis\s*\*|free\s*delivery/i, // Delivery info
       /halal|certified|certificação/i, // Certifications
-      /iva|taxa|legal|vigor|preços|prices/i, // Price disclaimers
+      /iva\s+incluído|taxa\s+legal|vigor|preços\s+com/i, // Price disclaimers
       /^[^\w]*$/, // Only special characters
       /^.{1,2}$/, // Too short (1-2 chars)
-      /^[A-Z\s]{3,}$/, // All caps headers (likely not menu items)
-      /menu\s*[\d,\.]+€?/i, // "Menu 5,50€" pattern (combo meals)
-      /^\d+\.?\s*[A-Z]/i, // Numbered lists that aren't items
+      /^\d+km[\s\-]?\d+km/i, // Distance info like "1KM-5KM"
+      /^\d+am[\s\-]?\d+am|todos\s+os\s+dias/i, // Hours like "10AM-12AM Todos os Dias"
+      /avenida|rua|street|address/i, // Addresses
+      /uber\s+eats|bolt\s+food/i, // App names
     ]
 
-    // Category detection
+    // Category detection - more comprehensive
     const categoryKeywords: Record<string, string> = {
+      "pizza": "Main",
+      "pizzas": "Main",
+      "kebab": "Main",
+      "kebabs": "Main",
+      "hamburger": "Main",
+      "hambúrguer": "Main",
+      "hamburgers": "Main",
+      "burger": "Main",
+      "burgers": "Main",
+      "churrasqueira": "Main",
+      "churrasco": "Main",
+      "bocadillos": "Main",
+      "bocadillo": "Main",
+      "sandwich": "Main",
+      "sandwiches": "Main",
       "starter": "Starter",
       "appetizer": "Starter",
       "entrée": "Starter",
+      "salad": "Starter",
+      "salada": "Starter",
+      "salads": "Starter",
+      "ensaladas": "Starter",
+      "soup": "Starter",
+      "sopa": "Starter",
       "dessert": "Dessert",
+      "sobremesa": "Dessert",
       "beverage": "Beverage",
       "drink": "Beverage",
       "bebida": "Beverage",
-      "soup": "Starter",
-      "salad": "Starter",
-      "salada": "Starter",
-      "pizza": "Main",
-      "pasta": "Main",
-      "burger": "Main",
-      "hamburger": "Main",
-      "hambúrguer": "Main",
-      "sandwich": "Main",
-      "kebab": "Main",
+      "bebidas": "Beverage",
+      "drinks": "Beverage",
+      "extra": "Main",
+      "extras": "Main",
     }
 
     for (let i = 0; i < lines.length; i++) {
@@ -160,13 +198,26 @@ export default function MenuPage() {
         continue
       }
 
-      // Check for category headers
-      const lowerLine = line.toLowerCase()
+      // Check for category headers (must be short, no numbers, and match keywords)
+      const lowerLine = line.toLowerCase().trim()
       for (const [keyword, category] of Object.entries(categoryKeywords)) {
-        if (lowerLine.includes(keyword) && line.length < 40 && !/\d/.test(line)) {
+        // Category headers are usually short, all caps or title case, and contain the keyword
+        if (
+          lowerLine === keyword || 
+          (lowerLine.includes(keyword) && line.length < 30 && !/\d/.test(line) && line.length > 2)
+        ) {
           currentCategory = category
-          continue
+          break
         }
+      }
+
+      // Skip if line is likely a category header (all caps, short, no price)
+      if (/^[A-Z\s]{2,20}$/.test(line) && !/\d/.test(line)) {
+        // Check if it's a known category
+        const isKnownCategory = Object.keys(categoryKeywords).some(k => 
+          line.toLowerCase().includes(k.toLowerCase())
+        )
+        if (isKnownCategory) continue
       }
 
       // Price patterns: handle both $3.50 and €3,50 (European format with comma)
@@ -198,32 +249,51 @@ export default function MenuPage() {
       // Validate price range (reasonable menu prices)
       if (priceMatch && price > 0.5 && price < 500) {
         // Extract item name (everything before the price)
-        const namePart = line.substring(0, priceIndex).trim()
+        let namePart = line.substring(0, priceIndex).trim()
         
-        // Clean up the name
+        // Remove common prefixes/suffixes that aren't part of the dish name
+        namePart = namePart
+          .replace(/^\d+\.\s*/, "") // Remove leading numbers like "1. " or "2. "
+          .replace(/^menu\s+/i, "") // Remove "Menu " prefix
+          .replace(/\s*menu\s*$/i, "") // Remove " Menu" suffix
+          .replace(/\s*\(.*?\)\s*$/, "") // Remove trailing descriptions in parentheses
+          .trim()
+
+        // Clean up the name but preserve exact spelling from OCR
         let cleanName = namePart
           .replace(/^[\d\.\)\-\s]+/, "") // Remove leading numbers, dots, parentheses, dashes
           .replace(/[\-\|:]+$/, "") // Remove trailing separators
-          .replace(/\s+/g, " ") // Normalize spaces
+          .replace(/\s+/g, " ") // Normalize multiple spaces to single space
           .trim()
 
         // Additional validation for menu item names
-        // Must have at least 3 characters, mostly letters, not all caps (unless short)
         const letterCount = (cleanName.match(/[a-zA-ZÀ-ÿ]/g) || []).length
         const totalChars = cleanName.length
         
+        // Must be a valid menu item name
         if (
           cleanName.length >= 3 &&
-          cleanName.length <= 60 &&
-          letterCount >= totalChars * 0.4 && // At least 40% letters
-          !/^[A-Z\s]{10,}$/.test(cleanName) && // Not all caps long text (likely headers)
-          !excludePatterns.some(pattern => pattern.test(cleanName)) // Not in exclude list
+          cleanName.length <= 80 &&
+          letterCount >= totalChars * 0.3 && // At least 30% letters (allows for numbers in names)
+          !/^[A-Z\s]{15,}$/.test(cleanName) && // Not all caps very long text (likely headers)
+          !excludePatterns.some(pattern => pattern.test(cleanName)) && // Not in exclude list
+          !/^(média|grande|pequeno|peq\.?|small|medium|large)$/i.test(cleanName) // Not size indicators
         ) {
-          // Capitalize first letter of each word for better presentation
-          cleanName = cleanName
-            .split(" ")
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(" ")
+          // Preserve original capitalization from OCR (don't force title case)
+          // Only fix obvious issues like all lowercase or all uppercase
+          if (/^[a-z\s]+$/.test(cleanName) && cleanName.length > 3) {
+            // If all lowercase, capitalize first letter of each word
+            cleanName = cleanName
+              .split(" ")
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ")
+          } else if (/^[A-Z\s]+$/.test(cleanName) && cleanName.length > 15) {
+            // If all uppercase and long, convert to title case
+            cleanName = cleanName
+              .split(" ")
+              .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+              .join(" ")
+          }
 
           items.push({
             name: cleanName,
@@ -270,12 +340,24 @@ export default function MenuPage() {
     try {
       toast.info("Processing image... This may take a moment.")
       
-      // Use multi-language OCR (English + Portuguese + Spanish for better menu recognition)
-      const worker = await createWorker(["eng", "por", "spa"])
-      const { data: { text } } = await worker.recognize(file)
+      // Use multi-language OCR with optimized settings for accuracy
+      const worker = await createWorker(["eng", "por", "spa"], 1, {
+        logger: (m) => {
+          // Optional: can show progress
+        },
+      })
+      
+      // Use high-quality OCR settings for better accuracy
+      // PSM 6 = Assume uniform block of text (good for menus)
+      const { data: { text } } = await worker.recognize(file, {
+        tessedit_pageseg_mode: "6", // Uniform block of text
+      })
       await worker.terminate()
+      
+      // Post-process OCR text to fix only very obvious common errors
+      const correctedText = fixCommonOCRErrors(text)
 
-      const parsedItems = parseMenuText(text)
+      const parsedItems = parseMenuText(correctedText)
       
       if (parsedItems.length === 0) {
         toast.error("No menu items found in the image. Please try a clearer image.")
