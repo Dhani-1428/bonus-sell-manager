@@ -114,59 +114,119 @@ export default function MenuPage() {
     setDeleteConfirm(null)
   }
 
-  // Image preprocessing: enhance image quality before OCR
-  const preprocessImage = async (file: File): Promise<File> => {
+  // Advanced image preprocessing: multiple enhancement techniques
+  const preprocessImage = async (file: File): Promise<File[]> => {
     return new Promise((resolve) => {
       const img = new Image()
       img.onload = () => {
+        const enhancedFiles: File[] = []
         const canvas = document.createElement("canvas")
         const ctx = canvas.getContext("2d")
         if (!ctx) {
-          resolve(file) // Fallback to original if canvas not available
+          resolve([file]) // Fallback to original if canvas not available
           return
         }
 
-        // Set canvas size
-        canvas.width = img.width
-        canvas.height = img.height
+        // Set canvas size (scale up for better OCR - 2x resolution)
+        const scale = 2
+        canvas.width = img.width * scale
+        canvas.height = img.height * scale
 
-        // Draw image
-        ctx.drawImage(img, 0, 0)
+        // Draw image scaled up
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
-        // Get image data
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const data = imageData.data
+        // Strategy 1: High contrast + brightness (for dark menus)
+        const strategy1 = document.createElement("canvas")
+        const ctx1 = strategy1.getContext("2d")
+        if (ctx1) {
+          strategy1.width = canvas.width
+          strategy1.height = canvas.height
+          ctx1.drawImage(canvas, 0, 0)
+          const imageData1 = ctx1.getImageData(0, 0, strategy1.width, strategy1.height)
+          const data1 = imageData1.data
 
-        // Apply enhancements
-        for (let i = 0; i < data.length; i += 4) {
-          // Increase contrast
-          const contrast = 1.2
-          data[i] = Math.min(255, Math.max(0, ((data[i] - 128) * contrast) + 128))     // R
-          data[i + 1] = Math.min(255, Math.max(0, ((data[i + 1] - 128) * contrast) + 128)) // G
-          data[i + 2] = Math.min(255, Math.max(0, ((data[i + 2] - 128) * contrast) + 128)) // B
-
-          // Increase brightness slightly
-          const brightness = 10
-          data[i] = Math.min(255, data[i] + brightness)
-          data[i + 1] = Math.min(255, data[i + 1] + brightness)
-          data[i + 2] = Math.min(255, data[i + 2] + brightness)
-
-          // Sharpen (simple unsharp mask approximation)
-          // This is a simplified version - full sharpening would require convolution
+          for (let i = 0; i < data1.length; i += 4) {
+            // High contrast
+            const contrast = 1.5
+            data1[i] = Math.min(255, Math.max(0, ((data1[i] - 128) * contrast) + 128))
+            data1[i + 1] = Math.min(255, Math.max(0, ((data1[i + 1] - 128) * contrast) + 128))
+            data1[i + 2] = Math.min(255, Math.max(0, ((data1[i + 2] - 128) * contrast) + 128))
+            
+            // Brightness
+            const brightness = 20
+            data1[i] = Math.min(255, data1[i] + brightness)
+            data1[i + 1] = Math.min(255, data1[i + 1] + brightness)
+            data1[i + 2] = Math.min(255, data1[i + 2] + brightness)
+          }
+          ctx1.putImageData(imageData1, 0, 0)
         }
 
-        // Put enhanced image data back
-        ctx.putImageData(imageData, 0, 0)
+        // Strategy 2: Grayscale with high contrast (better for text)
+        const strategy2 = document.createElement("canvas")
+        const ctx2 = strategy2.getContext("2d")
+        if (ctx2) {
+          strategy2.width = canvas.width
+          strategy2.height = canvas.height
+          ctx2.drawImage(canvas, 0, 0)
+          const imageData2 = ctx2.getImageData(0, 0, strategy2.width, strategy2.height)
+          const data2 = imageData2.data
 
-        // Convert canvas to blob
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const enhancedFile = new File([blob], file.name, { type: file.type })
-            resolve(enhancedFile)
-          } else {
-            resolve(file)
+          for (let i = 0; i < data2.length; i += 4) {
+            // Convert to grayscale
+            const gray = data2[i] * 0.299 + data2[i + 1] * 0.587 + data2[i + 2] * 0.114
+            
+            // High contrast grayscale
+            const contrast = 2.0
+            const enhanced = Math.min(255, Math.max(0, ((gray - 128) * contrast) + 128))
+            
+            data2[i] = enhanced
+            data2[i + 1] = enhanced
+            data2[i + 2] = enhanced
           }
-        }, file.type)
+          ctx2.putImageData(imageData2, 0, 0)
+        }
+
+        // Convert all strategies to files
+        const promises: Promise<void>[] = []
+
+        if (ctx1) {
+          promises.push(
+            new Promise((resolveBlob) => {
+              strategy1.toBlob((blob) => {
+                if (blob) enhancedFiles.push(new File([blob], "enhanced1.jpg", { type: "image/jpeg" }))
+                resolveBlob()
+              }, "image/jpeg", 0.95)
+            })
+          )
+        }
+
+        if (ctx2) {
+          promises.push(
+            new Promise((resolveBlob) => {
+              strategy2.toBlob((blob) => {
+                if (blob) enhancedFiles.push(new File([blob], "enhanced2.jpg", { type: "image/jpeg" }))
+                resolveBlob()
+              }, "image/jpeg", 0.95)
+            })
+          )
+        }
+
+        // Strategy 3: Original scaled (fallback)
+        promises.push(
+          new Promise((resolveBlob) => {
+            canvas.toBlob((blob) => {
+              if (blob) {
+                enhancedFiles.push(new File([blob], "enhanced3.jpg", { type: "image/jpeg" }))
+              }
+              resolveBlob()
+            }, "image/jpeg", 0.95)
+          })
+        )
+
+        // Wait for all strategies to complete
+        Promise.all(promises).then(() => {
+          resolve(enhancedFiles.length > 0 ? enhancedFiles : [file])
+        })
       }
       img.src = URL.createObjectURL(file)
     })
@@ -193,16 +253,96 @@ export default function MenuPage() {
     throw new Error("AI vision fallback not implemented")
   }
 
+  // Intelligent text correction for common OCR errors
+  const correctOCRText = (text: string): string => {
+    // Common OCR character misreads
+    const corrections: Record<string, string> = {
+      // Numbers misread as letters
+      "0": "O", // Context-dependent, but common in menu names
+      "1": "I", // In certain contexts
+      "5": "S", // Less common but happens
+      // Letters misread
+      "rn": "m",
+      "vv": "w",
+      "cl": "d",
+      // Common menu word fixes
+      "P1zza": "Pizza",
+      "Pizz@": "Pizza",
+      "PizzaBE": "Pizza",
+      "Pizza Espe": "Pizza Especial",
+      "Keb@b": "Kebab",
+      "Frang0": "Frango",
+      "Queij0": "Queijo",
+      "Bocadill0s": "Bocadillos",
+      "Bocadill0": "Bocadillo",
+      "Hambúrguer": "Hambúrguer",
+      "Hamburguer": "Hambúrguer",
+    }
+
+    let corrected = text
+    for (const [wrong, correct] of Object.entries(corrections)) {
+      corrected = corrected.replace(new RegExp(wrong, "gi"), correct)
+    }
+
+    return corrected
+  }
+
+  // Advanced menu item pattern recognition
+  const recognizeMenuItemPattern = (line: string): { name: string; price: number; description?: string } | null => {
+    // Pattern 1: "Item Name 3,50€" or "Item Name €3,50"
+    const pattern1 = /^(.+?)\s+([€$£₹]?\s*\d+[,\.]\d{2}\s*[€$£₹]?)$/
+    // Pattern 2: "Item Name - 3,50€"
+    const pattern2 = /^(.+?)\s*[-–—]\s*([€$£₹]?\s*\d+[,\.]\d{2}\s*[€$£₹]?)$/
+    // Pattern 3: "Item Name (Description) 3,50€"
+    const pattern3 = /^(.+?)\s*\(([^)]+)\)\s*([€$£₹]?\s*\d+[,\.]\d{2}\s*[€$£₹]?)$/
+
+    let match = line.match(pattern3)
+    if (match) {
+      const name = match[1].trim()
+      const description = match[2].trim()
+      const priceStr = match[3].replace(/[€$£₹\s]/g, "").replace(",", ".")
+      const price = parseFloat(priceStr)
+      if (price > 0 && price < 500 && name.length >= 3) {
+        return { name, price, description }
+      }
+    }
+
+    match = line.match(pattern2)
+    if (match) {
+      const name = match[1].trim()
+      const priceStr = match[2].replace(/[€$£₹\s]/g, "").replace(",", ".")
+      const price = parseFloat(priceStr)
+      if (price > 0 && price < 500 && name.length >= 3) {
+        return { name, price }
+      }
+    }
+
+    match = line.match(pattern1)
+    if (match) {
+      const name = match[1].trim()
+      const priceStr = match[2].replace(/[€$£₹\s]/g, "").replace(",", ".")
+      const price = parseFloat(priceStr)
+      if (price > 0 && price < 500 && name.length >= 3) {
+        return { name, price }
+      }
+    }
+
+    return null
+  }
+
   const parseMenuText = (text: string): Array<{ name: string; price: number; category: string; description?: string }> => {
     // Clean up text first - remove excessive whitespace but preserve structure
-    const cleanedText = text
+    // Apply intelligent text correction first
+    const correctedText = correctOCRText(text)
+    
+    const cleanedText = correctedText
       .replace(/\r\n/g, "\n")
       .replace(/\r/g, "\n")
       .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
       .trim()
     
     const lines = cleanedText.split("\n").map(line => line.trim()).filter((line) => line.length > 0)
-    const items: Array<{ name: string; price: number; category: string }> = []
+    const items: Array<{ name: string; price: number; category: string; description?: string }> = []
     let currentCategory = "Main"
 
     // Patterns to exclude (phone numbers, addresses, delivery info, etc.)
@@ -288,8 +428,48 @@ export default function MenuPage() {
         if (isKnownCategory) continue
       }
 
-      // Price patterns: handle both $3.50 and €3,50 (European format with comma)
-      // Also handle prices like "3,50€", "3.50€", "$3.50", "€3,50"
+      // Try intelligent pattern recognition first
+      const patternMatch = recognizeMenuItemPattern(line)
+      if (patternMatch) {
+        const { name: patternName, price: patternPrice, description: patternDesc } = patternMatch
+        
+        // Validate the extracted name
+        const letterCount = (patternName.match(/[a-zA-ZÀ-ÿ]/g) || []).length
+        const totalChars = patternName.length
+        
+        if (
+          patternName.length >= 3 &&
+          patternName.length <= 80 &&
+          letterCount >= totalChars * 0.3 &&
+          !excludePatterns.some(pattern => pattern.test(patternName)) &&
+          !/^(média|grande|pequeno|peq\.?|small|medium|large)$/i.test(patternName)
+        ) {
+          // Clean and format name
+          let cleanName = patternName
+            .replace(/^[\d\.\)\-\s]+/, "")
+            .replace(/[\-\|:]+$/, "")
+            .replace(/\s+/g, " ")
+            .trim()
+
+          // Preserve capitalization but fix obvious issues
+          if (/^[a-z\s]+$/.test(cleanName) && cleanName.length > 3) {
+            cleanName = cleanName
+              .split(" ")
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ")
+          }
+
+          items.push({
+            name: cleanName,
+            price: Math.round(patternPrice * 100) / 100,
+            category: currentCategory,
+            description: patternDesc,
+          })
+          continue
+        }
+      }
+
+      // Fallback to traditional price pattern matching
       const pricePatterns = [
         /([€$£₹]|USD|Rs\.?)\s*(\d+[,\.]\d{2})/, // Currency symbol before: €3,50 or $3.50
         /(\d+[,\.]\d{2})\s*([€$£₹])/, // Currency symbol after: 3,50€ or 3.50$
@@ -416,13 +596,13 @@ export default function MenuPage() {
     setProcessingStep("Preprocessing image...")
 
     try {
-      // Step 1: Preprocess image (enhance contrast, brightness, sharpness)
-      setProcessingStep("Enhancing image quality...")
-      const enhancedFile = await preprocessImage(file)
+      // Step 1: Preprocess image with multiple strategies
+      setProcessingStep("Enhancing image quality (multiple strategies)...")
+      const enhancedFiles = await preprocessImage(file)
       
-      // Step 2: Run OCR with confidence tracking
-      setProcessingStep("Running OCR...")
-      toast.info("Processing image with OCR... This may take a moment.")
+      // Step 2: Run OCR with multiple strategies and PSM modes
+      setProcessingStep("Running OCR with multiple strategies...")
+      toast.info("Processing image with advanced OCR... This may take 30-60 seconds.")
       
       const worker = await createWorker(["eng", "por", "spa"], 1, {
         logger: (m) => {
@@ -432,51 +612,103 @@ export default function MenuPage() {
         },
       })
       
-      // Use high-quality OCR settings for better accuracy
-      const result = await worker.recognize(enhancedFile, {
-        tessedit_pageseg_mode: "6", // Uniform block of text
-      })
+      // Try multiple OCR strategies and pick the best result
+      const ocrResults: Array<{ text: string; confidence: number; items: number }> = []
       
-      const { text, confidence } = result.data
-      setOcrConfidence(confidence || 0)
-      await worker.terminate()
-      
-      // Step 3: Check confidence and decide on fallback
-      const CONFIDENCE_THRESHOLD = 60 // If confidence is below 60%, consider fallback
-      
-      let finalText = text
-      
-      if (confidence && confidence < CONFIDENCE_THRESHOLD) {
-        setProcessingStep("Low OCR confidence. Attempting AI vision fallback...")
+      // Strategy 1: PSM 6 (Uniform block) - best for menus
+      for (const enhancedFile of enhancedFiles) {
         try {
-          // Try AI vision fallback (if configured)
-          finalText = await fallbackToAIVision(file)
-        } catch (error) {
-          // Continue with OCR results even if low confidence
-          console.warn("AI vision fallback not available, using OCR results")
+          const result1 = await worker.recognize(enhancedFile, {
+            tessedit_pageseg_mode: "6",
+          })
+          const parsed1 = parseMenuText(fixCommonOCRErrors(result1.data.text))
+          ocrResults.push({
+            text: result1.data.text,
+            confidence: result1.data.confidence || 0,
+            items: parsed1.length,
+          })
+        } catch (e) {
+          console.warn("OCR strategy failed:", e)
         }
       }
       
-      // Step 4: Post-process OCR text
-      setProcessingStep("Parsing menu items...")
-      const correctedText = fixCommonOCRErrors(finalText)
-
-      // Step 5: Parse menu items
+      // Strategy 2: PSM 11 (Sparse text) - for menus with images
+      try {
+        const result2 = await worker.recognize(enhancedFiles[0] || file, {
+          tessedit_pageseg_mode: "11",
+        })
+        const parsed2 = parseMenuText(fixCommonOCRErrors(result2.data.text))
+        ocrResults.push({
+          text: result2.data.text,
+          confidence: result2.data.confidence || 0,
+          items: parsed2.length,
+        })
+      } catch (e) {
+        console.warn("OCR strategy 2 failed:", e)
+      }
+      
+      // Strategy 3: PSM 4 (Single column) - for vertical menus
+      try {
+        const result3 = await worker.recognize(enhancedFiles[0] || file, {
+          tessedit_pageseg_mode: "4",
+        })
+        const parsed3 = parseMenuText(fixCommonOCRErrors(result3.data.text))
+        ocrResults.push({
+          text: result3.data.text,
+          confidence: result3.data.confidence || 0,
+          items: parsed3.length,
+        })
+      } catch (e) {
+        console.warn("OCR strategy 3 failed:", e)
+      }
+      
+      await worker.terminate()
+      
+      // Step 3: Select best result (prioritize by item count, then confidence)
+      ocrResults.sort((a, b) => {
+        if (a.items !== b.items) return b.items - a.items // More items is better
+        return b.confidence - a.confidence // Higher confidence is better
+      })
+      
+      const bestResult = ocrResults[0]
+      const finalText = bestResult?.text || ""
+      const confidence = bestResult?.confidence || 0
+      setOcrConfidence(confidence)
+      
+      // Step 4: Check confidence and decide on fallback
+      const CONFIDENCE_THRESHOLD = 50 // Lowered threshold since we're using multiple strategies
+      
+      let finalParsedText = finalText
+      
+      if (confidence < CONFIDENCE_THRESHOLD && ocrResults.length > 0) {
+        setProcessingStep("Low OCR confidence. Attempting AI vision fallback...")
+        try {
+          // Try AI vision fallback (if configured)
+          finalParsedText = await fallbackToAIVision(file)
+        } catch (error) {
+          // Continue with best OCR results
+          console.warn("AI vision fallback not available, using best OCR results")
+        }
+      }
+      
+      // Step 5: Parse menu items with intelligent correction
+      setProcessingStep("Parsing and validating menu items...")
+      const correctedText = fixCommonOCRErrors(finalParsedText)
       const parsedItems = parseMenuText(correctedText)
       
       setProcessingStep("")
       
       if (parsedItems.length === 0) {
-        toast.error("No menu items found in the image. Please try a clearer image.")
+        toast.error("No menu items found. Try: 1) Clearer image 2) Better lighting 3) Straight photo")
         setExtractedItems([])
       } else {
-        const confidenceMsg = confidence ? ` (OCR confidence: ${Math.round(confidence)}%)` : ""
+        const confidenceMsg = confidence ? ` (Best OCR confidence: ${Math.round(confidence)}%)` : ""
         toast.success(`Found ${parsedItems.length} menu items!${confidenceMsg}`)
         setExtractedItems(parsedItems)
       }
     } catch (error) {
       console.error("OCR Error:", error)
-      toast.error("Failed to process image. Please try again.")
+      toast.error("Failed to process image. Please try again with a clearer image.")
       setExtractedItems([])
       setProcessingStep("")
     } finally {
