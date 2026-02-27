@@ -1,5 +1,5 @@
 import type { User, AuthSession } from "./types"
-import { generateId, getSeedMenuItems, getSeedOrders } from "./seed-data"
+import { generateId } from "./seed-data"
 import { saveMenuItems, saveOrders } from "./store"
 
 const USERS_KEY = "restaurant_users"
@@ -43,11 +43,10 @@ export function signup(name: string, email: string, password: string): { success
   users.push(newUser)
   saveUsers(users)
 
-  // Seed data for new user
-  const menuItems = getSeedMenuItems()
-  saveMenuItems(newUser.id, menuItems)
-  const orders = getSeedOrders(menuItems)
-  saveOrders(newUser.id, orders)
+  // New accounts start with empty data - no seed data
+  // Initialize empty arrays for menu items and orders
+  saveMenuItems(newUser.id, [])
+  saveOrders(newUser.id, [])
 
   // Set session
   const session: AuthSession = { userId: newUser.id, email: newUser.email, name: newUser.name }

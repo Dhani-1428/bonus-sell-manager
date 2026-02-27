@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { getMenuItems, addMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/store"
 import type { MenuItem } from "@/lib/types"
@@ -29,13 +29,22 @@ const categories = ["Main", "Starter", "Dessert", "Beverage"]
 
 export default function MenuPage() {
   const { session } = useAuth()
-  const [items, setItems] = useState<MenuItem[]>(() => (session ? getMenuItems(session.userId) : []))
+  const [items, setItems] = useState<MenuItem[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("Main")
+
+  // Load items when session changes
+  useEffect(() => {
+    if (session) {
+      setItems(getMenuItems(session.userId))
+    } else {
+      setItems([])
+    }
+  }, [session])
 
   const refreshItems = useCallback(() => {
     if (session) setItems(getMenuItems(session.userId))
