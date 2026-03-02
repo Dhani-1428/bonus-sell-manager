@@ -100,15 +100,6 @@ export default function MenuPage() {
       return
     }
 
-    // Validate sizes if provided
-    const validSizes = sizes
-      .filter(s => s.size.trim() && s.price.trim())
-      .map(s => ({
-        size: s.size.trim(),
-        price: parseFloat(s.price)
-      }))
-      .filter(s => !isNaN(s.price) && s.price > 0)
-
     // Validate extras if provided
     const validExtras = extras
       .filter(e => e.name.trim() && e.price.trim())
@@ -122,10 +113,6 @@ export default function MenuPage() {
       name: name.trim(),
       price: priceNum,
       category
-    }
-
-    if (validSizes.length > 0) {
-      menuItemData.sizes = validSizes
     }
 
     if (validExtras.length > 0) {
@@ -142,18 +129,6 @@ export default function MenuPage() {
 
     refreshItems()
     setDialogOpen(false)
-  }
-
-  const addSize = () => {
-    setSizes([...sizes, { size: "", price: "" }])
-  }
-
-  const removeSize = (index: number) => {
-    setSizes(sizes.filter((_, i) => i !== index))
-  }
-
-  const updateSize = (index: number, field: "size" | "price", value: string) => {
-    setSizes(sizes.map((s, i) => i === index ? { ...s, [field]: value } : s))
   }
 
   const addExtra = () => {

@@ -67,9 +67,7 @@ export default function NewOrderPage() {
             : [...currentExtras, extraName]
 
           // Calculate new price
-          const basePrice = item.selectedSize && menuItem.sizes
-            ? menuItem.sizes.find(s => s.size === item.selectedSize)?.price || menuItem.price
-            : menuItem.price
+          const basePrice = menuItem.price
           const extrasPrice = calculateExtrasPrice(menuItem, newExtras)
 
           return {
@@ -274,28 +272,6 @@ export default function NewOrderPage() {
                         </button>
                       </div>
                       
-                      {/* Size Selection - Only show for items with sizes */}
-                      {hasSizes && (
-                        <div className="flex items-center gap-2 pt-2 border-t border-border">
-                          <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Size:</Label>
-                          <Select
-                            value={item.selectedSize || ""}
-                            onValueChange={(value) => updateItemSize(item.menuItemId, item.selectedSize, value, idx)}
-                          >
-                            <SelectTrigger className="h-9 text-sm flex-1 max-w-[200px]">
-                              <SelectValue placeholder="Select size" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {menuItem.sizes.map((size, sizeIdx) => (
-                                <SelectItem key={sizeIdx} value={size.size}>
-                                  {size.size} - {formatter.format(size.price)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-
                       {/* Extras Selection - Only show for items with extras */}
                       {menuItem?.extras && menuItem.extras.length > 0 && (
                         <div className="pt-2 border-t border-border">

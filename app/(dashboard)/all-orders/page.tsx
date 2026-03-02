@@ -246,24 +246,18 @@ export default function AllOrdersPage() {
     setSelectedSize("")
   }
 
-  const updateItemQuantity = (menuItemId: string, selectedSize: string | undefined, delta: number) => {
+  const updateItemQuantity = (menuItemId: string, delta: number) => {
     setEditingItems((prev) =>
       prev
         .map((o) => {
-          const itemKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-          const targetKey = selectedSize ? `${menuItemId}-${selectedSize}` : menuItemId
-          return itemKey === targetKey ? { ...o, quantity: Math.max(0, o.quantity + delta) } : o
+          return o.menuItemId === menuItemId ? { ...o, quantity: Math.max(0, o.quantity + delta) } : o
         })
         .filter((o) => o.quantity > 0)
     )
   }
 
-  const removeItemFromOrder = (menuItemId: string, selectedSize: string | undefined) => {
-    setEditingItems((prev) => prev.filter((o) => {
-      const itemKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-      const targetKey = selectedSize ? `${menuItemId}-${selectedSize}` : menuItemId
-      return itemKey !== targetKey
-    }))
+  const removeItemFromOrder = (menuItemId: string) => {
+    setEditingItems((prev) => prev.filter((o) => o.menuItemId !== menuItemId))
   }
 
   const grossTotal = useMemo(() => editingItems.reduce((sum, i) => sum + i.price * i.quantity, 0), [editingItems])
@@ -541,7 +535,7 @@ export default function AllOrdersPage() {
                 .map(
                   (item) => `
                 <div class="item-row">
-                  <span class="item-name">${item.menuItemName}${item.selectedSize ? ` (${item.selectedSize})` : ""}</span>
+                  <span class="item-name">${item.menuItemName}</span>
                   <span class="item-quantity">×${item.quantity}</span>
                   <span class="item-price">${formatter.format(item.price * item.quantity)}</span>
                 </div>
@@ -737,23 +731,6 @@ export default function AllOrdersPage() {
                       })}
                     </SelectContent>
                   </Select>
-                  
-                  {/* Size Selection */}
-                  {selectedMenuItem && selectedMenuItem.sizes && selectedMenuItem.sizes.length > 0 && (
-                    <Select value={selectedSize} onValueChange={setSelectedSize}>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Select size (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">No size (use base price)</SelectItem>
-                        {selectedMenuItem.sizes.map((size, idx) => (
-                          <SelectItem key={idx} value={size.size}>
-                            {size.size} - {formatter.format(size.price)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
                   
                   <button
                     onClick={addItemToOrder}
