@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
 
     // Plan pricing (in cents)
     const prices = {
-      monthly: 2900, // $29.00
-      yearly: 29000, // $290.00
+      monthly: 12000, // €120 for 6 months
+      yearly: 19900, // €199 for 12 months
     }
 
     const price = prices[plan as keyof typeof prices]
@@ -30,18 +30,18 @@ export async function POST(request: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "eur",
             product_data: {
-              name: `${plan === "monthly" ? "Monthly" : "Yearly"} Subscription`,
-              description: `SalesRocket ${plan === "monthly" ? "Monthly" : "Yearly"} Plan`,
+              name: `${plan === "monthly" ? "6 Months" : "12 Months"} Subscription`,
+              description: `SalesRocket ${plan === "monthly" ? "6 Months" : "12 Months"} Plan`,
             },
             unit_amount: price,
-            recurring: plan === "monthly" ? { interval: "month" } : { interval: "year" },
           },
           quantity: 1,
         },
       ],
-      mode: plan === "monthly" ? "subscription" : "payment",
+      // Treat both as one‑time payments that unlock access for a fixed duration
+      mode: "payment",
       success_url: `${request.headers.get("origin") || "http://localhost:3000"}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get("origin") || "http://localhost:3000"}/subscription?canceled=true`,
       client_reference_id: userId,

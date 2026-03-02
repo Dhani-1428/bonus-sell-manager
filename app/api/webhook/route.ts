@@ -52,25 +52,14 @@ export async function POST(request: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
         
-        // For one-time payments (yearly plan)
+        // For one-time payments (both 6‑month and 12‑month plans)
         if (session.mode === "payment" && session.payment_status === "paid") {
           const userId = session.metadata?.userId || session.client_reference_id
           const plan = (session.metadata?.plan || "yearly") as "monthly" | "yearly"
-          
+
           if (userId) {
-            const durationDays = plan === "yearly" ? 365 : 30
-            await updateSubscription(userId, plan, durationDays)
-            console.log(`Subscription activated for user ${userId} - ${plan} plan`)
-          }
-        }
-        
-        // For subscription payments (monthly plan)
-        if (session.mode === "subscription" && session.payment_status === "paid") {
-          const userId = session.metadata?.userId || session.client_reference_id
-          const plan = (session.metadata?.plan || "monthly") as "monthly" | "yearly"
-          
-          if (userId) {
-            const durationDays = plan === "monthly" ? 30 : 365
+            // Treat "monthly" as 6‑month (180 days) and "yearly" as 12‑month (365 days)
+            const durationDays = plan === "monthly" ? 180 : 365
             await updateSubscription(userId, plan, durationDays)
             console.log(`Subscription activated for user ${userId} - ${plan} plan`)
           }
@@ -87,9 +76,9 @@ export async function POST(request: NextRequest) {
           const userId = subscription.metadata?.userId || subscription.metadata?.client_reference_id
           
           if (userId) {
-            // Renew subscription for another period
+            // Renew subscription for another fixed period
             const plan = (subscription.metadata?.plan || "monthly") as "monthly" | "yearly"
-            const durationDays = plan === "monthly" ? 30 : 365
+            const durationDays = plan === "monthly" ? 180 : 365
             await updateSubscription(userId, plan, durationDays)
             console.log(`Subscription renewed for user ${userId} - ${plan} plan`)
           }
