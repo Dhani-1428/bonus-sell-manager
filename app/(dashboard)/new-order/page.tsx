@@ -186,7 +186,7 @@ export default function NewOrderPage() {
             {/* Quick add grid */}
             <div>
               <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Quick Add</p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <HoverEffect className="grid grid-cols-2 gap-2 sm:grid-cols-3 py-0">
                 {menuItems.slice(0, 6).map((item) => {
                   const hasSizes = item.sizes && item.sizes.length > 0
                   const displayPrice = hasSizes 
@@ -215,7 +215,7 @@ export default function NewOrderPage() {
                     </button>
                   )
                 })}
-              </div>
+              </HoverEffect>
             </div>
           </CardContent>
         </Card>
@@ -232,7 +232,7 @@ export default function NewOrderPage() {
             {orderItems.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">No items added yet. Select items from the left.</p>
             ) : (
-              <div className="flex flex-col gap-2">
+              <HoverEffect className="flex flex-col gap-2 py-0">
                 {orderItems.map((item, idx) => {
                   const menuItem = menuItems.find(m => m.id === item.menuItemId)
                   const hasSizes = menuItem?.sizes && menuItem.sizes.length > 0
@@ -358,7 +358,7 @@ export default function NewOrderPage() {
                     </div>
                   )
                 })}
-              </div>
+              </HoverEffect>
             )}
 
             {/* Discount */}

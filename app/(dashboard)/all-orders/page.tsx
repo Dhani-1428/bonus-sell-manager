@@ -5,6 +5,7 @@ import { useAuth } from "@/components/auth-provider"
 import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/store"
 import type { Order, OrderItem, MenuItem } from "@/lib/types"
 import { Download, Search, Pencil, Printer, Plus, Minus, Trash2 } from "lucide-react"
+import { HoverEffect } from "@/components/ui/card-hover-effect"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -592,12 +593,15 @@ export default function AllOrdersPage() {
                 </tr>
               ) : (
                 filteredOrders.map((order, index) => (
-                  <tr
-                    key={order.id}
-                    className={`border-b border-border transition-colors hover:bg-muted/30 ${
-                      index % 2 === 0 ? "bg-card" : "bg-muted/10"
-                    }`}
-                  >
+                  <OrderRowWithHover 
+                    key={order.id} 
+                    order={order} 
+                    index={index}
+                    onEdit={openEditDialog}
+                    onPrint={handlePrint}
+                  />
+                ))
+              )}
                     <td className="border-r border-border px-4 py-3 text-sm font-semibold text-foreground">
                       {order.orderNumber || "N/A"}
                     </td>
@@ -636,22 +640,22 @@ export default function AllOrdersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => openEditDialog(order)}
-                          className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                          aria-label={`Edit order ${order.orderNumber}`}
-                          title="Edit Order"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handlePrint(order)}
-                          className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                          aria-label={`Print order ${order.orderNumber}`}
-                          title="Print Order"
-                        >
-                          <Printer className="h-4 w-4" />
-                        </button>
+          <button
+            onClick={() => onEdit(order)}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={`Edit order ${order.orderNumber}`}
+            title="Edit Order"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onPrint(order)}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={`Print order ${order.orderNumber}`}
+            title="Print Order"
+          >
+            <Printer className="h-4 w-4" />
+          </button>
                       </div>
                     </td>
                   </tr>

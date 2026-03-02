@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2, Trash } from "lucide-react"
+import { HoverEffect } from "@/components/ui/card-hover-effect"
 import { toast } from "sonner"
 import { createWorker } from "tesseract.js"
 import { FileUpload } from "@/components/ui/file-upload"
@@ -879,7 +880,7 @@ export default function MenuPage() {
       {Object.entries(groupedItems).map(([cat, catItems]) => (
         <div key={cat}>
           <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{cat}</h3>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
               const hasSizes = item.sizes && item.sizes.length > 0
               const displayPrice = hasSizes 
@@ -927,7 +928,7 @@ export default function MenuPage() {
                 </Card>
               )
             })}
-          </div>
+          </HoverEffect>
         </div>
       ))}
 
