@@ -9,6 +9,7 @@ export const HoverEffect = ({
   items,
   className,
   children,
+  id,
 }: {
   items?: {
     title: string;
@@ -17,8 +18,10 @@ export const HoverEffect = ({
   }[];
   className?: string;
   children?: ReactNode;
+  id?: string;
 }) => {
   let [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const uniqueId = id || `hover-${Math.random().toString(36).substr(2, 9)}`;
 
   if (children) {
     // If children are provided, wrap them with hover effect
@@ -36,7 +39,7 @@ export const HoverEffect = ({
                 {hoveredIndex === idx && (
                   <motion.span
                     className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block rounded-3xl"
-                    layoutId="hoverBackground"
+                    layoutId={`hoverBackground-${uniqueId}-${idx}`}
                     initial={{ opacity: 0 }}
                     animate={{
                       opacity: 1,
@@ -62,7 +65,7 @@ export const HoverEffect = ({
               {hoveredIndex === 0 && (
                 <motion.span
                   className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block rounded-3xl"
-                  layoutId="hoverBackground"
+                  layoutId={`hoverBackground-${uniqueId}-0`}
                   initial={{ opacity: 0 }}
                   animate={{
                     opacity: 1,
@@ -101,7 +104,7 @@ export const HoverEffect = ({
             {hoveredIndex === idx && (
               <motion.span
                 className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block  rounded-3xl"
-                layoutId="hoverBackground"
+                layoutId={`hoverBackground-${uniqueId}-${idx}`}
                 initial={{ opacity: 0 }}
                 animate={{
                   opacity: 1,
