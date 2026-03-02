@@ -39,11 +39,11 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="scroll-mt-20 px-4 py-20 lg:py-28 relative">
+    <section id="features" className="scroll-mt-20 px-4 py-20 lg:py-28 relative overflow-hidden">
       {/* Vortex Background */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 -z-10">
         <Vortex
-          backgroundColor="black"
+          backgroundColor="transparent"
           className="flex items-center flex-col justify-center px-2 md:px-10 py-4 w-full h-full"
         />
       </div>

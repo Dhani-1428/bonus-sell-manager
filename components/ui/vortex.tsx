@@ -105,8 +105,11 @@ export const Vortex = (props: VortexProps) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Only fill background if it's not transparent
+    if (backgroundColor !== "transparent") {
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     drawParticles(ctx);
     renderGlow(canvas, ctx);
