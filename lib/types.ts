@@ -10,11 +10,17 @@ export interface User {
   subscriptionPlan?: "monthly" | "yearly" // Plan type if subscribed
 }
 
+export interface MenuItemSize {
+  size: string // e.g., "Small", "Medium", "Large"
+  price: number
+}
+
 export interface MenuItem {
   id: string
   name: string
-  price: number
+  price: number // Base price (used when no sizes)
   category: string
+  sizes?: MenuItemSize[] // Optional sizes array
   createdAt: string
 }
 
@@ -23,6 +29,7 @@ export interface OrderItem {
   menuItemName: string
   quantity: number
   price: number
+  selectedSize?: string // Optional: selected size name
 }
 
 export interface Order {

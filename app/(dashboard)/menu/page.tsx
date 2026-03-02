@@ -38,6 +38,7 @@ export default function MenuPage() {
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("Main")
+  const [sizes, setSizes] = useState<Array<{ size: string; price: string }>>([])
   const [ocrDialogOpen, setOcrDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [extractedItems, setExtractedItems] = useState<Array<{ name: string; price: number; category: string; description?: string }>>([])
@@ -72,6 +73,7 @@ export default function MenuPage() {
     setName("")
     setPrice("")
     setCategory("Main")
+    setSizes([])
     setDialogOpen(true)
   }
 
@@ -80,6 +82,7 @@ export default function MenuPage() {
     setName(item.name)
     setPrice(item.price.toString())
     setCategory(item.category)
+    setSizes(item.sizes ? item.sizes.map(s => ({ size: s.size, price: s.price.toString() })) : [])
     setDialogOpen(true)
   }
 
@@ -95,16 +98,47 @@ export default function MenuPage() {
       return
     }
 
+    // Validate sizes if provided
+    const validSizes = sizes
+      .filter(s => s.size.trim() && s.price.trim())
+      .map(s => ({
+        size: s.size.trim(),
+        price: parseFloat(s.price)
+      }))
+      .filter(s => !isNaN(s.price) && s.price > 0)
+
+    const menuItemData: any = {
+      name: name.trim(),
+      price: priceNum,
+      category
+    }
+
+    if (validSizes.length > 0) {
+      menuItemData.sizes = validSizes
+    }
+
     if (editingItem) {
-      updateMenuItem(session.userId, editingItem.id, { name: name.trim(), price: priceNum, category })
+      updateMenuItem(session.userId, editingItem.id, menuItemData)
       toast.success("Menu item updated!")
     } else {
-      addMenuItem(session.userId, { name: name.trim(), price: priceNum, category })
+      addMenuItem(session.userId, menuItemData)
       toast.success("Menu item added!")
     }
 
     refreshItems()
     setDialogOpen(false)
+  }
+
+  const addSize = () => {
+    setSizes([...sizes, { size: "", price: "" }])
+  }
+
+  const removeSize = (index: number) => {
+    setSizes(sizes.filter((_, i) => i !== index))
+  }
+
+  const updateSize = (index: number, field: "size" | "price", value: string) => {
+    setSizes(sizes.map((s, i) => i === index ? { ...s, [field]: value } : s))
   }
 
   const handleDelete = (id: string) => {
@@ -799,32 +833,53 @@ export default function MenuPage() {
         <div key={cat}>
           <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{cat}</h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {catItems.map((item) => (
-              <Card key={item.id} className="py-0">
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{item.name}</p>
-                    <p className="text-lg font-bold text-primary">{formatter.format(item.price)}</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEdit(item)}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                      aria-label={`Edit ${item.name}`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteConfirm(item.id)}
-                      className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      aria-label={`Delete ${item.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {catItems.map((item) => {
+              const hasSizes = item.sizes && item.sizes.length > 0
+              const displayPrice = hasSizes 
+                ? `${formatter.format(Math.min(...item.sizes.map(s => s.price)))} - ${formatter.format(Math.max(...item.sizes.map(s => s.price)))}`
+                : formatter.format(item.price)
+              
+              return (
+                <Card key={item.id} className="py-0">
+                  <CardContent className="flex flex-col gap-3 p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground truncate">{item.name}</p>
+                        <p className="text-lg font-bold text-primary">{displayPrice}</p>
+                        {hasSizes && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {item.sizes.map((size, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground"
+                              >
+                                {size.size}: {formatter.format(size.price)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openEdit(item)}
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(item.id)}
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          aria-label={`Delete ${item.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       ))}
@@ -888,6 +943,55 @@ export default function MenuPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Sizes Section */}
+            <div className="flex flex-col gap-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <Label>Sizes (Optional)</Label>
+                <button
+                  type="button"
+                  onClick={addSize}
+                  className="flex h-8 items-center gap-1 rounded-md border border-border px-3 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Size
+                </button>
+              </div>
+              {sizes.length > 0 && (
+                <div className="space-y-2">
+                  {sizes.map((size, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        placeholder="Size name (e.g., Small)"
+                        value={size.size}
+                        onChange={(e) => updateSize(index, "size", e.target.value)}
+                        className="h-10 flex-1"
+                      />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Price"
+                        value={size.price}
+                        onChange={(e) => updateSize(index, "price", e.target.value)}
+                        className="h-10 w-24"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSize(index)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        aria-label="Remove size"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    If sizes are added, the base price above will be used as a fallback. Size prices will be shown in the menu.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

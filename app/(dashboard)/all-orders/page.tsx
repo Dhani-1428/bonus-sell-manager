@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/store"
-import type { Order, OrderItem } from "@/lib/types"
+import type { Order, OrderItem, MenuItem } from "@/lib/types"
 import { Download, Search, Pencil, Printer, Plus, Minus, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,17 +33,18 @@ export default function AllOrdersPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItems, setEditingItems] = useState<OrderItem[]>([])
   const [selectedItem, setSelectedItem] = useState("")
+  const [selectedSize, setSelectedSize] = useState("")
   const [discount, setDiscount] = useState("")
   const [orderDate, setOrderDate] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "online">("cash")
-  const [menuItems, setMenuItems] = useState<{ id: string; name: string; price: number }[]>([])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
 
   useEffect(() => {
     if (session) {
       const allOrders = getOrders(session.userId)
       setOrders(allOrders)
       const items = getMenuItems(session.userId)
-      setMenuItems(items.map((item) => ({ id: item.id, name: item.name, price: item.price })))
+      setMenuItems(items)
     } else {
       setOrders([])
       setMenuItems([])
@@ -80,7 +81,7 @@ export default function AllOrdersPage() {
     const rows = filteredOrders.map((o) => [
       o.orderNumber,
       new Date(o.date).toLocaleDateString(),
-      o.items.map((i) => `${i.menuItemName} x${i.quantity}`).join("; "),
+      o.items.map((i) => `${i.menuItemName}${i.selectedSize ? ` (${i.selectedSize})` : ""} x${i.quantity}`).join("; "),
       o.totalAmount.toFixed(2),
       o.discountAmount.toFixed(2),
       o.finalAmount.toFixed(2),
@@ -105,35 +106,77 @@ export default function AllOrdersPage() {
     setOrderDate(order.date)
     setPaymentMethod(order.paymentMethod)
     setSelectedItem("")
+    setSelectedSize("")
     setDialogOpen(true)
   }
 
+  const selectedMenuItem = useMemo(() => {
+    return menuItems.find((m) => m.id === selectedItem)
+  }, [selectedItem, menuItems])
+
   const addItemToOrder = () => {
-    const item = menuItems.find((m) => m.id === selectedItem)
+    const item = selectedMenuItem
     if (!item) return
 
-    setEditingItems((prev) => {
-      const existing = prev.find((o) => o.menuItemId === item.id)
-      if (existing) {
-        return prev.map((o) =>
-          o.menuItemId === item.id ? { ...o, quantity: o.quantity + 1 } : o
-        )
+    // Determine price based on selected size or base price
+    let finalPrice = item.price
+    let sizeName: string | undefined = undefined
+    
+    if (selectedSize && item.sizes && item.sizes.length > 0) {
+      const size = item.sizes.find(s => s.size === selectedSize)
+      if (size) {
+        finalPrice = size.price
+        sizeName = size.size
       }
-      return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
+    }
+
+    // Create unique key for items with different sizes
+    const itemKey = sizeName ? `${item.id}-${sizeName}` : item.id
+    const displayName = sizeName ? `${item.name} (${sizeName})` : item.name
+
+    setEditingItems((prev) => {
+      const existing = prev.find((o) => {
+        const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
+        return existingKey === itemKey
+      })
+      
+      if (existing) {
+        return prev.map((o) => {
+          const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
+          return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
+        })
+      }
+      
+      return [...prev, { 
+        menuItemId: item.id, 
+        menuItemName: displayName, 
+        quantity: 1, 
+        price: finalPrice,
+        selectedSize: sizeName
+      }]
     })
     setSelectedItem("")
+    setSelectedSize("")
   }
 
-  const updateItemQuantity = (menuItemId: string, delta: number) => {
+  const updateItemQuantity = (menuItemId: string, selectedSize: string | undefined, delta: number) => {
     setEditingItems((prev) =>
       prev
-        .map((o) => (o.menuItemId === menuItemId ? { ...o, quantity: Math.max(0, o.quantity + delta) } : o))
+        .map((o) => {
+          const itemKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
+          const targetKey = selectedSize ? `${menuItemId}-${selectedSize}` : menuItemId
+          return itemKey === targetKey ? { ...o, quantity: Math.max(0, o.quantity + delta) } : o
+        })
         .filter((o) => o.quantity > 0)
     )
   }
 
-  const removeItemFromOrder = (menuItemId: string) => {
-    setEditingItems((prev) => prev.filter((o) => o.menuItemId !== menuItemId))
+  const removeItemFromOrder = (menuItemId: string, selectedSize: string | undefined) => {
+    setEditingItems((prev) => prev.filter((o) => {
+      const itemKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
+      const targetKey = selectedSize ? `${menuItemId}-${selectedSize}` : menuItemId
+      return itemKey !== targetKey
+    }))
   }
 
   const grossTotal = useMemo(() => editingItems.reduce((sum, i) => sum + i.price * i.quantity, 0), [editingItems])
@@ -411,7 +454,7 @@ export default function AllOrdersPage() {
                 .map(
                   (item) => `
                 <div class="item-row">
-                  <span class="item-name">${item.menuItemName}</span>
+                  <span class="item-name">${item.menuItemName}${item.selectedSize ? ` (${item.selectedSize})` : ""}</span>
                   <span class="item-quantity">×${item.quantity}</span>
                   <span class="item-price">${formatter.format(item.price * item.quantity)}</span>
                 </div>
@@ -569,7 +612,10 @@ export default function AllOrdersPage() {
                       <div className="max-w-xs">
                         {order.items.map((item, idx) => (
                           <div key={idx} className="truncate">
-                            {item.menuItemName} × {item.quantity}
+                            {item.menuItemName}
+                            {item.selectedSize && <span className="text-muted-foreground"> ({item.selectedSize})</span>}
+                            {" × "}
+                            {item.quantity}
                           </div>
                         ))}
                       </div>
@@ -638,26 +684,54 @@ export default function AllOrdersPage() {
               {/* Add Items */}
               <div className="flex flex-col gap-2">
                 <Label>Add Item</Label>
-                <div className="flex gap-2">
-                  <Select value={selectedItem} onValueChange={setSelectedItem}>
+                <div className="flex flex-col gap-2">
+                  <Select value={selectedItem} onValueChange={(value) => {
+                    setSelectedItem(value)
+                    setSelectedSize("") // Reset size when item changes
+                  }}>
                     <SelectTrigger className="h-12 flex-1">
                       <SelectValue placeholder="Select an item..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {menuItems.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.name} - {formatter.format(item.price)}
-                        </SelectItem>
-                      ))}
+                      {menuItems.map((item) => {
+                        const hasSizes = item.sizes && item.sizes.length > 0
+                        const displayPrice = hasSizes 
+                          ? `${formatter.format(Math.min(...item.sizes.map(s => s.price)))} - ${formatter.format(Math.max(...item.sizes.map(s => s.price)))}`
+                          : formatter.format(item.price)
+                        return (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name} - {displayPrice}
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
+                  
+                  {/* Size Selection */}
+                  {selectedMenuItem && selectedMenuItem.sizes && selectedMenuItem.sizes.length > 0 && (
+                    <Select value={selectedSize} onValueChange={setSelectedSize}>
+                      <SelectTrigger className="h-12">
+                        <SelectValue placeholder="Select size (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No size (use base price)</SelectItem>
+                        {selectedMenuItem.sizes.map((size, idx) => (
+                          <SelectItem key={idx} value={size.size}>
+                            {size.size} - {formatter.format(size.price)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  
                   <button
                     onClick={addItemToOrder}
                     disabled={!selectedItem}
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
+                    className="flex h-12 w-full items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
                     aria-label="Add item"
                   >
-                    <Plus className="h-5 w-5" />
+                    <Plus className="h-5 w-5 mr-2" />
+                    Add to Order
                   </button>
                 </div>
               </div>
@@ -669,34 +743,39 @@ export default function AllOrdersPage() {
                   <p className="text-sm text-muted-foreground text-center py-4">No items. Add items above.</p>
                 ) : (
                   <div className="space-y-2">
-                    {editingItems.map((item) => (
-                      <div key={item.menuItemId} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
-                          <p className="text-xs text-muted-foreground">{formatter.format(item.price)} each</p>
-                        </div>
-                        <div className="flex items-center gap-1">
+                    {editingItems.map((item, idx) => {
+                      const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}-${idx}` : `${item.menuItemId}-${idx}`
+                      return (
+                        <div key={itemKey} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatter.format(item.price)} each
+                              {item.selectedSize && <span className="ml-1">({item.selectedSize})</span>}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => updateItemQuantity(item.menuItemId, item.selectedSize, -1)}
+                              className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+                            <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
+                            <button
+                              onClick={() => updateItemQuantity(item.menuItemId, item.selectedSize, 1)}
+                              className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <p className="w-20 text-right text-sm font-semibold text-foreground">
+                            {formatter.format(item.price * item.quantity)}
+                          </p>
                           <button
-                            onClick={() => updateItemQuantity(item.menuItemId, -1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
-                            aria-label="Decrease quantity"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </button>
-                          <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
-                          <button
-                            onClick={() => updateItemQuantity(item.menuItemId, 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <p className="w-20 text-right text-sm font-semibold text-foreground">
-                          {formatter.format(item.price * item.quantity)}
-                        </p>
-                        <button
-                          onClick={() => removeItemFromOrder(item.menuItemId)}
+                            onClick={() => removeItemFromOrder(item.menuItemId, item.selectedSize)}
                           className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
                           aria-label="Remove item"
                         >
