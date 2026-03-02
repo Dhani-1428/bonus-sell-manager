@@ -133,6 +133,95 @@ export default function SubscriptionPage() {
         <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>
       </div>
 
+      {/* At-a-glance subscription cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* Card 1: Trial / Plan summary */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4 text-primary" />
+              {subscriptionStatus.status === "trial" ? "Free Trial" : "Current Plan"}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {subscriptionStatus.status === "trial"
+                ? "You have limited-time full access to explore all features."
+                : "Your paid plan is currently active."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-xl font-semibold text-foreground">
+              {subscriptionStatus.status === "trial"
+                ? `${subscriptionStatus.daysRemaining} day${
+                    subscriptionStatus.daysRemaining !== 1 ? "s" : ""
+                  } left`
+                : (subscriptionStatus.plan || "Monthly").toString().toUpperCase()}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Card 2: Status */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              {subscriptionStatus.hasAccess ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <X className="h-4 w-4 text-red-500" />
+              )}
+              Status
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {subscriptionStatus.message}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                subscriptionStatus.status === "active"
+                  ? "bg-green-500/10 text-green-600"
+                  : subscriptionStatus.status === "trial"
+                  ? "bg-blue-500/10 text-blue-600"
+                  : "bg-red-500/10 text-red-600"
+              }`}
+            >
+              {subscriptionStatus.status === "trial" && "Free Trial"}
+              {subscriptionStatus.status === "active" && "Active"}
+              {subscriptionStatus.status === "expired" && "Expired"}
+              {subscriptionStatus.status === "cancelled" && "Cancelled"}
+            </span>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Quick action */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              Subscription Action
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {subscriptionStatus.hasAccess
+                ? "You can change or extend your plan at any time."
+                : "Activate a plan to unlock the full admin panel."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Button
+              size="sm"
+              className="w-full"
+              disabled={isProcessing}
+              onClick={() => handleSubscribe("monthly")}
+            >
+              {isProcessing
+                ? "Redirecting to payment..."
+                : subscriptionStatus.hasAccess
+                ? "Manage Subscription"
+                : "Start Monthly Plan"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Current Status */}
       <Card>
         <CardHeader>

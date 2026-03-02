@@ -784,13 +784,13 @@ export default function MenuPage() {
             <Upload className="h-4 w-4" />
             Extract Menu with AI
           </button>
-          <button
-            onClick={openAdd}
-            className="flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Add Item
-          </button>
+        <button
+          onClick={openAdd}
+          className="flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4" />
+          Add Item
+        </button>
         </div>
       </div>
 
