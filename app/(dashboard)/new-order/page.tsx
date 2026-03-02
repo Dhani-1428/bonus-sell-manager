@@ -19,7 +19,6 @@ export default function NewOrderPage() {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [selectedItem, setSelectedItem] = useState("")
-  const [selectedSize, setSelectedSize] = useState("")
   const [discount, setDiscount] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "online">("cash")
 
@@ -27,54 +26,45 @@ export default function NewOrderPage() {
   const discountAmount = parseFloat(discount) || 0
   const netTotal = Math.max(0, grossTotal - discountAmount)
 
-  const selectedMenuItem = useMemo(() => {
-    return menuItems.find((m) => m.id === selectedItem)
-  }, [selectedItem, menuItems])
-
   const addItem = useCallback(() => {
-    const item = selectedMenuItem
+    const item = menuItems.find((m) => m.id === selectedItem)
     if (!item) return
 
-    // Determine price based on selected size or base price
-    let finalPrice = item.price
-    let sizeName: string | undefined = undefined
-    
-    if (selectedSize && item.sizes && item.sizes.length > 0) {
-      const size = item.sizes.find(s => s.size === selectedSize)
-      if (size) {
-        finalPrice = size.price
-        sizeName = size.size
-      }
-    }
-
-    // Create unique key for items with different sizes
-    const itemKey = sizeName ? `${item.id}-${sizeName}` : item.id
-    const displayName = sizeName ? `${item.name} (${sizeName})` : item.name
-
+    // Add item with base price (size will be selected in order summary if available)
     setOrderItems((prev) => {
-      const existing = prev.find((o) => {
-        const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-        return existingKey === itemKey
-      })
-      
+      const existing = prev.find((o) => o.menuItemId === item.id && !o.selectedSize)
       if (existing) {
-        return prev.map((o) => {
-          const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-          return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
-        })
+        return prev.map((o) =>
+          o.menuItemId === item.id && !o.selectedSize ? { ...o, quantity: o.quantity + 1 } : o
+        )
       }
-      
-      return [...prev, { 
-        menuItemId: item.id, 
-        menuItemName: displayName, 
-        quantity: 1, 
-        price: finalPrice,
-        selectedSize: sizeName
-      }]
+      return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
     })
     setSelectedItem("")
-    setSelectedSize("")
-  }, [selectedItem, selectedSize, selectedMenuItem])
+  }, [selectedItem, menuItems])
+
+  const updateItemSize = (menuItemId: string, currentSize: string | undefined, newSizeName: string, itemIndex: number) => {
+    const menuItem = menuItems.find(m => m.id === menuItemId)
+    if (!menuItem || !menuItem.sizes) return
+
+    const size = menuItem.sizes.find(s => s.size === newSizeName)
+    if (!size) return
+
+    setOrderItems((prev) => {
+      return prev.map((item, idx) => {
+        // Update the specific item instance by index
+        if (idx === itemIndex && item.menuItemId === menuItemId) {
+          return {
+            ...item,
+            menuItemName: `${menuItem.name} (${size.size})`,
+            price: size.price,
+            selectedSize: size.size
+          }
+        }
+        return item
+      })
+    })
+  }
 
   const updateQuantity = (menuItemId: string, delta: number) => {
     setOrderItems((prev) =>
@@ -124,11 +114,8 @@ export default function NewOrderPage() {
             <CardTitle className="text-base">Add Items</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Select value={selectedItem} onValueChange={(value) => {
-                setSelectedItem(value)
-                setSelectedSize("") // Reset size when item changes
-              }}>
+            <div className="flex gap-2">
+              <Select value={selectedItem} onValueChange={setSelectedItem}>
                 <SelectTrigger className="h-12 flex-1">
                   <SelectValue placeholder="Select an item..." />
                 </SelectTrigger>
@@ -146,32 +133,13 @@ export default function NewOrderPage() {
                   })}
                 </SelectContent>
               </Select>
-              
-              {/* Size Selection */}
-              {selectedMenuItem && selectedMenuItem.sizes && selectedMenuItem.sizes.length > 0 && (
-                <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Select size (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">No size (use base price)</SelectItem>
-                    {selectedMenuItem.sizes.map((size, idx) => (
-                      <SelectItem key={idx} value={size.size}>
-                        {size.size} - {formatter.format(size.price)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              
               <button
                 onClick={addItem}
                 disabled={!selectedItem}
-                className="flex h-12 w-full items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
                 aria-label="Add item"
               >
-                <Plus className="h-5 w-5 mr-2" />
-                Add to Order
+                <Plus className="h-5 w-5" />
               </button>
             </div>
 
@@ -189,42 +157,16 @@ export default function NewOrderPage() {
                     <button
                       key={item.id}
                       onClick={() => {
-                        setSelectedItem(item.id)
-                        if (hasSizes && item.sizes && item.sizes.length > 0) {
-                          // If item has sizes, use the first size by default
-                          const firstSize = item.sizes[0]
-                          setOrderItems((prev) => {
-                            const itemKey = `${item.id}-${firstSize.size}`
-                            const existing = prev.find((o) => {
-                              const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                              return existingKey === itemKey
-                            })
-                            if (existing) {
-                              return prev.map((o) => {
-                                const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                                return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
-                              })
-                            }
-                            return [...prev, { 
-                              menuItemId: item.id, 
-                              menuItemName: `${item.name} (${firstSize.size})`, 
-                              quantity: 1, 
-                              price: firstSize.price,
-                              selectedSize: firstSize.size
-                            }]
-                          })
-                        } else {
-                          // No sizes, use base price
-                          setOrderItems((prev) => {
-                            const existing = prev.find((o) => o.menuItemId === item.id && !o.selectedSize)
-                            if (existing) {
-                              return prev.map((o) =>
-                                o.menuItemId === item.id && !o.selectedSize ? { ...o, quantity: o.quantity + 1 } : o
-                              )
-                            }
-                            return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
-                          })
-                        }
+                        // Add item with base price (size can be selected in order summary)
+                        setOrderItems((prev) => {
+                          const existing = prev.find((o) => o.menuItemId === item.id && !o.selectedSize)
+                          if (existing) {
+                            return prev.map((o) =>
+                              o.menuItemId === item.id && !o.selectedSize ? { ...o, quantity: o.quantity + 1 } : o
+                            )
+                          }
+                          return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
+                        })
                       }}
                       className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center transition-colors hover:bg-accent active:scale-95"
                     >
@@ -252,67 +194,94 @@ export default function NewOrderPage() {
             ) : (
               <div className="flex flex-col gap-2">
                 {orderItems.map((item, idx) => {
+                  const menuItem = menuItems.find(m => m.id === item.menuItemId)
+                  const hasSizes = menuItem?.sizes && menuItem.sizes.length > 0
                   const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}-${idx}` : `${item.menuItemId}-${idx}`
+                  
                   return (
-                    <div key={itemKey} className="flex items-center gap-3 rounded-lg border border-border p-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatter.format(item.price)} each
-                          {item.selectedSize && <span className="ml-1">({item.selectedSize})</span>}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
-                            setOrderItems((prev) =>
-                              prev
-                                .map((o) => {
+                    <div key={itemKey} className="flex flex-col gap-2 rounded-lg border border-border p-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatter.format(item.price)} each
+                            {item.selectedSize && <span className="ml-1">({item.selectedSize})</span>}
+                          </p>
+                        </div>
+                        
+                        {/* Size Selection - Only show for items with sizes */}
+                        {hasSizes && (
+                          <div className="w-36">
+                            <Select
+                              value={item.selectedSize || ""}
+                              onValueChange={(value) => updateItemSize(item.menuItemId, item.selectedSize, value, idx)}
+                            >
+                              <SelectTrigger className="h-9 text-xs">
+                                <SelectValue placeholder="Select size" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {menuItem.sizes.map((size, sizeIdx) => (
+                                  <SelectItem key={sizeIdx} value={size.size}>
+                                    {size.size} - {formatter.format(size.price)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
+                              setOrderItems((prev) =>
+                                prev
+                                  .map((o) => {
+                                    const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
+                                    return existingKey === itemKey ? { ...o, quantity: Math.max(0, o.quantity - 1) } : o
+                                  })
+                                  .filter((o) => o.quantity > 0)
+                              )
+                            }}
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
+                          <button
+                            onClick={() => {
+                              const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
+                              setOrderItems((prev) =>
+                                prev.map((o) => {
                                   const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                                  return existingKey === itemKey ? { ...o, quantity: Math.max(0, o.quantity - 1) } : o
+                                  return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
                                 })
-                                .filter((o) => o.quantity > 0)
-                            )
-                          }}
-                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
-                          aria-label="Decrease quantity"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
+                              )
+                            }}
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <p className="w-20 text-right text-sm font-semibold text-foreground">
+                          {formatter.format(item.price * item.quantity)}
+                        </p>
                         <button
                           onClick={() => {
                             const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
-                            setOrderItems((prev) =>
-                              prev.map((o) => {
-                                const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                                return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
-                              })
-                            )
+                            setOrderItems((prev) => prev.filter((o) => {
+                              const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
+                              return existingKey !== itemKey
+                            }))
                           }}
-                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
-                          aria-label="Increase quantity"
+                          className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
+                          aria-label="Remove item"
                         >
-                          <Plus className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="w-16 text-right text-sm font-semibold text-foreground">
-                        {formatter.format(item.price * item.quantity)}
-                      </p>
-                      <button
-                        onClick={() => {
-                          const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
-                          setOrderItems((prev) => prev.filter((o) => {
-                            const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                            return existingKey !== itemKey
-                          }))
-                        }}
-                        className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
-                        aria-label="Remove item"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
                     </div>
                   )
                 })}
