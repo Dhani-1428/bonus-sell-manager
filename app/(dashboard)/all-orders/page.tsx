@@ -26,6 +26,94 @@ import { toast } from "sonner"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 
+function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; index: number; onEdit: (order: Order) => void; onPrint: (order: Order) => void }) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <tr
+      className={`border-b border-border transition-colors hover:bg-muted/30 relative group ${
+        index % 2 === 0 ? "bg-card" : "bg-muted/10"
+      }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <AnimatePresence>
+        {hovered && (
+          <motion.span
+            className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block rounded-lg -z-10"
+            layoutId={`hoverBackground-${order.id}`}
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              transition: { duration: 0.15 },
+            }}
+            exit={{
+              opacity: 0,
+              transition: { duration: 0.15, delay: 0.2 },
+            }}
+          />
+        )}
+      </AnimatePresence>
+      <td className="border-r border-border px-4 py-3 text-sm font-semibold text-foreground relative z-10">
+        {order.orderNumber || "N/A"}
+      </td>
+      <td className="border-r border-border px-4 py-3 text-sm text-foreground relative z-10">
+        {new Date(order.date).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+      </td>
+      <td className="border-r border-border px-4 py-3 text-sm text-foreground relative z-10">
+        <div className="max-w-xs">
+          {order.items.map((item, idx) => (
+            <div key={idx} className="truncate">
+              {item.menuItemName}
+              {item.selectedSize && <span className="text-muted-foreground"> ({item.selectedSize})</span>}
+              {" × "}
+              {item.quantity}
+            </div>
+          ))}
+        </div>
+      </td>
+      <td className="border-r border-border px-4 py-3 text-right text-sm text-foreground relative z-10">
+        {formatter.format(order.totalAmount)}
+      </td>
+      <td className="border-r border-border px-4 py-3 text-right text-sm text-destructive relative z-10">
+        {order.discountAmount > 0 ? `-${formatter.format(order.discountAmount)}` : "-"}
+      </td>
+      <td className="border-r border-border px-4 py-3 text-right text-sm font-semibold text-foreground relative z-10">
+        {formatter.format(order.finalAmount)}
+      </td>
+      <td className="border-r border-border px-4 py-3 text-sm text-foreground relative z-10">
+        <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize text-muted-foreground">
+          {order.paymentMethod}
+        </span>
+      </td>
+      <td className="px-4 py-3 relative z-10">
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => onEdit(order)}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={`Edit order ${order.orderNumber}`}
+            title="Edit Order"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onPrint(order)}
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label={`Print order ${order.orderNumber}`}
+            title="Print Order"
+          >
+            <Printer className="h-4 w-4" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
 export default function AllOrdersPage() {
   const { session } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
@@ -600,65 +688,6 @@ export default function AllOrdersPage() {
                     onEdit={openEditDialog}
                     onPrint={handlePrint}
                   />
-                ))
-              )}
-                    <td className="border-r border-border px-4 py-3 text-sm font-semibold text-foreground">
-                      {order.orderNumber || "N/A"}
-                    </td>
-                    <td className="border-r border-border px-4 py-3 text-sm text-foreground">
-                      {new Date(order.date).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                    <td className="border-r border-border px-4 py-3 text-sm text-foreground">
-                      <div className="max-w-xs">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="truncate">
-                            {item.menuItemName}
-                            {item.selectedSize && <span className="text-muted-foreground"> ({item.selectedSize})</span>}
-                            {" × "}
-                            {item.quantity}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="border-r border-border px-4 py-3 text-right text-sm text-foreground">
-                      {formatter.format(order.totalAmount)}
-                    </td>
-                    <td className="border-r border-border px-4 py-3 text-right text-sm text-destructive">
-                      {order.discountAmount > 0 ? `-${formatter.format(order.discountAmount)}` : "-"}
-                    </td>
-                    <td className="border-r border-border px-4 py-3 text-right text-sm font-semibold text-foreground">
-                      {formatter.format(order.finalAmount)}
-                    </td>
-                    <td className="border-r border-border px-4 py-3 text-sm text-foreground">
-                      <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize text-muted-foreground">
-                        {order.paymentMethod}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-2">
-          <button
-            onClick={() => onEdit(order)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label={`Edit order ${order.orderNumber}`}
-            title="Edit Order"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => onPrint(order)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            aria-label={`Print order ${order.orderNumber}`}
-            title="Print Order"
-          >
-            <Printer className="h-4 w-4" />
-          </button>
-                      </div>
-                    </td>
-                  </tr>
                 ))
               )}
             </tbody>
