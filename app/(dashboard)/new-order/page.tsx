@@ -199,7 +199,7 @@ export default function NewOrderPage() {
                   const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}-${idx}` : `${item.menuItemId}-${idx}`
                   
                   return (
-                    <div key={itemKey} className="flex flex-col gap-2 rounded-lg border border-border p-3">
+                    <div key={itemKey} className="flex flex-col gap-3 rounded-lg border border-border p-3">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
@@ -208,27 +208,6 @@ export default function NewOrderPage() {
                             {item.selectedSize && <span className="ml-1">({item.selectedSize})</span>}
                           </p>
                         </div>
-                        
-                        {/* Size Selection - Only show for items with sizes */}
-                        {hasSizes && (
-                          <div className="w-36">
-                            <Select
-                              value={item.selectedSize || ""}
-                              onValueChange={(value) => updateItemSize(item.menuItemId, item.selectedSize, value, idx)}
-                            >
-                              <SelectTrigger className="h-9 text-xs">
-                                <SelectValue placeholder="Select size" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {menuItem.sizes.map((size, sizeIdx) => (
-                                  <SelectItem key={sizeIdx} value={size.size}>
-                                    {size.size} - {formatter.format(size.price)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
                         
                         <div className="flex items-center gap-1">
                           <button
@@ -282,6 +261,28 @@ export default function NewOrderPage() {
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
+                      
+                      {/* Size Selection - Only show for items with sizes, displayed below the item info */}
+                      {hasSizes && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-border">
+                          <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Size:</Label>
+                          <Select
+                            value={item.selectedSize || ""}
+                            onValueChange={(value) => updateItemSize(item.menuItemId, item.selectedSize, value, idx)}
+                          >
+                            <SelectTrigger className="h-9 text-sm flex-1 max-w-[200px]">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {menuItem.sizes.map((size, sizeIdx) => (
+                                <SelectItem key={sizeIdx} value={size.size}>
+                                  {size.size} - {formatter.format(size.price)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
