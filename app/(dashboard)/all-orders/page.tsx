@@ -776,13 +776,14 @@ export default function AllOrdersPage() {
                           </p>
                           <button
                             onClick={() => removeItemFromOrder(item.menuItemId, item.selectedSize)}
-                          className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
+                            className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
+                            aria-label="Remove item"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
