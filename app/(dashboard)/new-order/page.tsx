@@ -31,12 +31,12 @@ export default function NewOrderPage() {
     const item = menuItems.find((m) => m.id === selectedItem)
     if (!item) return
 
-    // Add item with base price (size will be selected in order summary if available)
+    // Add item with base price
     setOrderItems((prev) => {
-      const existing = prev.find((o) => o.menuItemId === item.id && !o.selectedSize)
+      const existing = prev.find((o) => o.menuItemId === item.id)
       if (existing) {
         return prev.map((o) =>
-          o.menuItemId === item.id && !o.selectedSize ? { ...o, quantity: o.quantity + 1 } : o
+          o.menuItemId === item.id ? { ...o, quantity: o.quantity + 1 } : o
         )
       }
       return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
@@ -52,30 +52,6 @@ export default function NewOrderPage() {
     }, 0)
   }
 
-  const updateItemSize = (menuItemId: string, currentSize: string | undefined, newSizeName: string, itemIndex: number) => {
-    const menuItem = menuItems.find(m => m.id === menuItemId)
-    if (!menuItem || !menuItem.sizes) return
-
-    const size = menuItem.sizes.find(s => s.size === newSizeName)
-    if (!size) return
-
-    setOrderItems((prev) => {
-      return prev.map((item, idx) => {
-        // Update the specific item instance by index
-        if (idx === itemIndex && item.menuItemId === menuItemId) {
-          const basePrice = size.price
-          const extrasPrice = calculateExtrasPrice(menuItem, item.selectedExtras || [])
-          return {
-            ...item,
-            menuItemName: `${menuItem.name} (${size.size})`,
-            price: basePrice + extrasPrice,
-            selectedSize: size.size
-          }
-        }
-        return item
-      })
-    })
-  }
 
   const toggleExtra = (itemIndex: number, extraName: string) => {
     setOrderItems((prev) => {
@@ -189,21 +165,16 @@ export default function NewOrderPage() {
               <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Quick Add</p>
               <HoverEffect className="grid grid-cols-2 gap-2 sm:grid-cols-3 py-0">
                 {menuItems.slice(0, 6).map((item) => {
-                  const hasSizes = item.sizes && item.sizes.length > 0
-                  const displayPrice = hasSizes 
-                    ? `${formatter.format(Math.min(...item.sizes.map(s => s.price)))} - ${formatter.format(Math.max(...item.sizes.map(s => s.price)))}`
-                    : formatter.format(item.price)
-                  
                   return (
                     <button
                       key={item.id}
                       onClick={() => {
-                        // Add item with base price (size can be selected in order summary)
+                        // Add item with base price
                         setOrderItems((prev) => {
-                          const existing = prev.find((o) => o.menuItemId === item.id && !o.selectedSize)
+                          const existing = prev.find((o) => o.menuItemId === item.id)
                           if (existing) {
                             return prev.map((o) =>
-                              o.menuItemId === item.id && !o.selectedSize ? { ...o, quantity: o.quantity + 1 } : o
+                              o.menuItemId === item.id ? { ...o, quantity: o.quantity + 1 } : o
                             )
                           }
                           return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
@@ -212,7 +183,7 @@ export default function NewOrderPage() {
                       className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center transition-colors hover:bg-accent active:scale-95"
                     >
                       <span className="text-sm font-medium text-foreground truncate w-full">{item.name}</span>
-                      <span className="text-xs text-muted-foreground">{displayPrice}</span>
+                      <span className="text-xs text-muted-foreground">{formatter.format(item.price)}</span>
                     </button>
                   )
                 })}

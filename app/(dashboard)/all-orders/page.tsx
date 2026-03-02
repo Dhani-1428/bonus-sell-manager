@@ -69,7 +69,6 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
           {order.items.map((item, idx) => (
             <div key={idx} className="truncate">
               {item.menuItemName}
-              {item.selectedSize && <span className="text-muted-foreground"> ({item.selectedSize})</span>}
               {" × "}
               {item.quantity}
             </div>
@@ -170,7 +169,7 @@ export default function AllOrdersPage() {
     const rows = filteredOrders.map((o) => [
       o.orderNumber,
       new Date(o.date).toLocaleDateString(),
-      o.items.map((i) => `${i.menuItemName}${i.selectedSize ? ` (${i.selectedSize})` : ""} x${i.quantity}`).join("; "),
+      o.items.map((i) => `${i.menuItemName} x${i.quantity}`).join("; "),
       o.totalAmount.toFixed(2),
       o.discountAmount.toFixed(2),
       o.finalAmount.toFixed(2),
@@ -241,7 +240,6 @@ export default function AllOrdersPage() {
         menuItemName: displayName, 
         quantity: 1, 
         price: finalPrice,
-        selectedSize: sizeName
       }]
     })
     setSelectedItem("")
@@ -784,12 +782,11 @@ export default function AllOrdersPage() {
                             <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
                             <p className="text-xs text-muted-foreground">
                               {formatter.format(item.price)} each
-                              {item.selectedSize && <span className="ml-1">({item.selectedSize})</span>}
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => updateItemQuantity(item.menuItemId, item.selectedSize, -1)}
+                              onClick={() => updateItemQuantity(item.menuItemId, -1)}
                               className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
                               aria-label="Decrease quantity"
                             >
@@ -797,7 +794,7 @@ export default function AllOrdersPage() {
                             </button>
                             <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
                             <button
-                              onClick={() => updateItemQuantity(item.menuItemId, item.selectedSize, 1)}
+                              onClick={() => updateItemQuantity(item.menuItemId, 1)}
                               className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
                               aria-label="Increase quantity"
                             >
@@ -808,7 +805,7 @@ export default function AllOrdersPage() {
                             {formatter.format(item.price * item.quantity)}
                           </p>
                           <button
-                            onClick={() => removeItemFromOrder(item.menuItemId, item.selectedSize)}
+                            onClick={() => removeItemFromOrder(item.menuItemId)}
                             className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
                             aria-label="Remove item"
                           >

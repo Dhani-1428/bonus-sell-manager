@@ -10,11 +10,6 @@ export interface User {
   subscriptionPlan?: "monthly" | "yearly" // Plan type if subscribed
 }
 
-export interface MenuItemSize {
-  size: string // e.g., "Small", "Medium", "Large"
-  price: number
-}
-
 export interface MenuItemExtra {
   name: string // e.g., "Extra Cheese", "Bacon", "Extra Sauce"
   price: number
@@ -23,9 +18,8 @@ export interface MenuItemExtra {
 export interface MenuItem {
   id: string
   name: string
-  price: number // Base price (used when no sizes)
+  price: number
   category: string
-  sizes?: MenuItemSize[] // Optional sizes array
   extras?: MenuItemExtra[] // Optional extras/add-ons array
   createdAt: string
 }
@@ -35,7 +29,6 @@ export interface OrderItem {
   menuItemName: string
   quantity: number
   price: number
-  selectedSize?: string // Optional: selected size name
   selectedExtras?: string[] // Optional: array of selected extra IDs/names
 }
 
