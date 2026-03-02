@@ -15,6 +15,7 @@ import { TestimonialsSection } from "@/components/sections/testimonials"
 import { FaqSection } from "@/components/sections/faq"
 import { ContactSection } from "@/components/sections/contact"
 import { Footer } from "@/components/footer"
+import { FloatingButtons } from "@/components/floating-buttons"
 
 export default function LandingPage() {
   const { session, isLoading } = useAuth()
@@ -51,6 +52,7 @@ export default function LandingPage() {
         <ContactSection />
       </main>
       <Footer />
+      <FloatingButtons />
     </div>
   )
 }
