@@ -40,6 +40,7 @@ export default function MenuPage() {
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("Main")
   const [sizes, setSizes] = useState<Array<{ size: string; price: string }>>([])
+  const [extras, setExtras] = useState<Array<{ name: string; price: string }>>([])
   const [ocrDialogOpen, setOcrDialogOpen] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [extractedItems, setExtractedItems] = useState<Array<{ name: string; price: number; category: string; description?: string }>>([])
@@ -75,6 +76,7 @@ export default function MenuPage() {
     setPrice("")
     setCategory("Main")
     setSizes([])
+    setExtras([])
     setDialogOpen(true)
   }
 
@@ -84,6 +86,7 @@ export default function MenuPage() {
     setPrice(item.price.toString())
     setCategory(item.category)
     setSizes(item.sizes ? item.sizes.map(s => ({ size: s.size, price: s.price.toString() })) : [])
+    setExtras(item.extras ? item.extras.map(e => ({ name: e.name, price: e.price.toString() })) : [])
     setDialogOpen(true)
   }
 
@@ -108,6 +111,15 @@ export default function MenuPage() {
       }))
       .filter(s => !isNaN(s.price) && s.price > 0)
 
+    // Validate extras if provided
+    const validExtras = extras
+      .filter(e => e.name.trim() && e.price.trim())
+      .map(e => ({
+        name: e.name.trim(),
+        price: parseFloat(e.price)
+      }))
+      .filter(e => !isNaN(e.price) && e.price >= 0)
+
     const menuItemData: any = {
       name: name.trim(),
       price: priceNum,
@@ -116,6 +128,10 @@ export default function MenuPage() {
 
     if (validSizes.length > 0) {
       menuItemData.sizes = validSizes
+    }
+
+    if (validExtras.length > 0) {
+      menuItemData.extras = validExtras
     }
 
     if (editingItem) {
@@ -140,6 +156,18 @@ export default function MenuPage() {
 
   const updateSize = (index: number, field: "size" | "price", value: string) => {
     setSizes(sizes.map((s, i) => i === index ? { ...s, [field]: value } : s))
+  }
+
+  const addExtra = () => {
+    setExtras([...extras, { name: "", price: "" }])
+  }
+
+  const removeExtra = (index: number) => {
+    setExtras(extras.filter((_, i) => i !== index))
+  }
+
+  const updateExtra = (index: number, field: "name" | "price", value: string) => {
+    setExtras(extras.map((e, i) => i === index ? { ...e, [field]: value } : e))
   }
 
   const handleDelete = (id: string) => {
@@ -1008,6 +1036,55 @@ export default function MenuPage() {
                   ))}
                   <p className="text-xs text-muted-foreground">
                     If sizes are added, the base price above will be used as a fallback. Size prices will be shown in the menu.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Extras Section */}
+            <div className="flex flex-col gap-3 border-t border-border pt-4">
+              <div className="flex items-center justify-between">
+                <Label>Extras/Add-ons (Optional)</Label>
+                <button
+                  type="button"
+                  onClick={addExtra}
+                  className="flex h-8 items-center gap-1 rounded-md border border-border px-3 text-xs font-medium text-foreground hover:bg-accent transition-colors"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Extra
+                </button>
+              </div>
+              {extras.length > 0 && (
+                <div className="space-y-2">
+                  {extras.map((extra, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        placeholder="Extra name (e.g., Extra Cheese)"
+                        value={extra.name}
+                        onChange={(e) => updateExtra(index, "name", e.target.value)}
+                        className="h-10 flex-1"
+                      />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Price"
+                        value={extra.price}
+                        onChange={(e) => updateExtra(index, "price", e.target.value)}
+                        className="h-10 w-24"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeExtra(index)}
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        aria-label="Remove extra"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    Extras can be added to orders in the order summary. Prices will be added to the base item price.
                   </p>
                 </div>
               )}
