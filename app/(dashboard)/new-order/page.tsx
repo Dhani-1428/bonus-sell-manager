@@ -205,33 +205,21 @@ export default function NewOrderPage() {
               <HoverEffect className="flex flex-col gap-2 py-0">
                 {orderItems.map((item, idx) => {
                   const menuItem = menuItems.find(m => m.id === item.menuItemId)
-                  const hasSizes = menuItem?.sizes && menuItem.sizes.length > 0
-                  const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}-${idx}` : `${item.menuItemId}-${idx}`
+                  const hasExtras = menuItem?.extras && menuItem.extras.length > 0
                   
                   return (
-                    <div key={itemKey} className="flex flex-col gap-3 rounded-lg border border-border p-3">
+                    <div key={`${item.menuItemId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-border p-3">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
                           <p className="text-xs text-muted-foreground">
                             {formatter.format(item.price)} each
-                            {item.selectedSize && <span className="ml-1">({item.selectedSize})</span>}
                           </p>
                         </div>
                         
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => {
-                              const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
-                              setOrderItems((prev) =>
-                                prev
-                                  .map((o) => {
-                                    const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                                    return existingKey === itemKey ? { ...o, quantity: Math.max(0, o.quantity - 1) } : o
-                                  })
-                                  .filter((o) => o.quantity > 0)
-                              )
-                            }}
+                            onClick={() => updateQuantity(item.menuItemId, -1)}
                             className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
                             aria-label="Decrease quantity"
                           >
@@ -239,15 +227,7 @@ export default function NewOrderPage() {
                           </button>
                           <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
                           <button
-                            onClick={() => {
-                              const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
-                              setOrderItems((prev) =>
-                                prev.map((o) => {
-                                  const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                                  return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
-                                })
-                              )
-                            }}
+                            onClick={() => updateQuantity(item.menuItemId, 1)}
                             className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
                             aria-label="Increase quantity"
                           >
