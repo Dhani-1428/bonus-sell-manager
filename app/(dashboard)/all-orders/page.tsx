@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useEffect, useState, useCallback } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { useAuth } from "@/components/auth-provider"
 import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/store"
 import type { Order, OrderItem, MenuItem } from "@/lib/types"
