@@ -730,9 +730,8 @@ export default function AllOrdersPage() {
                 ) : (
                   <div className="space-y-2">
                     {editingItems.map((item, idx) => {
-                      const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}-${idx}` : `${item.menuItemId}-${idx}`
                       return (
-                        <div key={itemKey} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
+                        <div key={`${item.menuItemId}-${idx}`} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
                             <p className="text-xs text-muted-foreground">
