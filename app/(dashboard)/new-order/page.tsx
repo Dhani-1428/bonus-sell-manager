@@ -136,13 +136,9 @@ export default function NewOrderPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {menuItems.map((item) => {
-                    const hasSizes = item.sizes && item.sizes.length > 0
-                    const displayPrice = hasSizes 
-                      ? `${formatter.format(Math.min(...item.sizes.map(s => s.price)))} - ${formatter.format(Math.max(...item.sizes.map(s => s.price)))}`
-                      : formatter.format(item.price)
                     return (
                       <SelectItem key={item.id} value={item.id}>
-                        {item.name} - {displayPrice}
+                        {item.name} - {formatter.format(item.price)}
                       </SelectItem>
                     )
                   })}

@@ -854,30 +854,13 @@ export default function MenuPage() {
           <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{cat}</h3>
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
-              const hasSizes = item.sizes && item.sizes.length > 0
-              const displayPrice = hasSizes 
-                ? `${formatter.format(Math.min(...item.sizes.map(s => s.price)))} - ${formatter.format(Math.max(...item.sizes.map(s => s.price)))}`
-                : formatter.format(item.price)
-              
               return (
                 <Card key={item.id} className="py-0">
                   <CardContent className="flex flex-col gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground truncate">{item.name}</p>
-                        <p className="text-lg font-bold text-primary">{displayPrice}</p>
-                        {hasSizes && (
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {item.sizes.map((size, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground"
-                              >
-                                {size.size}: {formatter.format(size.price)}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        <p className="text-lg font-bold text-primary">{formatter.format(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
