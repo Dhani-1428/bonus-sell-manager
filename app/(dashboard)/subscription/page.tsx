@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Check, X, Clock, CreditCard, Zap, Crown } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
+import { CardBody as ThreeDCardBody, CardContainer, CardItem } from "@/components/ui/3d-card"
 
 export default function SubscriptionPage() {
   const { session } = useAuth()
@@ -133,148 +134,172 @@ export default function SubscriptionPage() {
         <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>
       </div>
 
-      {/* At-a-glance subscription cards */}
+      {/* At-a-glance subscription cards with 3D hover animation */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Card 1: Trial / Plan summary */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              {subscriptionStatus.status === "trial" ? "Free Trial" : "Current Plan"}
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {subscriptionStatus.status === "trial"
-                ? "You have limited-time full access to explore all features."
-                : "Your paid plan is currently active."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <p className="text-xl font-semibold text-foreground">
-              {subscriptionStatus.status === "trial"
-                ? `${subscriptionStatus.daysRemaining} day${
-                    subscriptionStatus.daysRemaining !== 1 ? "s" : ""
-                  } left`
-                : (subscriptionStatus.plan || "Monthly").toString().toUpperCase()}
-            </p>
-          </CardContent>
-        </Card>
+        <CardContainer className="inter-var">
+          <ThreeDCardBody className="bg-primary/5 border border-primary/20 rounded-xl p-4">
+            <CardItem translateZ="40">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  {subscriptionStatus.status === "trial" ? "Free Trial" : "Current Plan"}
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {subscriptionStatus.status === "trial"
+                    ? "You have limited-time full access to explore all features."
+                    : "Your paid plan is currently active."}
+                </CardDescription>
+              </CardHeader>
+            </CardItem>
+            <CardItem translateZ="80">
+              <CardContent className="pt-0">
+                <p className="text-xl font-semibold text-foreground">
+                  {subscriptionStatus.status === "trial"
+                    ? `${subscriptionStatus.daysRemaining} day${
+                        subscriptionStatus.daysRemaining !== 1 ? "s" : ""
+                      } left`
+                    : (subscriptionStatus.plan || "Monthly").toString().toUpperCase()}
+                </p>
+              </CardContent>
+            </CardItem>
+          </ThreeDCardBody>
+        </CardContainer>
 
         {/* Card 2: Status */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              {subscriptionStatus.hasAccess ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <X className="h-4 w-4 text-red-500" />
-              )}
-              Status
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {subscriptionStatus.message}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                subscriptionStatus.status === "active"
-                  ? "bg-green-500/10 text-green-600"
-                  : subscriptionStatus.status === "trial"
-                  ? "bg-blue-500/10 text-blue-600"
-                  : "bg-red-500/10 text-red-600"
-              }`}
-            >
-              {subscriptionStatus.status === "trial" && "Free Trial"}
-              {subscriptionStatus.status === "active" && "Active"}
-              {subscriptionStatus.status === "expired" && "Expired"}
-              {subscriptionStatus.status === "cancelled" && "Cancelled"}
-            </span>
-          </CardContent>
-        </Card>
+        <CardContainer className="inter-var">
+          <ThreeDCardBody className="bg-background border border-border rounded-xl p-4">
+            <CardItem translateZ="40">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  {subscriptionStatus.hasAccess ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-500" />
+                  )}
+                  Status
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {subscriptionStatus.message}
+                </CardDescription>
+              </CardHeader>
+            </CardItem>
+            <CardItem translateZ="80">
+              <CardContent className="pt-0">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    subscriptionStatus.status === "active"
+                      ? "bg-green-500/10 text-green-600"
+                      : subscriptionStatus.status === "trial"
+                      ? "bg-blue-500/10 text-blue-600"
+                      : "bg-red-500/10 text-red-600"
+                  }`}
+                >
+                  {subscriptionStatus.status === "trial" && "Free Trial"}
+                  {subscriptionStatus.status === "active" && "Active"}
+                  {subscriptionStatus.status === "expired" && "Expired"}
+                  {subscriptionStatus.status === "cancelled" && "Cancelled"}
+                </span>
+              </CardContent>
+            </CardItem>
+          </ThreeDCardBody>
+        </CardContainer>
 
         {/* Card 3: Quick action */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-              Subscription Action
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {subscriptionStatus.hasAccess
-                ? "You can change or extend your plan at any time."
-                : "Activate a plan to unlock the full admin panel."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Button
-              size="sm"
-              className="w-full"
-              disabled={isProcessing}
-              onClick={() => handleSubscribe("monthly")}
-            >
-              {isProcessing
-                ? "Redirecting to payment..."
-                : subscriptionStatus.hasAccess
-                ? "Manage Subscription"
-                : "Start Monthly Plan"}
-            </Button>
-          </CardContent>
-        </Card>
+        <CardContainer className="inter-var">
+          <ThreeDCardBody className="bg-background border border-border rounded-xl p-4">
+            <CardItem translateZ="40">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 text-muted-foreground" />
+                  Subscription Action
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  {subscriptionStatus.hasAccess
+                    ? "You can change or extend your plan at any time."
+                    : "Activate a plan to unlock the full admin panel."}
+                </CardDescription>
+              </CardHeader>
+            </CardItem>
+            <CardItem translateZ="80">
+              <CardContent className="pt-0">
+                <Button
+                  size="sm"
+                  className="w-full"
+                  disabled={isProcessing}
+                  onClick={() => handleSubscribe("monthly")}
+                >
+                  {isProcessing
+                    ? "Redirecting to payment..."
+                    : subscriptionStatus.hasAccess
+                    ? "Manage Subscription"
+                    : "Start Monthly Plan"}
+                </Button>
+              </CardContent>
+            </CardItem>
+          </ThreeDCardBody>
+        </CardContainer>
       </div>
 
-      {/* Current Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Current Status</CardTitle>
-          <CardDescription>Your subscription and trial information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                subscriptionStatus.hasAccess
-                  ? "bg-green-500/10 text-green-500"
-                  : "bg-red-500/10 text-red-500"
-              }`}
-            >
-              {subscriptionStatus.hasAccess ? (
-                <Check className="h-6 w-6" />
-              ) : (
-                <X className="h-6 w-6" />
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-foreground">
-                  {subscriptionStatus.status === "trial" && "Free Trial"}
-                  {subscriptionStatus.status === "active" && "Active Subscription"}
-                  {subscriptionStatus.status === "expired" && "Subscription Expired"}
-                  {subscriptionStatus.status === "cancelled" && "Subscription Cancelled"}
-                </p>
-                {subscriptionStatus.status === "trial" && (
-                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-500">
-                    Trial
-                  </span>
-                )}
-                {subscriptionStatus.status === "active" && (
-                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
-                    Active
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">{subscriptionStatus.message}</p>
-              {subscriptionStatus.daysRemaining > 0 && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {subscriptionStatus.daysRemaining} day{subscriptionStatus.daysRemaining !== 1 ? "s" : ""} remaining
-                  </span>
+      {/* Current Status (3D card) */}
+      <CardContainer className="inter-var">
+        <ThreeDCardBody className="bg-background border border-border rounded-xl">
+          <CardItem translateZ="40">
+            <CardHeader>
+              <CardTitle>Current Status</CardTitle>
+              <CardDescription>Your subscription and trial information</CardDescription>
+            </CardHeader>
+          </CardItem>
+          <CardItem translateZ="80">
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                    subscriptionStatus.hasAccess
+                      ? "bg-green-500/10 text-green-500"
+                      : "bg-red-500/10 text-red-500"
+                  }`}
+                >
+                  {subscriptionStatus.hasAccess ? (
+                    <Check className="h-6 w-6" />
+                  ) : (
+                    <X className="h-6 w-6" />
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-foreground">
+                      {subscriptionStatus.status === "trial" && "Free Trial"}
+                      {subscriptionStatus.status === "active" && "Active Subscription"}
+                      {subscriptionStatus.status === "expired" && "Subscription Expired"}
+                      {subscriptionStatus.status === "cancelled" && "Subscription Cancelled"}
+                    </p>
+                    {subscriptionStatus.status === "trial" && (
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-500/10 text-blue-500">
+                        Trial
+                      </span>
+                    )}
+                    {subscriptionStatus.status === "active" && (
+                      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{subscriptionStatus.message}</p>
+                  {subscriptionStatus.daysRemaining > 0 && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {subscriptionStatus.daysRemaining} day{subscriptionStatus.daysRemaining !== 1 ? "s" : ""} remaining
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </CardItem>
+        </ThreeDCardBody>
+      </CardContainer>
 
       {/* Subscription Plans */}
       {!subscriptionStatus.hasAccess && (
@@ -282,99 +307,119 @@ export default function SubscriptionPage() {
           <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Plan</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {plans.map((plan) => (
-              <Card key={plan.name} className={plan.popular ? "border-primary border-2" : ""}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {plan.name}
-                        {plan.popular && (
-                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                            Popular
-                          </span>
-                        )}
-                      </CardTitle>
-                      <CardDescription className="mt-2">
-                        <span className="text-2xl font-bold text-foreground">{plan.price}</span>
-                        <span className="text-muted-foreground"> {plan.period}</span>
-                      </CardDescription>
-                    </div>
-                    {plan.name === "Monthly" && <Zap className="h-8 w-8 text-muted-foreground" />}
-                    {plan.name === "Yearly" && <Crown className="h-8 w-8 text-primary" />}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    onClick={() => handleSubscribe(plan.plan)}
-                    disabled={isProcessing}
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                  >
-                    {isProcessing ? "Processing..." : `Subscribe to ${plan.name}`}
-                  </Button>
-                </CardContent>
-              </Card>
+              <CardContainer key={plan.name} className="inter-var">
+                <ThreeDCardBody
+                  className={`rounded-xl border p-4 ${
+                    plan.popular ? "border-primary ring-1 ring-primary/40" : "border-border bg-background"
+                  }`}
+                >
+                  <CardItem translateZ="40">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            {plan.name}
+                            {plan.popular && (
+                              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                                Popular
+                              </span>
+                            )}
+                          </CardTitle>
+                          <CardDescription className="mt-2">
+                            <span className="text-2xl font-bold text-foreground">{plan.price}</span>
+                            <span className="text-muted-foreground"> {plan.period}</span>
+                          </CardDescription>
+                        </div>
+                        {plan.name === "Monthly" && <Zap className="h-8 w-8 text-muted-foreground" />}
+                        {plan.name === "Yearly" && <Crown className="h-8 w-8 text-primary" />}
+                      </div>
+                    </CardHeader>
+                  </CardItem>
+                  <CardItem translateZ="80">
+                    <CardContent>
+                      <ul className="space-y-3 mb-6">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                            <span className="text-sm text-foreground">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        onClick={() => handleSubscribe(plan.plan)}
+                        disabled={isProcessing}
+                        className="w-full"
+                        variant={plan.popular ? "default" : "outline"}
+                      >
+                        {isProcessing ? "Processing..." : `Subscribe to ${plan.name}`}
+                      </Button>
+                    </CardContent>
+                  </CardItem>
+                </ThreeDCardBody>
+              </CardContainer>
             ))}
           </div>
         </div>
       )}
 
-      {/* Active Subscription Info */}
+      {/* Active Subscription Info (3D card) */}
       {subscriptionStatus.hasAccess && subscriptionStatus.status === "active" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscription Details</CardTitle>
-            <CardDescription>Your active subscription information</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Plan</span>
-                <span className="font-medium text-foreground capitalize">
-                  {subscriptionStatus.plan || "Monthly"}
-                </span>
-              </div>
-              {subscriptionStatus.subscriptionEndDate && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Renews on</span>
-                  <span className="font-medium text-foreground">
-                    {new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString()}
-                  </span>
+        <CardContainer className="inter-var">
+          <ThreeDCardBody className="bg-background border border-border rounded-xl">
+            <CardItem translateZ="40">
+              <CardHeader>
+                <CardTitle>Subscription Details</CardTitle>
+                <CardDescription>Your active subscription information</CardDescription>
+              </CardHeader>
+            </CardItem>
+            <CardItem translateZ="80">
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Plan</span>
+                    <span className="font-medium text-foreground capitalize">
+                      {subscriptionStatus.plan || "Monthly"}
+                    </span>
+                  </div>
+                  {subscriptionStatus.subscriptionEndDate && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Renews on</span>
+                      <span className="font-medium text-foreground">
+                        {new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
+                      Active
+                    </span>
+                  </div>
                 </div>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status</span>
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-500/10 text-green-500">
-                  Active
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </CardItem>
+          </ThreeDCardBody>
+        </CardContainer>
       )}
 
-      {/* Payment Info */}
-      <Card className="bg-muted/50">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-foreground mb-1">Secure Payment</p>
-              <p className="text-xs text-muted-foreground">
-                Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Payment Info (3D card) */}
+      <CardContainer className="inter-var">
+        <ThreeDCardBody className="bg-muted/50 rounded-xl border border-border/40">
+          <CardItem translateZ="40">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-1">Secure Payment</p>
+                  <p className="text-xs text-muted-foreground">
+                    Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </CardItem>
+        </ThreeDCardBody>
+      </CardContainer>
     </div>
   )
 }
