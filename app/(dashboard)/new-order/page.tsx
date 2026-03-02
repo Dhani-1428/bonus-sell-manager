@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Minus, Trash2, ShoppingCart, X } from "lucide-react"
 import { toast } from "sonner"
+import { HoverEffect } from "@/components/ui/card-hover-effect"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 
