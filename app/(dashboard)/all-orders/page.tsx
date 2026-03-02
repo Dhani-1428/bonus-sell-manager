@@ -121,7 +121,6 @@ export default function AllOrdersPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItems, setEditingItems] = useState<OrderItem[]>([])
   const [selectedItem, setSelectedItem] = useState("")
-  const [selectedSize, setSelectedSize] = useState("")
   const [discount, setDiscount] = useState("")
   const [orderDate, setOrderDate] = useState("")
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "online">("cash")
