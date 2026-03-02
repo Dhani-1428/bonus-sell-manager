@@ -2,6 +2,7 @@
 
 import { ShoppingCart, UtensilsCrossed, LineChart, Receipt, Users, Bell } from "lucide-react"
 import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
+import { Vortex } from "@/components/ui/vortex"
 
 const features = [
   {
@@ -38,8 +39,16 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="scroll-mt-20 px-4 py-20 lg:py-28">
-      <div className="mx-auto max-w-6xl">
+    <section id="features" className="scroll-mt-20 px-4 py-20 lg:py-28 relative">
+      {/* Vortex Background */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <Vortex
+          backgroundColor="black"
+          className="flex items-center flex-col justify-center px-2 md:px-10 py-4 w-full h-full"
+        />
+      </div>
+
+      <div className="mx-auto max-w-6xl relative z-10">
         <div className="mx-auto mb-14 max-w-2xl text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">Features</p>
           <h2 className="text-3xl font-bold tracking-tight text-foreground lg:text-4xl text-balance">
