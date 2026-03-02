@@ -698,8 +698,47 @@ function SidebarMenuSubButton({
   )
 }
 
+function SidebarBody({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      className={cn('flex flex-col', className)}
+      {...props}
+    />
+  )
+}
+
+function SidebarLink({ 
+  link,
+  className,
+  ...props 
+}: React.ComponentProps<'div'> & {
+  link: {
+    label: string
+    href: string
+    icon?: React.ReactNode
+  }
+}) {
+  const { state } = useSidebar()
+  
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer',
+        'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        state === 'collapsed' && 'justify-center',
+        className
+      )}
+      {...props}
+    >
+      {link.icon}
+      {state !== 'collapsed' && <span>{link.label}</span>}
+    </div>
+  )
+}
+
 export {
   Sidebar,
+  SidebarBody,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -709,6 +748,7 @@ export {
   SidebarHeader,
   SidebarInput,
   SidebarInset,
+  SidebarLink,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuBadge,

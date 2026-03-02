@@ -1,7 +1,8 @@
 "use client"
 
-import { Menu, LogOut, Sun, Moon } from "lucide-react"
+import { LogOut, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export function DashboardHeader({
   userName,
@@ -17,13 +18,7 @@ export function DashboardHeader({
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
       <div className="flex items-center gap-3">
-        <button
-          onClick={onMenuToggle}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden"
-          aria-label="Toggle menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        <SidebarTrigger />
         <div className="hidden lg:block">
           <p className="text-sm font-medium text-foreground">{userName}</p>
         </div>

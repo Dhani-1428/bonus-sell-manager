@@ -1,8 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, X, CreditCard } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, CreditCard, LogOut } from "lucide-react"
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
+import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/components/auth-provider"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -14,81 +18,100 @@ const navItems = [
 ]
 
 export function DashboardSidebar({
-  isOpen,
-  onClose,
-  pathname,
   userName,
 }: {
-  isOpen: boolean
-  onClose: () => void
-  pathname: string
   userName: string
 }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAuth()
+  const { state } = useSidebar()
+  const isCollapsed = state === 'collapsed'
+
+  const handleLogout = () => {
+    logout()
+    router.push("/")
+  }
+
+  const links = navItems.map((item) => ({
+    label: item.label,
+    href: item.href,
+    icon: (
+      <item.icon className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+    ),
+  }))
+
   return (
-    <aside
-      className={cn(
-        "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 lg:static lg:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}
-    >
-      {/* Header */}
-      <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-            <svg width="16" height="20" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 0C16 0 8 10 8 20H24C24 10 16 0 16 0Z" className="fill-sidebar-primary-foreground" />
-              <rect x="8" y="20" width="16" height="12" className="fill-sidebar-primary-foreground/80" />
-              <path d="M8 26L2 34L8 32Z" className="fill-sidebar-primary-foreground/60" />
-              <path d="M24 26L30 34L24 32Z" className="fill-sidebar-primary-foreground/60" />
-            </svg>
-          </div>
-          <span className="text-sm font-bold text-sidebar-foreground">SalesRocket</span>
-        </div>
-        <button
-          onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground lg:hidden"
-          aria-label="Close sidebar"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Restaurant name */}
-      <div className="px-4 py-3">
-        <p className="text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wider">Restaurant</p>
-        <p className="mt-0.5 text-sm font-semibold text-sidebar-foreground truncate">{userName}</p>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3">
-        <ul className="flex flex-col gap-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={onClose}
-                  className={cn(
-                    "flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <item.icon className="h-5 w-5 shrink-0" />
-                  {item.label}
+    <Sidebar collapsible="icon">
+      <SidebarBody className="justify-between gap-10">
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+          {isCollapsed ? <LogoIcon /> : <Logo />}
+          <div className="mt-8 flex flex-col gap-2">
+            {links.map((link, idx) => {
+              const isActive = pathname === link.href
+              return (
+                <Link key={idx} href={link.href} className="block">
+                  <SidebarLink 
+                    link={link}
+                    className={cn(
+                      isActive && "bg-sidebar-primary text-sidebar-primary-foreground"
+                    )}
+                  />
                 </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
+              )
+            })}
+          </div>
+        </div>
+        <div>
+          <SidebarLink
+            link={{
+              label: userName,
+              href: "#",
+              icon: (
+                <div className="h-7 w-7 shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+              ),
+            }}
+          />
+          <button
+            onClick={handleLogout}
+            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <LogOut className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            {!isCollapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </SidebarBody>
+    </Sidebar>
+  )
+}
 
-      {/* Footer */}
-      <div className="border-t border-sidebar-border p-4">
-        <p className="text-xs text-sidebar-foreground/40 text-center">SalesRocket v1.0</p>
-      </div>
-    </aside>
+export const Logo = () => {
+  return (
+    <Link
+      href="/dashboard"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
+    >
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="font-medium whitespace-pre text-black dark:text-white"
+      >
+        SalesRocket
+      </motion.span>
+    </Link>
+  )
+}
+
+export const LogoIcon = () => {
+  return (
+    <Link
+      href="/dashboard"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
+    >
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
+    </Link>
   )
 }
