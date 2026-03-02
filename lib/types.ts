@@ -15,12 +15,18 @@ export interface MenuItemSize {
   price: number
 }
 
+export interface MenuItemExtra {
+  name: string // e.g., "Extra Cheese", "Bacon", "Extra Sauce"
+  price: number
+}
+
 export interface MenuItem {
   id: string
   name: string
   price: number // Base price (used when no sizes)
   category: string
   sizes?: MenuItemSize[] // Optional sizes array
+  extras?: MenuItemExtra[] // Optional extras/add-ons array
   createdAt: string
 }
 
@@ -30,6 +36,7 @@ export interface OrderItem {
   quantity: number
   price: number
   selectedSize?: string // Optional: selected size name
+  selectedExtras?: string[] // Optional: array of selected extra IDs/names
 }
 
 export interface Order {

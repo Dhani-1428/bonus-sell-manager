@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react"
+import { Plus, Minus, Trash2, ShoppingCart, X } from "lucide-react"
 import { toast } from "sonner"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
@@ -43,6 +43,14 @@ export default function NewOrderPage() {
     setSelectedItem("")
   }, [selectedItem, menuItems])
 
+  const calculateExtrasPrice = (menuItem: typeof menuItems[0], selectedExtras: string[]): number => {
+    if (!menuItem.extras || selectedExtras.length === 0) return 0
+    return selectedExtras.reduce((total, extraName) => {
+      const extra = menuItem.extras?.find(e => e.name === extraName)
+      return total + (extra?.price || 0)
+    }, 0)
+  }
+
   const updateItemSize = (menuItemId: string, currentSize: string | undefined, newSizeName: string, itemIndex: number) => {
     const menuItem = menuItems.find(m => m.id === menuItemId)
     if (!menuItem || !menuItem.sizes) return
@@ -54,11 +62,43 @@ export default function NewOrderPage() {
       return prev.map((item, idx) => {
         // Update the specific item instance by index
         if (idx === itemIndex && item.menuItemId === menuItemId) {
+          const basePrice = size.price
+          const extrasPrice = calculateExtrasPrice(menuItem, item.selectedExtras || [])
           return {
             ...item,
             menuItemName: `${menuItem.name} (${size.size})`,
-            price: size.price,
+            price: basePrice + extrasPrice,
             selectedSize: size.size
+          }
+        }
+        return item
+      })
+    })
+  }
+
+  const toggleExtra = (itemIndex: number, extraName: string) => {
+    setOrderItems((prev) => {
+      return prev.map((item, idx) => {
+        if (idx === itemIndex) {
+          const menuItem = menuItems.find(m => m.id === item.menuItemId)
+          if (!menuItem) return item
+
+          const currentExtras = item.selectedExtras || []
+          const isSelected = currentExtras.includes(extraName)
+          const newExtras = isSelected
+            ? currentExtras.filter(e => e !== extraName)
+            : [...currentExtras, extraName]
+
+          // Calculate new price
+          const basePrice = item.selectedSize && menuItem.sizes
+            ? menuItem.sizes.find(s => s.size === item.selectedSize)?.price || menuItem.price
+            : menuItem.price
+          const extrasPrice = calculateExtrasPrice(menuItem, newExtras)
+
+          return {
+            ...item,
+            selectedExtras: newExtras,
+            price: basePrice + extrasPrice
           }
         }
         return item
@@ -262,7 +302,7 @@ export default function NewOrderPage() {
                         </button>
                       </div>
                       
-                      {/* Size Selection - Only show for items with sizes, displayed below the item info */}
+                      {/* Size Selection - Only show for items with sizes */}
                       {hasSizes && (
                         <div className="flex items-center gap-2 pt-2 border-t border-border">
                           <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Size:</Label>
@@ -281,6 +321,38 @@ export default function NewOrderPage() {
                               ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                      )}
+
+                      {/* Extras Selection - Only show for items with extras */}
+                      {menuItem?.extras && menuItem.extras.length > 0 && (
+                        <div className="pt-2 border-t border-border">
+                          <Label className="text-xs font-medium text-muted-foreground mb-2 block">Extras:</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {menuItem.extras.map((extra, extraIdx) => {
+                              const isSelected = item.selectedExtras?.includes(extra.name) || false
+                              return (
+                                <button
+                                  key={extraIdx}
+                                  onClick={() => toggleExtra(idx, extra.name)}
+                                  className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                                    isSelected
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-border bg-card text-foreground hover:bg-accent"
+                                  }`}
+                                >
+                                  <span>{extra.name}</span>
+                                  <span className="text-muted-foreground">+{formatter.format(extra.price)}</span>
+                                  {isSelected && <X className="h-3 w-3" />}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          {item.selectedExtras && item.selectedExtras.length > 0 && (
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              Selected: {item.selectedExtras.join(", ")}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
