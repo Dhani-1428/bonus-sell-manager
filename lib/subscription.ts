@@ -113,28 +113,89 @@ export function initializeTrial(userId: string): void {
 
 /**
  * Activate subscription for a user
+ * Works both client-side and server-side
  */
-export function activateSubscription(
+export async function activateSubscription(
   userId: string,
   plan: "monthly" | "yearly",
   durationDays: number
-): boolean {
-  if (typeof window === "undefined") return false
-  
-  const users = getUsers()
-  const user = users.find((u) => u.id === userId)
-  if (!user) return false
-  
+): Promise<boolean> {
   const now = new Date()
   const endDate = new Date(now)
   endDate.setDate(endDate.getDate() + durationDays)
+  
+  // Server-side: Store via API route
+  if (typeof window === "undefined") {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/sync-subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          plan,
+          endDate: endDate.toISOString(),
+        }),
+      })
+      return response.ok
+    } catch (error) {
+      console.error("Server-side subscription activation error:", error)
+      return false
+    }
+  }
+  
+  // Client-side: Use localStorage and sync with server
+  const users = getUsers()
+  const user = users.find((u) => u.id === userId)
+  if (!user) return false
   
   user.subscriptionStatus = "active"
   user.subscriptionEndDate = endDate.toISOString()
   user.subscriptionPlan = plan
   
   saveUsers(users)
+  
+  // Sync with server for webhook updates
+  try {
+    await fetch("/api/sync-subscription", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        plan,
+        endDate: endDate.toISOString(),
+      }),
+    })
+  } catch (error) {
+    // Silently fail - not critical
+    console.error("Subscription sync error:", error)
+  }
+  
   return true
+}
+
+/**
+ * Sync server-side subscription updates to client localStorage
+ */
+export async function syncServerUpdates(userId: string): Promise<void> {
+  try {
+    const response = await fetch("/api/sync-subscription")
+    if (response.ok) {
+      const data = await response.json()
+      if (data[userId]) {
+        const users = getUsers()
+        const user = users.find((u) => u.id === userId)
+        if (user) {
+          user.subscriptionStatus = "active"
+          user.subscriptionEndDate = data[userId].endDate
+          user.subscriptionPlan = data[userId].plan as "monthly" | "yearly"
+          saveUsers(users)
+        }
+      }
+    }
+  } catch (error) {
+    // Silently fail - not critical
+    console.error("Subscription sync error:", error)
+  }
 }
 
 /**

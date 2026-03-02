@@ -2,21 +2,25 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { getUserById, getSubscriptionStatus, activateSubscription } from "@/lib/subscription"
+import { getUserById, getSubscriptionStatus, syncServerUpdates } from "@/lib/subscription"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check, X, Clock, CreditCard, Zap, Crown } from "lucide-react"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 export default function SubscriptionPage() {
   const { session } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [subscriptionStatus, setSubscriptionStatus] = useState<ReturnType<typeof getSubscriptionStatus> | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const refreshStatus = useCallback(() => {
+  const refreshStatus = useCallback(async () => {
     if (session) {
+      // Sync server-side updates first
+      await syncServerUpdates(session.userId)
+      
       const user = getUserById(session.userId)
       if (user) {
         setSubscriptionStatus(getSubscriptionStatus(user))
@@ -31,33 +35,52 @@ export default function SubscriptionPage() {
     return () => clearInterval(interval)
   }, [refreshStatus])
 
+  // Handle Stripe redirect
+  useEffect(() => {
+    const success = searchParams.get("success")
+    const canceled = searchParams.get("canceled")
+    
+    if (success === "true") {
+      toast.success("Payment successful! Your subscription is now active.")
+      refreshStatus()
+      // Clean URL
+      router.replace("/subscription")
+    } else if (canceled === "true") {
+      toast.info("Payment canceled. You can try again anytime.")
+      router.replace("/subscription")
+    }
+  }, [searchParams, router, refreshStatus])
+
   const handleSubscribe = async (plan: "monthly" | "yearly") => {
     if (!session) return
 
     setIsProcessing(true)
     try {
-      // Simulate subscription activation
-      // In a real app, you would integrate with a payment provider (Stripe, PayPal, etc.)
-      const durationDays = plan === "monthly" ? 30 : 365
-      const success = activateSubscription(session.userId, plan, durationDays)
+      // Create Stripe checkout session
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          userId: session.userId,
+        }),
+      })
 
-      if (success) {
-        toast.success(`Successfully subscribed to ${plan === "monthly" ? "Monthly" : "Yearly"} plan!`)
-        
-        // Update status
-        refreshStatus()
+      const data = await response.json()
 
-        // Redirect to dashboard after a moment
-        setTimeout(() => {
-          router.push("/dashboard")
-        }, 1500)
-      } else {
-        toast.error("Failed to activate subscription. Please try again.")
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create checkout session")
       }
-    } catch (error) {
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error("No checkout URL received")
+      }
+    } catch (error: any) {
       console.error("Subscription error:", error)
-      toast.error("An error occurred. Please try again.")
-    } finally {
+      toast.error(error.message || "Failed to start checkout. Please try again.")
       setIsProcessing(false)
     }
   }
@@ -249,16 +272,15 @@ export default function SubscriptionPage() {
         </Card>
       )}
 
-      {/* Note about payment integration */}
+      {/* Payment Info */}
       <Card className="bg-muted/50">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
             <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-foreground mb-1">Payment Integration</p>
+              <p className="text-sm font-medium text-foreground mb-1">Secure Payment</p>
               <p className="text-xs text-muted-foreground">
-                This is a demo subscription system. In production, integrate with a payment provider like Stripe or
-                PayPal to process real payments. The subscription is activated immediately for demonstration purposes.
+                Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
               </p>
             </div>
           </div>
