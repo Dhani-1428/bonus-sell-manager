@@ -1,4 +1,7 @@
+"use client"
+
 import { ShoppingCart, UtensilsCrossed, LineChart, Receipt, Users, Bell } from "lucide-react"
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
 
 const features = [
   {
@@ -49,16 +52,19 @@ export function FeaturesSection() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/30 hover:bg-card/80"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-                <feature.icon className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-base font-semibold text-card-foreground">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-            </div>
+            <CardContainer key={feature.title} className="inter-var">
+              <CardBody className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-6 dark:bg-black dark:border-white/[0.2]">
+                <CardItem translateZ="50" className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
+                  <feature.icon className="h-5 w-5 text-primary" />
+                </CardItem>
+                <CardItem translateZ="60" className="text-base font-semibold text-card-foreground">
+                  {feature.title}
+                </CardItem>
+                <CardItem translateZ="70" as="p" className="text-sm text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </CardItem>
+              </CardBody>
+            </CardContainer>
           ))}
         </div>
       </div>

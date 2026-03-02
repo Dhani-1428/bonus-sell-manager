@@ -1,4 +1,7 @@
+"use client"
+
 import { Check } from "lucide-react"
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
 
 const plans = [
   {
@@ -52,48 +55,57 @@ export function PricingSection({ onGetStarted }: { onGetStarted: () => void }) {
 
         <div className="grid gap-8 md:grid-cols-2">
           {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative flex flex-col rounded-2xl border p-8 ${
-                plan.highlighted
-                  ? "border-primary bg-background shadow-lg shadow-primary/5"
-                  : "border-border bg-background"
-              }`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                  {plan.badge}
-                </span>
-              )}
-
-              <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
-
-              <div className="mt-6 flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-foreground">&euro;{plan.price}</span>
-                <span className="text-muted-foreground">{plan.period}</span>
-              </div>
-
-              <ul className="mt-8 flex flex-col gap-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-foreground">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={onGetStarted}
-                className={`mt-8 flex h-12 items-center justify-center rounded-lg text-base font-semibold transition-colors ${
+            <CardContainer key={plan.name} className="inter-var">
+              <CardBody
+                className={`relative flex flex-col rounded-2xl border p-8 ${
                   plan.highlighted
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "border border-border text-foreground hover:bg-accent"
+                    ? "border-primary bg-background shadow-lg shadow-primary/5 dark:bg-black dark:border-white/[0.2]"
+                    : "border-border bg-background dark:bg-black dark:border-white/[0.2]"
                 }`}
               >
-                Get Started
-              </button>
-            </div>
+                {plan.badge && (
+                  <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    {plan.badge}
+                  </span>
+                )}
+
+                <CardItem translateZ="50" className="text-lg font-semibold text-foreground">
+                  {plan.name}
+                </CardItem>
+                <CardItem translateZ="60" as="p" className="mt-1 text-sm text-muted-foreground">
+                  {plan.description}
+                </CardItem>
+
+                <CardItem translateZ="70" className="mt-6 flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-foreground">&euro;{plan.price}</span>
+                  <span className="text-muted-foreground">{plan.period}</span>
+                </CardItem>
+
+                <CardItem translateZ="80" className="mt-8 flex flex-col gap-3">
+                  <ul className="flex flex-col gap-3">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm text-foreground">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </CardItem>
+
+                <CardItem
+                  translateZ="100"
+                  as="button"
+                  onClick={onGetStarted}
+                  className={`mt-8 flex h-12 items-center justify-center rounded-lg text-base font-semibold transition-colors ${
+                    plan.highlighted
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "border border-border text-foreground hover:bg-accent"
+                  }`}
+                >
+                  Get Started
+                </CardItem>
+              </CardBody>
+            </CardContainer>
           ))}
         </div>
       </div>

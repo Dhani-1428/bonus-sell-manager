@@ -1,4 +1,7 @@
+"use client"
+
 import { Star } from "lucide-react"
+import { CardContainer, CardBody, CardItem } from "@/components/ui/3d-card"
 
 const testimonials = [
   {
@@ -47,28 +50,27 @@ export function TestimonialsSection() {
 
         <div className="grid gap-6 sm:grid-cols-2">
           {testimonials.map((t) => (
-            <div
-              key={t.name}
-              className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6"
-            >
-              <div className="flex gap-0.5">
-                {Array.from({ length: t.stars }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-chart-3 text-chart-3" />
-                ))}
-              </div>
-              <p className="text-sm text-card-foreground leading-relaxed">
-                &ldquo;{t.quote}&rdquo;
-              </p>
-              <div className="mt-auto flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                  {t.name.charAt(0)}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-card-foreground">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.role}</p>
-                </div>
-              </div>
-            </div>
+            <CardContainer key={t.name} className="inter-var">
+              <CardBody className="flex flex-col gap-4 rounded-xl border border-border bg-card p-6 dark:bg-black dark:border-white/[0.2]">
+                <CardItem translateZ="50" className="flex gap-0.5">
+                  {Array.from({ length: t.stars }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-chart-3 text-chart-3" />
+                  ))}
+                </CardItem>
+                <CardItem translateZ="60" as="p" className="text-sm text-card-foreground leading-relaxed">
+                  &ldquo;{t.quote}&rdquo;
+                </CardItem>
+                <CardItem translateZ="70" className="mt-auto flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-card-foreground">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                </CardItem>
+              </CardBody>
+            </CardContainer>
           ))}
         </div>
       </div>
