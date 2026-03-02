@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { getMenuItems, addMenuItem, updateMenuItem, deleteMenuItem } from "@/lib/store"
+import { getMenuItems, addMenuItem, updateMenuItem, deleteMenuItem, saveMenuItems } from "@/lib/store"
 import type { MenuItem } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2, Trash } from "lucide-react"
 import { toast } from "sonner"
 import { createWorker } from "tesseract.js"
 import { FileUpload } from "@/components/ui/file-upload"
@@ -35,6 +35,7 @@ export default function MenuPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false)
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
   const [category, setCategory] = useState("Main")
@@ -147,6 +148,14 @@ export default function MenuPage() {
     toast.success("Menu item deleted")
     refreshItems()
     setDeleteConfirm(null)
+  }
+
+  const handleDeleteAll = () => {
+    if (!session) return
+    saveMenuItems(session.userId, [])
+    toast.success("All menu items deleted")
+    refreshItems()
+    setDeleteAllConfirm(false)
   }
 
   // Advanced image preprocessing: multiple enhancement techniques
@@ -801,6 +810,16 @@ export default function MenuPage() {
           <p className="text-sm text-muted-foreground">{items.length} items in your menu</p>
         </div>
         <div className="flex items-center gap-2">
+          {items.length > 0 && (
+            <button
+              onClick={() => setDeleteAllConfirm(true)}
+              className="flex h-10 items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20"
+              title="Delete all menu items"
+            >
+              <Trash className="h-4 w-4" />
+              Delete All
+            </button>
+          )}
           <button
             onClick={() => {
               const input = document.createElement("input")
@@ -1032,6 +1051,40 @@ export default function MenuPage() {
               className="flex h-12 items-center justify-center rounded-lg bg-destructive px-6 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90"
             >
               Delete
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete All Confirmation */}
+      <Dialog open={deleteAllConfirm} onOpenChange={setDeleteAllConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete All Menu Items</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete all {items.length} menu items? This action cannot be undone.
+            </p>
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+              <p className="text-sm font-medium text-destructive">
+                ⚠️ Warning: This will permanently delete all menu items from your menu.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <button
+              onClick={() => setDeleteAllConfirm(false)}
+              className="flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteAll}
+              className="flex h-12 items-center justify-center rounded-lg bg-destructive px-6 text-sm font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Delete All Items
             </button>
           </DialogFooter>
         </DialogContent>
