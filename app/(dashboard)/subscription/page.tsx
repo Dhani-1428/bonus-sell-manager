@@ -128,7 +128,7 @@ export default function SubscriptionPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl mx-auto">
+    <div className="flex flex-col gap-6 w-full h-full">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Subscription</h2>
         <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>

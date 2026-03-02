@@ -142,7 +142,7 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full h-full">
       <div>
         <h2 className="text-2xl font-bold text-foreground">New Order</h2>
         <p className="text-sm text-muted-foreground">Create a new order by adding items</p>

@@ -934,7 +934,7 @@ export default function MenuPage() {
 
       {items.length === 0 && (
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full">
             <div className="border border-dashed bg-card dark:bg-black border-border dark:border-neutral-800 rounded-lg">
               <FileUpload 
                 onChange={(files) => {
