@@ -301,66 +301,68 @@ export default function SubscriptionPage() {
         </ThreeDCardBody>
       </CardContainer>
 
-      {/* Subscription Plans */}
-      {!subscriptionStatus.hasAccess && (
-        <div>
-          <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Plan</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {plans.map((plan) => (
-              <CardContainer key={plan.name} className="inter-var">
-                <ThreeDCardBody
-                  className={`rounded-xl border p-4 ${
-                    plan.popular ? "border-primary ring-1 ring-primary/40" : "border-border bg-background"
-                  }`}
-                >
-                  <CardItem translateZ="40">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            {plan.name}
-                            {plan.popular && (
-                              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
-                                Popular
-                              </span>
-                            )}
-                          </CardTitle>
-                          <CardDescription className="mt-2">
-                            <span className="text-2xl font-bold text-foreground">{plan.price}</span>
-                            <span className="text-muted-foreground"> {plan.period}</span>
-                          </CardDescription>
-                        </div>
-                        {plan.name === "Monthly" && <Zap className="h-8 w-8 text-muted-foreground" />}
-                        {plan.name === "Yearly" && <Crown className="h-8 w-8 text-primary" />}
+      {/* Subscription Plans - always visible so user can easily subscribe/upgrade */}
+      <div>
+        <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Plan</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {plans.map((plan) => (
+            <CardContainer key={plan.name} className="inter-var">
+              <ThreeDCardBody
+                className={`rounded-xl border p-4 ${
+                  plan.popular ? "border-primary ring-1 ring-primary/40" : "border-border bg-background"
+                }`}
+              >
+                <CardItem translateZ="40">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {plan.name}
+                          {plan.popular && (
+                            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                              Best Value
+                            </span>
+                          )}
+                        </CardTitle>
+                        <CardDescription className="mt-2">
+                          <span className="text-2xl font-bold text-foreground">{plan.price}</span>
+                          <span className="text-muted-foreground"> {plan.period}</span>
+                        </CardDescription>
                       </div>
-                    </CardHeader>
-                  </CardItem>
-                  <CardItem translateZ="80">
-                    <CardContent>
-                      <ul className="space-y-3 mb-6">
-                        {plan.features.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                            <span className="text-sm text-foreground">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <Button
-                        onClick={() => handleSubscribe(plan.plan)}
-                        disabled={isProcessing}
-                        className="w-full"
-                        variant={plan.popular ? "default" : "outline"}
-                      >
-                        {isProcessing ? "Processing..." : `Subscribe to ${plan.name}`}
-                      </Button>
-                    </CardContent>
-                  </CardItem>
-                </ThreeDCardBody>
-              </CardContainer>
-            ))}
-          </div>
+                      {plan.name === "6 Months" && <Zap className="h-8 w-8 text-muted-foreground" />}
+                      {plan.name === "12 Months" && <Crown className="h-8 w-8 text-primary" />}
+                    </div>
+                  </CardHeader>
+                </CardItem>
+                <CardItem translateZ="80">
+                  <CardContent>
+                    <ul className="space-y-3 mb-6">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                          <span className="text-sm text-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      onClick={() => handleSubscribe(plan.plan)}
+                      disabled={isProcessing}
+                      className="w-full"
+                      variant={plan.popular ? "default" : "outline"}
+                    >
+                      {isProcessing
+                        ? "Processing..."
+                        : subscriptionStatus.hasAccess && subscriptionStatus.status === "active"
+                        ? "Change / Extend Plan"
+                        : `Get Started`}
+                    </Button>
+                  </CardContent>
+                </CardItem>
+              </ThreeDCardBody>
+            </CardContainer>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* Active Subscription Info (3D card) */}
       {subscriptionStatus.hasAccess && subscriptionStatus.status === "active" && (
