@@ -194,7 +194,6 @@ export default function AllOrdersPage() {
     setOrderDate(order.date)
     setPaymentMethod(order.paymentMethod)
     setSelectedItem("")
-    setSelectedSize("")
     setDialogOpen(true)
   }
 
@@ -243,7 +242,6 @@ export default function AllOrdersPage() {
       }]
     })
     setSelectedItem("")
-    setSelectedSize("")
   }
 
   const updateItemQuantity = (menuItemId: string, delta: number) => {

@@ -258,13 +258,7 @@ export default function NewOrderPage() {
                           {formatter.format(item.price * item.quantity)}
                         </p>
                         <button
-                          onClick={() => {
-                            const itemKey = item.selectedSize ? `${item.menuItemId}-${item.selectedSize}` : item.menuItemId
-                            setOrderItems((prev) => prev.filter((o) => {
-                              const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-                              return existingKey !== itemKey
-                            }))
-                          }}
+                          onClick={() => removeItem(item.menuItemId)}
                           className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
                           aria-label="Remove item"
                         >
