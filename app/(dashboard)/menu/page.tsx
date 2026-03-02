@@ -24,6 +24,7 @@ import {
 import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { createWorker } from "tesseract.js"
+import { FileUpload } from "@/components/ui/file-upload"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 const categories = ["Main", "Starter", "Dessert", "Beverage"]
@@ -829,14 +830,19 @@ export default function MenuPage() {
       ))}
 
       {items.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-12">
-            <p className="text-muted-foreground">No menu items yet.</p>
-            <button onClick={openAdd} className="text-sm font-medium text-primary hover:underline">
-              Add your first item
-            </button>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="border border-dashed bg-card dark:bg-black border-border dark:border-neutral-800 rounded-lg">
+              <FileUpload 
+                onChange={(files) => {
+                  if (files.length > 0) {
+                    handleImageUpload(files[0])
+                  }
+                }} 
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Add/Edit Dialog */}
