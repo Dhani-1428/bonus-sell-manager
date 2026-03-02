@@ -205,40 +205,20 @@ export default function AllOrdersPage() {
     const item = selectedMenuItem
     if (!item) return
 
-    // Determine price based on selected size or base price
-    let finalPrice = item.price
-    let sizeName: string | undefined = undefined
-    
-    if (selectedSize && item.sizes && item.sizes.length > 0) {
-      const size = item.sizes.find(s => s.size === selectedSize)
-      if (size) {
-        finalPrice = size.price
-        sizeName = size.size
-      }
-    }
-
-    // Create unique key for items with different sizes
-    const itemKey = sizeName ? `${item.id}-${sizeName}` : item.id
-    const displayName = sizeName ? `${item.name} (${sizeName})` : item.name
-
     setEditingItems((prev) => {
-      const existing = prev.find((o) => {
-        const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-        return existingKey === itemKey
-      })
+      const existing = prev.find((o) => o.menuItemId === item.id)
       
       if (existing) {
         return prev.map((o) => {
-          const existingKey = o.selectedSize ? `${o.menuItemId}-${o.selectedSize}` : o.menuItemId
-          return existingKey === itemKey ? { ...o, quantity: o.quantity + 1 } : o
+          return o.menuItemId === item.id ? { ...o, quantity: o.quantity + 1 } : o
         })
       }
       
       return [...prev, { 
         menuItemId: item.id, 
-        menuItemName: displayName, 
+        menuItemName: item.name, 
         quantity: 1, 
-        price: finalPrice,
+        price: item.price,
       }]
     })
     setSelectedItem("")
