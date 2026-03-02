@@ -8,6 +8,9 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot="card"
       className={cn(
         'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
+        // 3D-like hover animation shared across website & admin panel
+        'group/card relative transform-gpu transition-transform transition-shadow duration-300 ease-out',
+        'hover:-translate-y-1 hover:shadow-xl',
         className,
       )}
       {...props}
