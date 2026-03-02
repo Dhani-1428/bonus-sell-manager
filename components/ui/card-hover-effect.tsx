@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 
-import { useState, ReactNode } from "react";
+import { useState, ReactNode, useMemo } from "react";
 
 export const HoverEffect = ({
   items,
@@ -21,7 +21,7 @@ export const HoverEffect = ({
   id?: string;
 }) => {
   let [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const uniqueId = id || `hover-${Math.random().toString(36).substr(2, 9)}`;
+  const uniqueId = useMemo(() => id || `hover-${Math.random().toString(36).substr(2, 9)}`, [id]);
 
   if (children) {
     // If children are provided, wrap them with hover effect
