@@ -2,42 +2,7 @@
 
 import { ArrowLeft } from "lucide-react"
 import { SignIn } from "@clerk/nextjs"
-
-const clerkAppearance = {
-  elements: {
-    rootBox: "mx-auto w-full",
-    card: "shadow-none border border-border bg-card rounded-xl",
-    headerTitle: "text-2xl font-bold tracking-tight text-foreground",
-    headerSubtitle: "text-sm text-muted-foreground",
-    socialButtonsBlockButton: "border border-border bg-card text-foreground hover:bg-accent transition-colors rounded-lg h-11",
-    socialButtonsBlockButtonText: "text-foreground font-medium text-sm",
-    dividerLine: "bg-border",
-    dividerText: "text-muted-foreground text-sm",
-    formFieldLabel: "text-foreground font-medium text-sm",
-    formFieldInput: "bg-background border-border text-foreground rounded-lg h-11 focus:ring-2 focus:ring-primary focus:border-primary",
-    formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold transition-colors h-11 text-sm",
-    footerActionLink: "text-primary hover:text-primary/80 font-medium text-sm",
-    footerActionText: "text-muted-foreground text-sm",
-    identityPreviewText: "text-foreground text-sm",
-    identityPreviewEditButton: "text-primary hover:text-primary/80 text-sm",
-    formFieldSuccessText: "text-green-500 text-sm",
-    formFieldErrorText: "text-destructive text-sm",
-    alertText: "text-destructive text-sm",
-    formResendCodeLink: "text-primary hover:text-primary/80 text-sm",
-    otpCodeFieldInput: "bg-background border-border text-foreground rounded-lg focus:ring-2 focus:ring-primary",
-  },
-  variables: {
-    colorPrimary: "var(--color-primary)",
-    colorBackground: "var(--color-background)",
-    colorInputBackground: "var(--color-background)",
-    colorInputText: "var(--color-foreground)",
-    colorText: "var(--color-foreground)",
-    colorTextSecondary: "var(--color-muted-foreground)",
-    colorDanger: "var(--color-destructive)",
-    borderRadius: "var(--radius)",
-    fontFamily: "var(--font-sans)",
-  },
-}
+import { clerkAppearance } from "@/lib/clerk-appearance"
 
 export function LoginForm({
   onBack,
