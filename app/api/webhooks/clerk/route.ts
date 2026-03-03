@@ -68,11 +68,13 @@ export async function POST(request: NextRequest) {
       const lastName = userData.last_name || ""
       const fullName = userData.username || `${firstName} ${lastName}`.trim() || "User"
       
-      // Get creation timestamp
-      const createdAt = new Date(userData.created_at).toISOString()
+      // Get creation timestamp (Clerk sends Unix timestamp in seconds)
+      const createdAt = userData.created_at 
+        ? new Date(userData.created_at * 1000).toISOString().slice(0, 19).replace('T', ' ')
+        : new Date().toISOString().slice(0, 19).replace('T', ' ')
       
       // Initialize trial start date (15-day free trial)
-      const trialStartDate = new Date().toISOString()
+      const trialStartDate = new Date().toISOString().slice(0, 19).replace('T', ' ')
 
       console.log(`Creating user in database:`, {
         id: userId,
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
         await connection.beginTransaction()
 
         // Insert or update user
-        await connection.query(
+        await connection.execute(
           `INSERT INTO users (
             id, 
             name, 
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest) {
         )
 
         // Initialize restaurant settings for the user
-        await connection.query(
+        await connection.execute(
           `INSERT INTO restaurant_settings (user_id, name)
            VALUES (?, ?)
            ON DUPLICATE KEY UPDATE name = VALUES(name)`,
@@ -136,7 +138,13 @@ export async function POST(request: NextRequest) {
         })
       } catch (dbError: any) {
         await connection.rollback()
-        console.error("Database error creating user:", dbError)
+        console.error("Database error creating user:", {
+          message: dbError.message,
+          code: dbError.code,
+          sqlState: dbError.sqlState,
+          sqlMessage: dbError.sqlMessage,
+          stack: dbError.stack,
+        })
         throw dbError
       } finally {
         connection.release()
@@ -159,7 +167,7 @@ export async function POST(request: NextRequest) {
       const connection = await pool.getConnection()
 
       try {
-        await connection.query(
+        await connection.execute(
           `UPDATE users 
            SET name = ?, email = ?
            WHERE id = ?`,
@@ -167,7 +175,7 @@ export async function POST(request: NextRequest) {
         )
 
         // Update restaurant settings name if it exists
-        await connection.query(
+        await connection.execute(
           `UPDATE restaurant_settings 
            SET name = ?
            WHERE user_id = ?`,
@@ -198,7 +206,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Note: Foreign key constraints with ON DELETE CASCADE will handle related records
-        await connection.query(`DELETE FROM users WHERE id = ?`, [userId])
+        await connection.execute(`DELETE FROM users WHERE id = ?`, [userId])
 
         console.log(`✅ User ${userId} deleted successfully from database`)
 
