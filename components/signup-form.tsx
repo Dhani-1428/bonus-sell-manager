@@ -3,6 +3,41 @@
 import { ArrowLeft } from "lucide-react"
 import { SignUp } from "@clerk/nextjs"
 
+const clerkAppearance = {
+  elements: {
+    rootBox: "mx-auto w-full",
+    card: "shadow-none border border-border bg-card rounded-xl",
+    headerTitle: "text-2xl font-bold tracking-tight text-foreground",
+    headerSubtitle: "text-sm text-muted-foreground",
+    socialButtonsBlockButton: "border border-border bg-card text-foreground hover:bg-accent transition-colors rounded-lg",
+    socialButtonsBlockButtonText: "text-foreground font-medium",
+    dividerLine: "bg-border",
+    dividerText: "text-muted-foreground",
+    formFieldLabel: "text-foreground font-medium",
+    formFieldInput: "bg-background border-border text-foreground rounded-lg focus:ring-2 focus:ring-primary",
+    formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold transition-colors",
+    footerActionLink: "text-primary hover:text-primary/80 font-medium",
+    footerActionText: "text-muted-foreground",
+    identityPreviewText: "text-foreground",
+    identityPreviewEditButton: "text-primary hover:text-primary/80",
+    formFieldSuccessText: "text-green-500",
+    formFieldErrorText: "text-destructive",
+    alertText: "text-destructive",
+    formResendCodeLink: "text-primary hover:text-primary/80",
+  },
+  variables: {
+    colorPrimary: "hsl(var(--primary))",
+    colorBackground: "hsl(var(--background))",
+    colorInputBackground: "hsl(var(--background))",
+    colorInputText: "hsl(var(--foreground))",
+    colorText: "hsl(var(--foreground))",
+    colorTextSecondary: "hsl(var(--muted-foreground))",
+    colorDanger: "hsl(var(--destructive))",
+    borderRadius: "0.625rem",
+    fontFamily: "var(--font-sans)",
+  },
+}
+
 export function SignupForm({
   onBack,
   onSwitchToLogin,
@@ -28,12 +63,7 @@ export function SignupForm({
 
         <div className="flex justify-center">
           <SignUp
-            appearance={{
-              elements: {
-                rootBox: "mx-auto",
-                card: "shadow-none border border-border bg-card",
-              },
-            }}
+            appearance={clerkAppearance}
             routing="hash"
             signInUrl="#login"
             afterSignUpUrl="/dashboard"
