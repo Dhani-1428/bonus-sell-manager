@@ -181,19 +181,19 @@
 }
 
 .cl-socialButtonsBlockButton {
-  background-color: hsl(var(--card)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--foreground)) !important;
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
   border-radius: 0.625rem !important;
   height: 2.75rem !important;
 }
 
 .cl-socialButtonsBlockButton:hover {
-  background-color: hsl(var(--accent)) !important;
+  background-color: hsl(var(--primary) / 0.9) !important;
 }
 
 .cl-socialButtonsBlockButtonText {
-  color: hsl(var(--foreground)) !important;
+  color: hsl(var(--primary-foreground)) !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
 }
