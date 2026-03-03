@@ -143,8 +143,9 @@ export async function POST(request: NextRequest) {
           [userId, fullName]
         )
 
-        // Initialize empty menu items and orders (they will be created when needed)
-        // No need to insert empty records, they'll be created on first use
+        // Note: Menu items and orders are stored in database when created by user
+        // They will be automatically stored via API routes: /api/users/[userId]/menu-items and /api/users/[userId]/orders
+        console.log(`✅ User ${userId} initialized with restaurant settings in database`)
 
         await connection.commit()
 
