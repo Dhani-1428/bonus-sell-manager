@@ -16,6 +16,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [subscriptionCheck, setSubscriptionCheck] = useState<{ hasAccess: boolean; message: string } | null>(null)
 
+  // Handle redirect if no session
+  useEffect(() => {
+    if (!isLoading && !session) {
+      router.push("/")
+    }
+  }, [session, isLoading, router])
+
   useEffect(() => {
     if (session) {
       // Small delay to ensure user data is initialized
@@ -48,7 +55,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   if (!session) {
-    router.push("/")
     return <CookingLoader text="Redirecting..." />
   }
 
