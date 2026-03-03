@@ -19,11 +19,18 @@ export async function GET(
   try {
     const session = await getSession()
     
-    // Verify user is accessing their own data
-    if (!session || session.userId !== params.userId) {
+    // Verify user is authenticated and accessing their own data
+    if (!session) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Please sign in" },
         { status: 401 }
+      )
+    }
+    
+    if (session.userId !== params.userId) {
+      return NextResponse.json(
+        { error: "Forbidden - Cannot access other user's data" },
+        { status: 403 }
       )
     }
 
