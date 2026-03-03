@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getSession } from "@/lib/auth-middleware"
 import {
   getRestaurantSettings,
   saveRestaurantSettings,
@@ -14,10 +14,10 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
     
     // Verify user is accessing their own data
-    if (!userId || userId !== params.userId) {
+    if (!session || session.userId !== params.userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -44,10 +44,10 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
     
     // Verify user is accessing their own data
-    if (!userId || userId !== params.userId) {
+    if (!session || session.userId !== params.userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }

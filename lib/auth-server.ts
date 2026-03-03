@@ -1,0 +1,141 @@
+/**
+ * Server-side authentication utilities
+ * Handles password hashing, session management, and user verification
+ */
+
+import { getPool, queryOne } from './db'
+import crypto from 'crypto'
+
+/**
+ * Hash password using SHA-256
+ */
+export function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex')
+}
+
+/**
+ * Verify password against hash
+ */
+export function verifyPassword(password: string, hash: string): boolean {
+  return hashPassword(password) === hash
+}
+
+/**
+ * Get user by email
+ */
+export async function getUserByEmail(email: string) {
+  return await queryOne<{
+    id: string
+    name: string
+    email: string
+    password: string
+    created_at: Date
+    subscription_status: string
+    trial_start_date: Date | null
+  }>(
+    'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE email = ?',
+    [email.toLowerCase()]
+  )
+}
+
+/**
+ * Get user by ID
+ */
+export async function getUserById(userId: string) {
+  return await queryOne<{
+    id: string
+    name: string
+    email: string
+    password: string
+    created_at: Date
+    subscription_status: string
+    trial_start_date: Date | null
+  }>(
+    'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
+    [userId]
+  )
+}
+
+/**
+ * Create a new user
+ */
+export async function createUser(
+  name: string,
+  email: string,
+  password: string
+): Promise<{ id: string; name: string; email: string }> {
+  const pool = getPool()
+  const connection = await pool.getConnection()
+
+  try {
+    await connection.beginTransaction()
+
+    // Check if user already exists
+    const existing = await getUserByEmail(email)
+    if (existing) {
+      throw new Error('An account with this email already exists.')
+    }
+
+    // Generate user ID
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const hashedPassword = hashPassword(password)
+    const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' ')
+
+    // Insert user
+    await connection.execute(
+      `INSERT INTO users (
+        id, 
+        name, 
+        email, 
+        password, 
+        created_at, 
+        trial_start_date, 
+        subscription_status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [userId, name, email.toLowerCase(), hashedPassword, createdAt, createdAt, 'trial']
+    )
+
+    // Initialize restaurant settings
+    await connection.execute(
+      `INSERT INTO restaurant_settings (user_id, name)
+       VALUES (?, ?)`,
+      [userId, name]
+    )
+
+    await connection.commit()
+
+    return {
+      id: userId,
+      name,
+      email: email.toLowerCase(),
+    }
+  } catch (error: any) {
+    await connection.rollback()
+    throw error
+  } finally {
+    connection.release()
+  }
+}
+
+/**
+ * Verify user credentials
+ */
+export async function verifyUser(
+  email: string,
+  password: string
+): Promise<{ id: string; name: string; email: string } | null> {
+  const user = await getUserByEmail(email)
+  if (!user) {
+    return null
+  }
+
+  if (!verifyPassword(password, user.password)) {
+    return null
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+  }
+}

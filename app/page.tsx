@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
   const [showAnimation, setShowAnimation] = useState(false)
 
-  // Handle hash routing for Clerk
+  // Handle hash routing
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash
@@ -38,15 +38,12 @@ export default function LandingPage() {
 
   // Check if we're coming from successful auth
   useEffect(() => {
-    if (typeof window !== "undefined" && session) {
-      const params = new URLSearchParams(window.location.search)
-      if (params.get("auth") === "success") {
-        setShowAnimation(true)
-        // Clean up URL
-        window.history.replaceState({}, "", window.location.pathname)
-      }
+    if (typeof window !== "undefined" && session && showSuccessAnimation) {
+      setShowAnimation(true)
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname)
     }
-  }, [session])
+  }, [session, showSuccessAnimation])
 
   // Handle redirects after animation completes
   const handleAnimationComplete = () => {
@@ -82,11 +79,23 @@ export default function LandingPage() {
   }
 
   if (view === "login") {
-    return <LoginForm onBack={() => setView("landing")} onSwitchToSignup={() => setView("signup")} />
+    return (
+      <LoginForm
+        onBack={() => setView("landing")}
+        onSwitchToSignup={() => setView("signup")}
+        onSuccess={() => setShowAnimation(true)}
+      />
+    )
   }
 
   if (view === "signup") {
-    return <SignupForm onBack={() => setView("landing")} onSwitchToLogin={() => setView("login")} />
+    return (
+      <SignupForm
+        onBack={() => setView("landing")}
+        onSwitchToLogin={() => setView("login")}
+        onSuccess={() => setShowAnimation(true)}
+      />
+    )
   }
 
   return (

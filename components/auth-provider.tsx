@@ -1,98 +1,135 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
-import { useUser, useAuth as useClerkAuth } from "@clerk/nextjs"
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
 import type { AuthSession } from "@/lib/types"
-import { initializeUserData } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 
 interface AuthContextType {
   session: AuthSession | null
   isLoading: boolean
   showSuccessAnimation: boolean
-  login: (email: string, password: string) => { success: boolean; error?: string }
-  signup: (name: string, email: string, password: string) => { success: boolean; error?: string }
-  logout: () => void
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
   hideSuccessAnimation: () => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { user, isLoaded: userLoaded } = useUser()
-  const { signOut } = useClerkAuth()
   const [session, setSession] = useState<AuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
-  const previousUserRef = useRef<string | null>(null)
+  const router = useRouter()
 
-  useEffect(() => {
-    if (!userLoaded) {
-      setIsLoading(true)
-      return
-    }
+  // Check session on mount and when needed
+  const checkSession = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth/session")
+      const data = await response.json()
 
-    if (user) {
-      // Check if this is a new login/signup (user just appeared)
-      // Only show animation if we were previously not logged in (not on page refresh)
-      const wasLoggedOut = previousUserRef.current === null
-      const isNewAuth = wasLoggedOut && user.id
-      
-      // Initialize user data in localStorage if needed (for subscription system)
-      initializeUserData(user.id, user.fullName || user.firstName || "User", user.primaryEmailAddress?.emailAddress || "")
-
-      // Create session from Clerk user
-      const authSession: AuthSession = {
-        userId: user.id,
-        email: user.primaryEmailAddress?.emailAddress || "",
-        name: user.fullName || user.firstName || "User",
+      if (data.user) {
+        setSession({
+          userId: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+        })
+      } else {
+        setSession(null)
       }
-      setSession(authSession)
-      
-      // Show success animation if this is a new authentication
-      // Check if we're coming from auth flow (hash routing or redirect)
-      if (isNewAuth && typeof window !== "undefined") {
-        const hash = window.location.hash
-        const isFromAuthFlow = hash.includes("#") || sessionStorage.getItem("clerk-auth-flow") === "true"
-        if (isFromAuthFlow) {
-          setShowSuccessAnimation(true)
-          sessionStorage.removeItem("clerk-auth-flow")
-        }
-      }
-      
-      previousUserRef.current = user.id
-    } else {
+    } catch (error) {
+      console.error("Session check error:", error)
       setSession(null)
-      previousUserRef.current = null
-      setShowSuccessAnimation(false)
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
-  }, [user, userLoaded])
-
-  const login = useCallback((email: string, password: string) => {
-    // Clerk handles login through their UI components
-    // This is kept for compatibility but will redirect to Clerk sign-in
-    return { success: false, error: "Please use the sign-in button to login." }
   }, [])
 
-  const signup = useCallback((name: string, email: string, password: string) => {
-    // Clerk handles signup through their UI components
-    // This is kept for compatibility but will redirect to Clerk sign-up
-    return { success: false, error: "Please use the sign-up button to create an account." }
+  useEffect(() => {
+    checkSession()
+  }, [checkSession])
+
+  const login = useCallback(async (email: string, password: string) => {
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.error || "Failed to login" }
+      }
+
+      setSession({
+        userId: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+      })
+      setShowSuccessAnimation(true)
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || "An error occurred" }
+    }
+  }, [])
+
+  const signup = useCallback(async (name: string, email: string, password: string) => {
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return { success: false, error: data.error || "Failed to create account" }
+      }
+
+      setSession({
+        userId: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+      })
+      setShowSuccessAnimation(true)
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || "An error occurred" }
+    }
   }, [])
 
   const logout = useCallback(async () => {
-    await signOut()
-    setSession(null)
-    setShowSuccessAnimation(false)
-    previousUserRef.current = null
-  }, [signOut])
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+      setSession(null)
+      setShowSuccessAnimation(false)
+      router.push("/")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+  }, [router])
 
   const hideSuccessAnimation = useCallback(() => {
     setShowSuccessAnimation(false)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ session, isLoading, showSuccessAnimation, login, signup, logout, hideSuccessAnimation }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        isLoading,
+        showSuccessAnimation,
+        login,
+        signup,
+        logout,
+        hideSuccessAnimation,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )
