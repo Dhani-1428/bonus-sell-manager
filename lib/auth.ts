@@ -89,3 +89,45 @@ export function getCurrentSession(): AuthSession | null {
   const data = localStorage.getItem(SESSION_KEY)
   return data ? JSON.parse(data) : null
 }
+
+/**
+ * Initialize user data for Clerk users
+ * This ensures compatibility with the subscription system and other features
+ */
+export function initializeUserData(userId: string, name: string, email: string): void {
+  if (typeof window === "undefined") return
+  
+  const users = getUsers()
+  let user = users.find((u) => u.id === userId)
+
+  if (!user) {
+    // Create new user entry for Clerk user
+    const newUser: User = {
+      id: userId,
+      name,
+      email: email.toLowerCase(),
+      password: "", // Clerk handles authentication, no password needed
+      createdAt: new Date().toISOString(),
+      subscriptionStatus: "trial",
+      trialStartDate: new Date().toISOString(),
+    }
+
+    users.push(newUser)
+    saveUsers(users)
+
+    // Initialize empty arrays for menu items and orders
+    saveMenuItems(userId, [])
+    saveOrders(userId, [])
+
+    // Initialize restaurant settings
+    initializeRestaurantSettings(userId, name)
+
+    // Initialize 15-day free trial
+    initializeTrial(userId)
+  } else {
+    // Update existing user info if needed
+    user.name = name
+    user.email = email.toLowerCase()
+    saveUsers(users)
+  }
+}

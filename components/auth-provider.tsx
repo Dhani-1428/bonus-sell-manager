@@ -1,8 +1,9 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
+import { useUser, useAuth as useClerkAuth } from "@clerk/nextjs"
 import type { AuthSession } from "@/lib/types"
-import { getCurrentSession, login as authLogin, signup as authSignup, logout as authLogout } from "@/lib/auth"
+import { initializeUserData } from "@/lib/auth"
 
 interface AuthContextType {
   session: AuthSession | null
@@ -15,35 +16,50 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { user, isLoaded: userLoaded } = useUser()
+  const { signOut } = useClerkAuth()
   const [session, setSession] = useState<AuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const current = getCurrentSession()
-    setSession(current)
+    if (!userLoaded) {
+      setIsLoading(true)
+      return
+    }
+
+    if (user) {
+      // Initialize user data in localStorage if needed (for subscription system)
+      initializeUserData(user.id, user.fullName || user.firstName || "User", user.primaryEmailAddress?.emailAddress || "")
+
+      // Create session from Clerk user
+      const authSession: AuthSession = {
+        userId: user.id,
+        email: user.primaryEmailAddress?.emailAddress || "",
+        name: user.fullName || user.firstName || "User",
+      }
+      setSession(authSession)
+    } else {
+      setSession(null)
+    }
     setIsLoading(false)
-  }, [])
+  }, [user, userLoaded])
 
   const login = useCallback((email: string, password: string) => {
-    const result = authLogin(email, password)
-    if (result.success) {
-      setSession(getCurrentSession())
-    }
-    return result
+    // Clerk handles login through their UI components
+    // This is kept for compatibility but will redirect to Clerk sign-in
+    return { success: false, error: "Please use the sign-in button to login." }
   }, [])
 
   const signup = useCallback((name: string, email: string, password: string) => {
-    const result = authSignup(name, email, password)
-    if (result.success) {
-      setSession(getCurrentSession())
-    }
-    return result
+    // Clerk handles signup through their UI components
+    // This is kept for compatibility but will redirect to Clerk sign-up
+    return { success: false, error: "Please use the sign-up button to create an account." }
   }, [])
 
-  const logout = useCallback(() => {
-    authLogout()
+  const logout = useCallback(async () => {
+    await signOut()
     setSession(null)
-  }, [])
+  }, [signOut])
 
   return (
     <AuthContext.Provider value={{ session, isLoading, login, signup, logout }}>

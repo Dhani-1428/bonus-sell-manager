@@ -31,6 +31,18 @@ export default function LandingPage() {
     return <CookingLoader text="Opening your dashboard..." />
   }
 
+  // Handle hash routing for Clerk
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash
+      if (hash === "#login" || hash === "#sign-in") {
+        setView("login")
+      } else if (hash === "#signup" || hash === "#sign-up") {
+        setView("signup")
+      }
+    }
+  }, [])
+
   if (view === "login") {
     return <LoginForm onBack={() => setView("landing")} onSwitchToSignup={() => setView("signup")} />
   }
