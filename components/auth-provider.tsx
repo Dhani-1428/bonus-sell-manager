@@ -33,7 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (user) {
       // Check if this is a new login/signup (user just appeared)
-      const isNewAuth = previousUserRef.current === null && user.id
+      // Only show animation if we were previously not logged in (not on page refresh)
+      const wasLoggedOut = previousUserRef.current === null
+      const isNewAuth = wasLoggedOut && user.id
       
       // Initialize user data in localStorage if needed (for subscription system)
       initializeUserData(user.id, user.fullName || user.firstName || "User", user.primaryEmailAddress?.emailAddress || "")
@@ -47,14 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(authSession)
       
       // Show success animation if this is a new authentication
-      if (isNewAuth) {
-        setShowSuccessAnimation(true)
+      // Check if we're coming from auth flow (hash routing or redirect)
+      if (isNewAuth && typeof window !== "undefined") {
+        const hash = window.location.hash
+        const isFromAuthFlow = hash.includes("#") || sessionStorage.getItem("clerk-auth-flow") === "true"
+        if (isFromAuthFlow) {
+          setShowSuccessAnimation(true)
+          sessionStorage.removeItem("clerk-auth-flow")
+        }
       }
       
       previousUserRef.current = user.id
     } else {
       setSession(null)
       previousUserRef.current = null
+      setShowSuccessAnimation(false)
     }
     setIsLoading(false)
   }, [user, userLoaded])
