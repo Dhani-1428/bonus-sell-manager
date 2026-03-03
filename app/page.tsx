@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { CookingLoader } from "@/components/cooking-loader"
+import { AuthSuccessAnimation } from "@/components/auth-success-animation"
 import { LoginForm } from "@/components/login-form"
 import { SignupForm } from "@/components/signup-form"
 import { Navbar } from "@/components/navbar"
@@ -18,7 +19,7 @@ import { Footer } from "@/components/footer"
 import { FloatingButtons } from "@/components/floating-buttons"
 
 export default function LandingPage() {
-  const { session, isLoading } = useAuth()
+  const { session, isLoading, showSuccessAnimation, hideSuccessAnimation } = useAuth()
   const router = useRouter()
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
 
@@ -34,12 +35,16 @@ export default function LandingPage() {
     }
   }, [])
 
-  // Handle redirects after hooks are called
-  useEffect(() => {
-    if (!isLoading && session) {
-      router.push("/dashboard")
-    }
-  }, [session, isLoading, router])
+  // Handle redirects after animation completes
+  const handleAnimationComplete = () => {
+    hideSuccessAnimation()
+    router.push("/dashboard")
+  }
+
+  // Show success animation if authentication just succeeded
+  if (showSuccessAnimation) {
+    return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
+  }
 
   if (isLoading) {
     return <CookingLoader text="Preparing your kitchen..." />

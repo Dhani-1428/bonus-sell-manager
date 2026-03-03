@@ -59,10 +59,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await signOut()
     setSession(null)
+    setShowSuccessAnimation(false)
+    previousUserRef.current = null
   }, [signOut])
 
+  const hideSuccessAnimation = useCallback(() => {
+    setShowSuccessAnimation(false)
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ session, isLoading, login, signup, logout }}>
+    <AuthContext.Provider value={{ session, isLoading, showSuccessAnimation, login, signup, logout, hideSuccessAnimation }}>
       {children}
     </AuthContext.Provider>
   )
