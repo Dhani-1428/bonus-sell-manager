@@ -46,8 +46,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+  if (!publishableKey) {
+    console.error('Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable')
+  }
+
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>
       <html lang="en" suppressHydrationWarning>
         <body className="font-sans antialiased">
           <ThemeProvider
