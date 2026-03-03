@@ -22,6 +22,7 @@ export default function LandingPage() {
   const { session, isLoading, showSuccessAnimation, hideSuccessAnimation } = useAuth()
   const router = useRouter()
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
+  const [showAnimation, setShowAnimation] = useState(false)
 
   // Handle hash routing for Clerk - MUST be called before any early returns
   useEffect(() => {
@@ -32,17 +33,26 @@ export default function LandingPage() {
       } else if (hash === "#signup" || hash === "#sign-up") {
         setView("signup")
       }
+      
+      // Check if we're coming from successful auth
+      const params = new URLSearchParams(window.location.search)
+      if (params.get("auth") === "success" && session) {
+        setShowAnimation(true)
+        // Clean up URL
+        window.history.replaceState({}, "", window.location.pathname)
+      }
     }
-  }, [])
+  }, [session])
 
   // Handle redirects after animation completes
   const handleAnimationComplete = () => {
+    setShowAnimation(false)
     hideSuccessAnimation()
     router.push("/dashboard")
   }
 
   // Show success animation if authentication just succeeded
-  if (showSuccessAnimation) {
+  if (showAnimation && session) {
     return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
   }
 
