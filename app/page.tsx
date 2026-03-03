@@ -22,16 +22,7 @@ export default function LandingPage() {
   const router = useRouter()
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
 
-  if (isLoading) {
-    return <CookingLoader text="Preparing your kitchen..." />
-  }
-
-  if (session) {
-    router.push("/dashboard")
-    return <CookingLoader text="Opening your dashboard..." />
-  }
-
-  // Handle hash routing for Clerk
+  // Handle hash routing for Clerk - MUST be called before any early returns
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash
@@ -42,6 +33,21 @@ export default function LandingPage() {
       }
     }
   }, [])
+
+  // Handle redirects after hooks are called
+  useEffect(() => {
+    if (!isLoading && session) {
+      router.push("/dashboard")
+    }
+  }, [session, isLoading, router])
+
+  if (isLoading) {
+    return <CookingLoader text="Preparing your kitchen..." />
+  }
+
+  if (session) {
+    return <CookingLoader text="Opening your dashboard..." />
+  }
 
   if (view === "login") {
     return <LoginForm onBack={() => setView("landing")} onSwitchToSignup={() => setView("signup")} />
