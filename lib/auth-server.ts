@@ -27,16 +27,16 @@ export async function getUserByEmail(email: string) {
   const pool = getPool()
   const connection = await pool.getConnection()
   try {
-    // Ensure we're using the correct database
-    const dbName = process.env.DB_NAME || 'foodsell_manager'
-    await connection.query(`USE \`${dbName}\``)
     const [rows] = await connection.execute(
       'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE email = ?',
       [email.toLowerCase()]
     ) as any[]
     return rows.length > 0 ? rows[0] : null
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting user by email:', error)
+    if (error.message && error.message.includes("doesn't exist")) {
+      console.error(`⚠️  Table doesn't exist. Please initialize database schema at /api/db/init`)
+    }
     throw error
   } finally {
     connection.release()
@@ -50,16 +50,16 @@ export async function getUserById(userId: string) {
   const pool = getPool()
   const connection = await pool.getConnection()
   try {
-    // Ensure we're using the correct database
-    const dbName = process.env.DB_NAME || 'foodsell_manager'
-    await connection.query(`USE \`${dbName}\``)
     const [rows] = await connection.execute(
       'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
       [userId]
     ) as any[]
     return rows.length > 0 ? rows[0] : null
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error getting user by ID:', error)
+    if (error.message && error.message.includes("doesn't exist")) {
+      console.error(`⚠️  Table doesn't exist. Please initialize database schema at /api/db/init`)
+    }
     throw error
   } finally {
     connection.release()
@@ -78,9 +78,6 @@ export async function createUser(
   const connection = await pool.getConnection()
 
   try {
-    // Ensure we're using the correct database
-    const dbName = process.env.DB_NAME || 'foodsell_manager'
-    await connection.query(`USE \`${dbName}\``)
     await connection.beginTransaction()
 
     // Check if user already exists

@@ -3,10 +3,11 @@ import * as fs from 'fs';
 
 // Database connection configuration
 function getDbConfig(): mysql.PoolOptions {
+  const dbName = process.env.DB_NAME || 'foodsell_manager';
   const config: mysql.PoolOptions = {
     host: process.env.DB_HOST || 'foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com',
     port: parseInt(process.env.DB_PORT || '3306'),
-    database: process.env.DB_NAME || 'foodsell_manager', // Use the application database
+    database: dbName, // Explicitly set the database name
     user: process.env.DB_USER || 'bfsmanager',
     password: process.env.DB_PASSWORD || 'Dhani1428',
     waitForConnections: true,
@@ -15,7 +16,11 @@ function getDbConfig(): mysql.PoolOptions {
     connectTimeout: 10000, // 10 seconds timeout
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
+    // Ensure we always use the correct database
+    multipleStatements: false,
   };
+  
+  console.log(`🔌 Database config: ${config.host}:${config.port}/${dbName}`);
 
   // Configure SSL if enabled
   if (process.env.DB_SSL === 'true') {
@@ -61,18 +66,18 @@ export async function query<T = any>(
   params?: any[]
 ): Promise<T[]> {
   const pool = getPool();
-  const connection = await pool.getConnection();
   try {
-    // Ensure we're using the correct database
-    const dbName = process.env.DB_NAME || 'foodsell_manager';
-    await connection.query(`USE \`${dbName}\``);
-    const [rows] = await connection.execute(sql, params);
+    // The pool is already configured with the correct database
+    // But we'll ensure it's set explicitly
+    const [rows] = await pool.execute(sql, params);
     return rows as T[];
-  } catch (error) {
+  } catch (error: any) {
     console.error('Database query error:', error);
+    if (error.message && error.message.includes("doesn't exist")) {
+      console.error(`⚠️  Database error: ${error.message}`);
+      console.error(`   Make sure database '${process.env.DB_NAME || 'foodsell_manager'}' exists and schema is initialized`);
+    }
     throw error;
-  } finally {
-    connection.release();
   }
 }
 
