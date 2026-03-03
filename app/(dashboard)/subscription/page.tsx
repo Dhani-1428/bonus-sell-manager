@@ -44,11 +44,16 @@ export default function SubscriptionPage() {
     if (success === "true") {
       toast.success("Payment successful! Your subscription is now active.")
       refreshStatus()
-      // Clean URL
-      router.replace("/subscription")
+      // Clean URL - use setTimeout to ensure this happens after render
+      setTimeout(() => {
+        router.replace("/subscription")
+      }, 0)
     } else if (canceled === "true") {
       toast.info("Payment canceled. You can try again anytime.")
-      router.replace("/subscription")
+      // Clean URL - use setTimeout to ensure this happens after render
+      setTimeout(() => {
+        router.replace("/subscription")
+      }, 0)
     }
   }, [searchParams, router, refreshStatus])
 

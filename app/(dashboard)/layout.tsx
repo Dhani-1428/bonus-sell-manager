@@ -34,8 +34,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           
           // Redirect to subscription page if no access (except if already on subscription page)
           // Allow subscription page to be accessible even without active subscription
+          // Use setTimeout to ensure redirect happens after state update
           if (!status.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
-            router.push("/subscription")
+            setTimeout(() => {
+              router.push("/subscription")
+            }, 0)
           }
         } else {
           // User not found in localStorage - give access by default (trial users)

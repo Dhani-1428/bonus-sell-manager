@@ -24,7 +24,7 @@ export default function LandingPage() {
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
   const [showAnimation, setShowAnimation] = useState(false)
 
-  // Handle hash routing for Clerk - MUST be called before any early returns
+  // Handle hash routing for Clerk
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash
@@ -33,10 +33,14 @@ export default function LandingPage() {
       } else if (hash === "#signup" || hash === "#sign-up") {
         setView("signup")
       }
-      
-      // Check if we're coming from successful auth
+    }
+  }, [])
+
+  // Check if we're coming from successful auth
+  useEffect(() => {
+    if (typeof window !== "undefined" && session) {
       const params = new URLSearchParams(window.location.search)
-      if (params.get("auth") === "success" && session) {
+      if (params.get("auth") === "success") {
         setShowAnimation(true)
         // Clean up URL
         window.history.replaceState({}, "", window.location.pathname)
@@ -48,20 +52,26 @@ export default function LandingPage() {
   const handleAnimationComplete = () => {
     setShowAnimation(false)
     hideSuccessAnimation()
-    router.push("/dashboard")
-  }
-
-  // Show success animation if authentication just succeeded
-  if (showAnimation && session) {
-    return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
+    // Use setTimeout to ensure this happens after render
+    setTimeout(() => {
+      router.push("/dashboard")
+    }, 0)
   }
 
   // Handle redirect to dashboard when session exists (but not showing animation)
   useEffect(() => {
     if (!isLoading && session && !showAnimation) {
-      router.push("/dashboard")
+      // Use setTimeout to ensure this happens after render
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 0)
     }
   }, [session, isLoading, showAnimation, router])
+
+  // Show success animation if authentication just succeeded
+  if (showAnimation && session) {
+    return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
+  }
 
   if (isLoading) {
     return <CookingLoader text="Preparing your kitchen..." />
