@@ -18,21 +18,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (session) {
-      const user = getUserById(session.userId)
-      if (user) {
-        const status = getSubscriptionStatus(user)
-        setSubscriptionCheck({ hasAccess: status.hasAccess, message: status.message })
-        
-        // Redirect to subscription page if no access (except if already on subscription page)
-        // Allow subscription page to be accessible even without active subscription
-        if (!status.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
-          router.push("/subscription")
+      // Small delay to ensure user data is initialized
+      const timer = setTimeout(() => {
+        const user = getUserById(session.userId)
+        if (user) {
+          const status = getSubscriptionStatus(user)
+          setSubscriptionCheck({ hasAccess: status.hasAccess, message: status.message })
+          
+          // Redirect to subscription page if no access (except if already on subscription page)
+          // Allow subscription page to be accessible even without active subscription
+          if (!status.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
+            router.push("/subscription")
+          }
+        } else {
+          // User not found in localStorage - give access by default (trial users)
+          // This might happen on first login before user data is fully initialized
+          setSubscriptionCheck({ hasAccess: true, message: "Trial access" })
         }
-      } else {
-        // User not found in localStorage - this shouldn't happen, but set default access
-        // This might happen on first login before user data is initialized
-        setSubscriptionCheck({ hasAccess: true, message: "Loading..." })
-      }
+      }, 100) // Small delay to allow initialization
+      
+      return () => clearTimeout(timer)
+    } else {
+      setSubscriptionCheck(null)
     }
   }, [session, pathname, router])
 
@@ -53,7 +60,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   // If subscription check is still null but we have a session, show dashboard anyway
-  // (user data might still be initializing)
+  // (user data might still be initializing - this prevents infinite loading)
 
   return (
     <SidebarProvider>
