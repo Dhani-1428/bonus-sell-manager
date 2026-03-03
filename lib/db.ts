@@ -3,10 +3,11 @@ import * as fs from 'fs';
 
 // Database connection configuration
 function getDbConfig(): mysql.PoolOptions {
+  // Don't specify database initially - will be selected after connection
   const config: mysql.PoolOptions = {
     host: process.env.DB_HOST || 'foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com',
     port: parseInt(process.env.DB_PORT || '3306'),
-    database: process.env.DB_NAME || 'mysql',
+    // database: process.env.DB_NAME || 'foodsell_manager', // Will be set after connection
     user: process.env.DB_USER || 'bfsmanager',
     password: process.env.DB_PASSWORD || 'Dhani1428',
     waitForConnections: true,

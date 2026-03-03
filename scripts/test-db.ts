@@ -28,8 +28,8 @@ async function main() {
       console.log('Database version:', result[0]?.v);
       
       // Test database name
-      const dbResult = await query<{ database: string }>('SELECT DATABASE() AS database');
-      console.log('Current database:', dbResult[0]?.database || 'Not selected');
+      const dbResult = await query<{ db: string }>('SELECT DATABASE() AS db');
+      console.log('Current database:', dbResult[0]?.db || 'Not selected');
       
       // Test current user
       const userResult = await query<{ user: string }>('SELECT USER() AS user');
