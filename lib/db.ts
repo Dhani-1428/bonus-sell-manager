@@ -1,6 +1,5 @@
 import mysql from 'mysql2/promise';
 import * as fs from 'fs';
-import * as path from 'path';
 
 // Database connection configuration
 function getDbConfig(): mysql.PoolOptions {
