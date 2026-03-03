@@ -28,6 +28,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         if (!status.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
           router.push("/subscription")
         }
+      } else {
+        // User not found in localStorage - this shouldn't happen, but set default access
+        // This might happen on first login before user data is initialized
+        setSubscriptionCheck({ hasAccess: true, message: "Loading..." })
       }
     }
   }, [session, pathname, router])
@@ -43,9 +47,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Show subscription page if no access (unless already on subscription page)
   // Allow subscription page to be accessible even without active subscription
+  // Only show loader if we have a subscription check result and no access
   if (subscriptionCheck && !subscriptionCheck.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
     return <CookingLoader text="Checking subscription..." />
   }
+
+  // If subscription check is still null but we have a session, show dashboard anyway
+  // (user data might still be initializing)
 
   return (
     <SidebarProvider>

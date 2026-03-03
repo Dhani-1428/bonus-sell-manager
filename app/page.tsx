@@ -56,11 +56,18 @@ export default function LandingPage() {
     return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
   }
 
+  // Handle redirect to dashboard when session exists (but not showing animation)
+  useEffect(() => {
+    if (!isLoading && session && !showAnimation) {
+      router.push("/dashboard")
+    }
+  }, [session, isLoading, showAnimation, router])
+
   if (isLoading) {
     return <CookingLoader text="Preparing your kitchen..." />
   }
 
-  if (session) {
+  if (session && !showAnimation) {
     return <CookingLoader text="Opening your dashboard..." />
   }
 
