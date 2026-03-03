@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getSession } from "@/lib/auth-middleware"
 
-const publicRoutes = ["/", "/sign-in", "/sign-up", "/api/auth", "/api/webhooks"]
+const publicRoutes = ["/", "/sign-in", "/sign-up", "/api/auth"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
