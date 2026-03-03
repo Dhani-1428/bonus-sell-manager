@@ -13,8 +13,8 @@ async function main() {
       console.log(`Using database: ${dbName}\n`);
 
       // Check if users table exists
-      const tables = await query<{ Table_in_foodsell_manager: string }>('SHOW TABLES');
-      const tableNames = tables.map(row => row.Table_in_foodsell_manager);
+      const [tablesResult] = await connection.query('SHOW TABLES') as any[];
+      const tableNames = tablesResult.map((row: any) => Object.values(row)[0] as string);
 
       if (!tableNames.includes('users')) {
         console.error('❌ Users table does not exist! Please run schema initialization.');

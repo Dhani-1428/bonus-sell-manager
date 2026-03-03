@@ -12,16 +12,32 @@ const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || "whsec_vuiQ3aVbelwtrdl
  * Signing Secret: whsec_vuiQ3aVbelwtrdlfXK5hkdczgPRT47jm
  */
 export async function POST(request: NextRequest) {
+  console.log("🔔 Webhook endpoint called at:", new Date().toISOString())
+  
   try {
     // Get the headers from the request
     const svixId = request.headers.get("svix-id")
     const svixTimestamp = request.headers.get("svix-timestamp")
     const svixSignature = request.headers.get("svix-signature")
+    
+    console.log("📋 Webhook headers:", {
+      hasSvixId: !!svixId,
+      hasSvixTimestamp: !!svixTimestamp,
+      hasSvixSignature: !!svixSignature,
+    })
 
     // If there are no headers, error out
     if (!svixId || !svixTimestamp || !svixSignature) {
+      console.error("❌ Missing svix headers - webhook may not be from Clerk")
       return NextResponse.json(
-        { error: "Error occurred -- no svix headers" },
+        { 
+          error: "Error occurred -- no svix headers",
+          receivedHeaders: {
+            svixId: !!svixId,
+            svixTimestamp: !!svixTimestamp,
+            svixSignature: !!svixSignature,
+          }
+        },
         { status: 400 }
       )
     }
@@ -31,6 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Create a new Svix instance with your secret
     const wh = new Webhook(webhookSecret)
+    console.log("🔐 Webhook secret configured:", webhookSecret ? "✅ Yes" : "❌ No")
 
     let evt: any
 
@@ -84,11 +101,13 @@ export async function POST(request: NextRequest) {
       })
 
       // Store user in database
+      console.log("🔌 Connecting to database...")
       const pool = getPool()
       const connection = await pool.getConnection()
 
       try {
         await connection.beginTransaction()
+        console.log("✅ Database transaction started")
 
         // Insert or update user
         await connection.execute(
