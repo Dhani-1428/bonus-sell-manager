@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react"
 import { useUser, useAuth as useClerkAuth } from "@clerk/nextjs"
 import type { AuthSession } from "@/lib/types"
 import { initializeUserData } from "@/lib/auth"
@@ -8,9 +8,11 @@ import { initializeUserData } from "@/lib/auth"
 interface AuthContextType {
   session: AuthSession | null
   isLoading: boolean
+  showSuccessAnimation: boolean
   login: (email: string, password: string) => { success: boolean; error?: string }
   signup: (name: string, email: string, password: string) => { success: boolean; error?: string }
   logout: () => void
+  hideSuccessAnimation: () => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -20,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { signOut } = useClerkAuth()
   const [session, setSession] = useState<AuthSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+  const previousUserRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!userLoaded) {
@@ -28,6 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (user) {
+      // Check if this is a new login/signup (user just appeared)
+      const isNewAuth = previousUserRef.current === null && user.id
+      
       // Initialize user data in localStorage if needed (for subscription system)
       initializeUserData(user.id, user.fullName || user.firstName || "User", user.primaryEmailAddress?.emailAddress || "")
 
@@ -38,8 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: user.fullName || user.firstName || "User",
       }
       setSession(authSession)
+      
+      // Show success animation if this is a new authentication
+      if (isNewAuth) {
+        setShowSuccessAnimation(true)
+      }
+      
+      previousUserRef.current = user.id
     } else {
       setSession(null)
+      previousUserRef.current = null
     }
     setIsLoading(false)
   }, [user, userLoaded])
