@@ -24,36 +24,46 @@ export function verifyPassword(password: string, hash: string): boolean {
  * Get user by email
  */
 export async function getUserByEmail(email: string) {
-  return await queryOne<{
-    id: string
-    name: string
-    email: string
-    password: string
-    created_at: Date
-    subscription_status: string
-    trial_start_date: Date | null
-  }>(
-    'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE email = ?',
-    [email.toLowerCase()]
-  )
+  const pool = getPool()
+  const connection = await pool.getConnection()
+  try {
+    // Ensure we're using the correct database
+    const dbName = process.env.DB_NAME || 'foodsell_manager'
+    await connection.query(`USE \`${dbName}\``)
+    const [rows] = await connection.execute(
+      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE email = ?',
+      [email.toLowerCase()]
+    ) as any[]
+    return rows.length > 0 ? rows[0] : null
+  } catch (error) {
+    console.error('Error getting user by email:', error)
+    throw error
+  } finally {
+    connection.release()
+  }
 }
 
 /**
  * Get user by ID
  */
 export async function getUserById(userId: string) {
-  return await queryOne<{
-    id: string
-    name: string
-    email: string
-    password: string
-    created_at: Date
-    subscription_status: string
-    trial_start_date: Date | null
-  }>(
-    'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
-    [userId]
-  )
+  const pool = getPool()
+  const connection = await pool.getConnection()
+  try {
+    // Ensure we're using the correct database
+    const dbName = process.env.DB_NAME || 'foodsell_manager'
+    await connection.query(`USE \`${dbName}\``)
+    const [rows] = await connection.execute(
+      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
+      [userId]
+    ) as any[]
+    return rows.length > 0 ? rows[0] : null
+  } catch (error) {
+    console.error('Error getting user by ID:', error)
+    throw error
+  } finally {
+    connection.release()
+  }
 }
 
 /**
@@ -68,6 +78,9 @@ export async function createUser(
   const connection = await pool.getConnection()
 
   try {
+    // Ensure we're using the correct database
+    const dbName = process.env.DB_NAME || 'foodsell_manager'
+    await connection.query(`USE \`${dbName}\``)
     await connection.beginTransaction()
 
     // Check if user already exists

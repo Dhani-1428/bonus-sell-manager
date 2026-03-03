@@ -61,12 +61,18 @@ export async function query<T = any>(
   params?: any[]
 ): Promise<T[]> {
   const pool = getPool();
+  const connection = await pool.getConnection();
   try {
-    const [rows] = await pool.execute(sql, params);
+    // Ensure we're using the correct database
+    const dbName = process.env.DB_NAME || 'foodsell_manager';
+    await connection.query(`USE \`${dbName}\``);
+    const [rows] = await connection.execute(sql, params);
     return rows as T[];
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
+  } finally {
+    connection.release();
   }
 }
 
