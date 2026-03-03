@@ -49,9 +49,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className={cn("flex h-svh overflow-hidden bg-background")}>
+      <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
         <DashboardSidebar userName={session.name} />
-        <SidebarInset>
+        <SidebarInset className="w-full flex-1 min-w-0">
           <DashboardHeader
             userName={session.name}
             onMenuToggle={() => {}}
@@ -60,8 +60,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               router.push("/")
             }}
           />
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full">
-            <div className="w-full h-full">
+          <main className="flex-1 overflow-y-auto w-full h-full">
+            <div className="w-full h-full p-4 lg:p-6">
               {children}
             </div>
           </main>
