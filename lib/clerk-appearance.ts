@@ -8,6 +8,7 @@ export const clerkAppearance = {
     headerSubtitle: "text-sm text-muted-foreground",
     socialButtonsBlockButton: "border border-border bg-card text-foreground hover:bg-accent transition-colors rounded-lg h-11",
     socialButtonsBlockButtonText: "text-foreground font-medium text-sm",
+    socialButtonsBlockButtonIcon: "bg-white rounded p-1",
     dividerLine: "bg-border",
     dividerText: "text-muted-foreground text-sm",
     formFieldLabel: "text-foreground font-medium text-sm",

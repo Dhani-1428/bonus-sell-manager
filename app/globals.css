@@ -198,6 +198,24 @@
   font-size: 0.875rem !important;
 }
 
+.cl-socialButtonsBlockButtonIcon {
+  background-color: white !important;
+  border-radius: 0.25rem !important;
+  padding: 0.25rem !important;
+}
+
+.cl-socialButtonsBlockButton svg {
+  background-color: white !important;
+  border-radius: 0.25rem !important;
+  padding: 0.25rem !important;
+}
+
+.cl-socialButtonsBlockButton img {
+  background-color: white !important;
+  border-radius: 0.25rem !important;
+  padding: 0.25rem !important;
+}
+
 .cl-footerActionLink {
   color: hsl(var(--primary)) !important;
   font-weight: 500 !important;
