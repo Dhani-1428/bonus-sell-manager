@@ -12,6 +12,9 @@ function getDbConfig(): mysql.PoolOptions {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
+    connectTimeout: 10000, // 10 seconds timeout
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
   };
 
   // Configure SSL if enabled
@@ -105,11 +108,29 @@ export async function transaction<T>(
  */
 export async function testConnection(): Promise<boolean> {
   try {
-    const result = await query<{ v: string }>('SELECT VERSION() AS v');
-    console.log('Database version:', result[0]?.v);
-    return true;
-  } catch (error) {
-    console.error('Database connection test failed:', error);
+    const pool = getPool();
+    const connection = await pool.getConnection();
+    
+    try {
+      const [rows] = await connection.execute('SELECT VERSION() AS v');
+      const result = rows as { v: string }[];
+      console.log('Database version:', result[0]?.v);
+      return true;
+    } finally {
+      connection.release();
+    }
+  } catch (error: any) {
+    console.error('Database connection test failed:', error.message);
+    if (error.code === 'ETIMEDOUT') {
+      console.error('Connection timeout - Check if:');
+      console.error('1. RDS instance is publicly accessible');
+      console.error('2. Security group allows connections from your IP');
+      console.error('3. Network/firewall allows outbound connections on port 3306');
+    } else if (error.code === 'ECONNREFUSED') {
+      console.error('Connection refused - Check host and port');
+    } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+      console.error('Access denied - Check username and password');
+    }
     return false;
   }
 }
