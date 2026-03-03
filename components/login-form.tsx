@@ -33,6 +33,11 @@ export function LoginForm({
             routing="hash"
             signUpUrl="#signup"
             afterSignInUrl="/dashboard"
+            afterSignIn={() => {
+              if (typeof window !== "undefined") {
+                sessionStorage.setItem("clerk-auth-flow", "true")
+              }
+            }}
           />
         </div>
 
