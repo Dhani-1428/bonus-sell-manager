@@ -58,7 +58,15 @@ export function SignupForm({
       if (onSuccess) {
         onSuccess()
       } else {
-        router.push("/dashboard")
+        // Use production URL in production, relative path in development
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'
+        const isProduction = process.env.NODE_ENV === 'production' || window.location.hostname.includes('bonusfoodsellmanager.com')
+        
+        if (isProduction && !window.location.hostname.includes('localhost')) {
+          window.location.href = `${appUrl}/dashboard`
+        } else {
+          router.push("/dashboard")
+        }
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.")

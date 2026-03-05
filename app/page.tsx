@@ -51,7 +51,15 @@ export default function LandingPage() {
     hideSuccessAnimation()
     // Use setTimeout to ensure this happens after render
     setTimeout(() => {
-      router.push("/dashboard")
+      // Use production URL in production, relative path in development
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'
+      const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('bonusfoodsellmanager.com'))
+      
+      if (isProduction && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+        window.location.href = `${appUrl}/dashboard`
+      } else {
+        router.push("/dashboard")
+      }
     }, 0)
   }
 
@@ -60,7 +68,15 @@ export default function LandingPage() {
     if (!isLoading && session && !showAnimation) {
       // Use setTimeout to ensure this happens after render
       setTimeout(() => {
-        router.push("/dashboard")
+        // Use production URL in production, relative path in development
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'
+        const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('bonusfoodsellmanager.com'))
+        
+        if (isProduction && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+          window.location.href = `${appUrl}/dashboard`
+        } else {
+          router.push("/dashboard")
+        }
       }, 0)
     }
   }, [session, isLoading, showAnimation, router])
