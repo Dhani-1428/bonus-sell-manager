@@ -47,15 +47,88 @@ export async function initializeSchema(): Promise<void> {
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255),
+        google_id VARCHAR(255) UNIQUE,
+        avatar VARCHAR(500),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         trial_start_date DATETIME,
         subscription_status ENUM('trial', 'active', 'expired', 'cancelled') DEFAULT 'trial',
         subscription_end_date DATETIME,
         subscription_plan ENUM('monthly', 'yearly'),
         INDEX idx_email (email),
+        INDEX idx_google_id (google_id),
         INDEX idx_subscription_status (subscription_status)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+    
+    // Add google_id and avatar columns if they don't exist (for existing databases)
+    try {
+      // Check if google_id column exists
+      const [columns] = await connection.query(
+        `SELECT COLUMN_NAME 
+         FROM INFORMATION_SCHEMA.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = 'users' 
+         AND COLUMN_NAME = 'google_id'`
+      ) as any[];
+      
+      if (columns.length === 0) {
+        await connection.query(`
+          ALTER TABLE users 
+          ADD COLUMN google_id VARCHAR(255) UNIQUE
+        `);
+        console.log('✅ Added google_id column');
+      }
+    } catch (error: any) {
+      if (!error.message.includes('Duplicate column name')) {
+        console.log('Note: google_id column may already exist');
+      }
+    }
+    
+    try {
+      // Check if avatar column exists
+      const [columns] = await connection.query(
+        `SELECT COLUMN_NAME 
+         FROM INFORMATION_SCHEMA.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = 'users' 
+         AND COLUMN_NAME = 'avatar'`
+      ) as any[];
+      
+      if (columns.length === 0) {
+        await connection.query(`
+          ALTER TABLE users 
+          ADD COLUMN avatar VARCHAR(500)
+        `);
+        console.log('✅ Added avatar column');
+      }
+    } catch (error: any) {
+      if (!error.message.includes('Duplicate column name')) {
+        console.log('Note: avatar column may already exist');
+      }
+    }
+    
+    // Add index for google_id if it doesn't exist
+    try {
+      const [indexes] = await connection.query(
+        `SELECT INDEX_NAME 
+         FROM INFORMATION_SCHEMA.STATISTICS 
+         WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = 'users' 
+         AND INDEX_NAME = 'idx_google_id'`
+      ) as any[];
+      
+      if (indexes.length === 0) {
+        await connection.query(`
+          CREATE INDEX idx_google_id ON users(google_id)
+        `);
+        console.log('✅ Added index for google_id');
+      }
+    } catch (error: any) {
+      // Index might already exist, ignore
+      if (!error.message.includes('Duplicate key name')) {
+        console.log('Note: idx_google_id index may already exist');
+      }
+    }
 
     // Create menu_items table
     await connection.query(`

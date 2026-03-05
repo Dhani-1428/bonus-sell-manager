@@ -99,7 +99,7 @@ async function testMySQLConnection(config: mysql.PoolOptions, testName: string):
 async function main() {
   const hostname = process.env.DB_HOST || 'foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com';
   const port = parseInt(process.env.DB_PORT || '3306');
-  const database = process.env.DB_NAME || 'mysql';
+  const database = process.env.DB_NAME || 'foodsell_manager';
   const user = process.env.DB_USER || 'bfsmanager';
   const password = process.env.DB_PASSWORD || 'Dhani1428';
   

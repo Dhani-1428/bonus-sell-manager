@@ -10,7 +10,7 @@ Add the following environment variables to your `.env.local` file:
 # Database Configuration
 DB_HOST=foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com
 DB_PORT=3306
-DB_NAME=mysql
+DB_NAME=foodsell_manager
 DB_USER=bfsmanager
 DB_PASSWORD=Dhani1428
 DB_SSL=true
@@ -26,7 +26,7 @@ The database connection is configured in `lib/db.ts` and uses a connection pool 
 ### Connection Details:
 - **Host**: `foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com`
 - **Port**: `3306`
-- **Database**: `mysql`
+- **Database**: `foodsell_manager`
 - **User**: `bfsmanager`
 - **SSL**: Enabled (with `rejectUnauthorized: false` for development)
 

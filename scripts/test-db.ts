@@ -10,7 +10,7 @@ async function main() {
   console.log('Connection details:');
   console.log(`  Host: ${process.env.DB_HOST || 'foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com'}`);
   console.log(`  Port: ${process.env.DB_PORT || '3306'}`);
-  console.log(`  Database: ${process.env.DB_NAME || 'mysql'}`);
+  console.log(`  Database: ${process.env.DB_NAME || 'foodsell_manager'}`);
   console.log(`  User: ${process.env.DB_USER || 'bfsmanager'}`);
   console.log(`  SSL: ${process.env.DB_SSL || 'true'}\n`);
   

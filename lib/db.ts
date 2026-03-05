@@ -3,7 +3,14 @@ import * as fs from 'fs';
 
 // Database connection configuration
 function getDbConfig(): mysql.PoolOptions {
-  const dbName = process.env.DB_NAME || 'foodsell_manager';
+  let dbName = process.env.DB_NAME || 'foodsell_manager';
+  
+  // Prevent using MySQL system database
+  if (dbName === 'mysql' || dbName === 'information_schema' || dbName === 'performance_schema' || dbName === 'sys') {
+    console.warn(`⚠️  Warning: Database name '${dbName}' is a MySQL system database. Using 'foodsell_manager' instead.`);
+    dbName = 'foodsell_manager';
+  }
+  
   const config: mysql.PoolOptions = {
     host: process.env.DB_HOST || 'foodsell.cluster-ctu4682g825l.eu-north-1.rds.amazonaws.com',
     port: parseInt(process.env.DB_PORT || '3306'),
@@ -68,14 +75,23 @@ export async function query<T = any>(
   const pool = getPool();
   try {
     // The pool is already configured with the correct database
-    // But we'll ensure it's set explicitly
     const [rows] = await pool.execute(sql, params);
     return rows as T[];
   } catch (error: any) {
     console.error('Database query error:', error);
     if (error.message && error.message.includes("doesn't exist")) {
       console.error(`⚠️  Database error: ${error.message}`);
-      console.error(`   Make sure database '${process.env.DB_NAME || 'foodsell_manager'}' exists and schema is initialized`);
+      const dbName = process.env.DB_NAME || 'foodsell_manager';
+      if (error.message.includes("mysql.users")) {
+        console.error(`   Error: Trying to access mysql.users system table.`);
+        console.error(`   This happens when DB_NAME is set to 'mysql' (the system database).`);
+        console.error(`   Solution: Set DB_NAME to 'foodsell_manager' in your environment variables.`);
+        console.error(`   Current DB_NAME: ${dbName}`);
+        console.error(`   The database name has been automatically corrected to 'foodsell_manager'.`);
+        console.error(`   Please restart your application or update your .env.local file.`);
+      }
+      console.error(`   Make sure database '${dbName}' exists and schema is initialized`);
+      console.error(`   Run: POST /api/db/init to initialize the schema`);
     }
     throw error;
   }
