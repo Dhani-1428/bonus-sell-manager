@@ -123,31 +123,45 @@ export async function GET(request: NextRequest) {
     const googleUser = await userInfoResponse.json();
 
     // Find or create user in database
-    const user = await findOrCreateGoogleUser(
-      googleUser.id,
-      googleUser.email,
-      googleUser.name,
-      googleUser.picture
-    );
+    let user;
+    try {
+      user = await findOrCreateGoogleUser(
+        googleUser.id,
+        googleUser.email,
+        googleUser.name,
+        googleUser.picture
+      );
+      console.log('✅ User created/found successfully:', user.id);
+    } catch (dbError: any) {
+      console.error('❌ Database error creating/finding user:', dbError);
+      // If database error, still try to proceed but log it
+      // This allows the user to login even if there's a temporary DB issue
+      throw new Error(`Database error: ${dbError.message || 'Failed to create user'}`);
+    }
 
     // Create session cookie
-    cookieStore.set('session', user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: '/',
-    });
+    try {
+      cookieStore.set('session', user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+      });
+      console.log('✅ Session cookie set for user:', user.id);
+    } catch (cookieError: any) {
+      console.error('❌ Error setting session cookie:', cookieError);
+      throw new Error(`Session error: ${cookieError.message || 'Failed to set session'}`);
+    }
 
     // Clear OAuth state cookie
     cookieStore.delete('oauth_state');
 
-    // Redirect to dashboard or previous route
-    // Priority: 1. redirect from state, 2. redirect query param, 3. referer, 4. default dashboard
+    // Always redirect to dashboard/admin panel on successful login
+    // Priority: 1. redirect from state, 2. redirect query param, 3. default dashboard
     const redirectParam = searchParams.get('redirect');
-    const referer = request.headers.get('referer');
     
-    let redirectPath = '/dashboard';
+    let redirectPath = '/dashboard'; // Default to admin panel
     
     if (redirectFromState) {
       // Use redirect from state (most reliable)
@@ -155,48 +169,45 @@ export async function GET(request: NextRequest) {
       const cleanRedirect = redirectFromState.startsWith('http') 
         ? new URL(redirectFromState).pathname 
         : (redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`);
-      redirectPath = cleanRedirect;
+      // Only use if it's a valid dashboard route, otherwise use dashboard
+      if (cleanRedirect.startsWith('/dashboard') || cleanRedirect.startsWith('/admin')) {
+        redirectPath = cleanRedirect;
+      }
     } else if (redirectParam) {
       // Use redirect parameter if provided
       // Ensure it's a relative path, not a full URL
       const cleanRedirect = redirectParam.startsWith('http')
         ? new URL(redirectParam).pathname
         : (redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`);
-      redirectPath = cleanRedirect;
-    } else if (referer) {
-      // Try to extract path from referer
-      try {
-        const refererUrl = new URL(referer);
-        // Only use referer if it's from the same domain (not external)
-        if (refererUrl.hostname.includes('bonusfoodsellmanager.com') || 
-            (process.env.NODE_ENV !== 'production' && refererUrl.hostname.includes('localhost'))) {
-          const refererPath = refererUrl.pathname;
-          // Only use referer if it's a valid app route (not auth routes)
-          if (refererPath && 
-              refererPath !== '/api/auth/google' && 
-              !refererPath.startsWith('/api/auth/') &&
-              refererPath.startsWith('/')) {
-            redirectPath = refererPath;
-          }
-        }
-      } catch (e) {
-        // Invalid referer URL, use default
+      // Only use if it's a valid dashboard route, otherwise use dashboard
+      if (cleanRedirect.startsWith('/dashboard') || cleanRedirect.startsWith('/admin')) {
+        redirectPath = cleanRedirect;
       }
     }
     
     // Final safety check - ensure we never redirect to localhost in production
     const finalUrl = `${appUrl}${redirectPath}`;
     if (finalUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
+      console.log('⚠️  Prevented localhost redirect, using dashboard');
       return NextResponse.redirect(`${appUrl}/dashboard`);
     }
     
+    console.log('✅ Redirecting to:', finalUrl);
     return NextResponse.redirect(finalUrl);
   } catch (error: any) {
-    console.error('Google OAuth callback error:', error);
+    console.error('❌ Google OAuth callback error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error message:', error.message);
+    
     // Always use production URL for error redirects, never localhost
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
+    
+    // Log the error details for debugging
+    const errorMessage = error.message || 'server_error';
+    console.error('Redirecting to error page with message:', errorMessage);
+    
     return NextResponse.redirect(
-      `${appUrl}/auth/login?error=server_error`
+      `${appUrl}/auth/login?error=${encodeURIComponent(errorMessage)}`
     );
   }
 }
