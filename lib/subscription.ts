@@ -127,7 +127,8 @@ export async function activateSubscription(
   // Server-side: Store via API route
   if (typeof window === "undefined") {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/sync-subscription`, {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.FRONTEND_URL || "https://bonusfoodsellmanager.com"
+      const response = await fetch(`${appUrl}/api/sync-subscription`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

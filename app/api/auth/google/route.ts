@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAppUrl } from '@/lib/redirect';
 
 /**
  * GET /api/auth/google
@@ -7,23 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get the actual host from request headers
-    const host = request.headers.get('host') || request.headers.get('x-forwarded-host');
-    const protocol = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-    
-    // Determine app URL - prioritize production URL, fallback to request host
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
-    
-    // Only use request host if it's NOT localhost and we're in development
-    if (process.env.NODE_ENV !== 'production' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
-      appUrl = `${protocol}://${host}`;
-    }
-    
-    // Always use production URL in production, never localhost
-    if (process.env.NODE_ENV === 'production' || host?.includes('bonusfoodsellmanager.com')) {
-      appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
-    }
-    
+    // Always use production URL, never localhost
+    const appUrl = getAppUrl();
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
       `${appUrl}/api/auth/google/callback`;

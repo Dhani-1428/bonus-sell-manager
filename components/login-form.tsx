@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { GoogleSignInButton } from "@/components/google-signin-button"
+import { redirectToDashboard } from "@/lib/redirect"
 
 export function LoginForm({
   onBack,
@@ -45,15 +46,7 @@ export function LoginForm({
       if (onSuccess) {
         onSuccess()
       } else {
-        // Use production URL in production, relative path in development
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'
-        const isProduction = process.env.NODE_ENV === 'production' || window.location.hostname.includes('bonusfoodsellmanager.com')
-        
-        if (isProduction && !window.location.hostname.includes('localhost')) {
-          window.location.href = `${appUrl}/dashboard`
-        } else {
-          router.push("/dashboard")
-        }
+        redirectToDashboard()
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.")

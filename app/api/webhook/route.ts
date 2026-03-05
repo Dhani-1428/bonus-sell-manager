@@ -17,7 +17,7 @@ async function updateSubscription(
   endDate.setDate(endDate.getDate() + durationDays)
 
   // Store subscription update via sync API
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.FRONTEND_URL || "https://bonusfoodsellmanager.com"
   await fetch(`${baseUrl}/api/sync-subscription`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

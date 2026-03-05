@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findOrCreateGoogleUser } from '@/lib/google-auth';
+import { getServerRedirectUrl, cleanRedirectPath, getAppUrl } from '@/lib/redirect';
 
 /**
  * GET /api/auth/google/callback
@@ -14,22 +15,8 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    // Get the actual host from request headers
-    const host = request.headers.get('host') || request.headers.get('x-forwarded-host');
-    const protocol = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-    
-    // Determine app URL - prioritize production URL, fallback to request host
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
-    
-    // Only use request host if it's NOT localhost and we're in development
-    if (process.env.NODE_ENV !== 'production' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
-      appUrl = `${protocol}://${host}`;
-    }
-    
-    // Always use production URL in production, never localhost
-    if (process.env.NODE_ENV === 'production' || host?.includes('bonusfoodsellmanager.com')) {
-      appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
-    }
+    // Always use production URL, never localhost
+    const appUrl = getAppUrl();
 
     // Handle OAuth errors
     if (error) {
@@ -68,7 +55,7 @@ export async function GET(request: NextRequest) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
-      `${appUrl}/api/auth/google/callback`;
+      `${getAppUrl()}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
       console.error('Google OAuth credentials not configured');
@@ -158,76 +145,29 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('oauth_state');
 
     // Always redirect to dashboard/admin panel on successful login
-    // Use production URL, never localhost
-    const productionUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
-    
     // Priority: 1. redirect from state, 2. redirect query param, 3. default dashboard
     const redirectParam = searchParams.get('redirect');
     
     let redirectPath = '/dashboard'; // Default to admin panel
     
     if (redirectFromState) {
-      // Use redirect from state (most reliable)
-      // Ensure it's a relative path, not a full URL
-      let cleanRedirect = redirectFromState;
-      
-      // If it's a full URL, extract pathname and check it's not localhost
-      if (redirectFromState.startsWith('http')) {
-        try {
-          const url = new URL(redirectFromState);
-          // Never use localhost URLs
-          if (url.hostname.includes('localhost') || url.hostname.includes('127.0.0.1')) {
-            cleanRedirect = '/dashboard';
-          } else {
-            cleanRedirect = url.pathname;
-          }
-        } catch (e) {
-          cleanRedirect = '/dashboard';
-        }
-      } else {
-        cleanRedirect = redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`;
-      }
-      
-      // Only use if it's a valid dashboard route, otherwise use dashboard
+      // Clean redirect path from state
+      const cleanRedirect = cleanRedirectPath(redirectFromState);
+      // Only use if it's a valid dashboard route
       if (cleanRedirect.startsWith('/dashboard') || cleanRedirect.startsWith('/admin')) {
         redirectPath = cleanRedirect;
       }
     } else if (redirectParam) {
-      // Use redirect parameter if provided
-      // Ensure it's a relative path, not a full URL
-      let cleanRedirect = redirectParam;
-      
-      // If it's a full URL, extract pathname and check it's not localhost
-      if (redirectParam.startsWith('http')) {
-        try {
-          const url = new URL(redirectParam);
-          // Never use localhost URLs
-          if (url.hostname.includes('localhost') || url.hostname.includes('127.0.0.1')) {
-            cleanRedirect = '/dashboard';
-          } else {
-            cleanRedirect = url.pathname;
-          }
-        } catch (e) {
-          cleanRedirect = '/dashboard';
-        }
-      } else {
-        cleanRedirect = redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`;
-      }
-      
-      // Only use if it's a valid dashboard route, otherwise use dashboard
+      // Clean redirect parameter
+      const cleanRedirect = cleanRedirectPath(redirectParam);
+      // Only use if it's a valid dashboard route
       if (cleanRedirect.startsWith('/dashboard') || cleanRedirect.startsWith('/admin')) {
         redirectPath = cleanRedirect;
       }
     }
     
-    // Always use production URL for redirect, never localhost
-    const finalUrl = `${productionUrl}${redirectPath}`;
-    
-    // Final safety check - ensure we never redirect to localhost
-    if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
-      console.log('⚠️  Prevented localhost redirect, using production dashboard');
-      return NextResponse.redirect(`${productionUrl}/dashboard`);
-    }
+    // Get server redirect URL (always production, never localhost)
+    const finalUrl = getServerRedirectUrl(redirectPath);
     
     console.log('✅ Redirecting to:', finalUrl);
     return NextResponse.redirect(finalUrl);
@@ -237,9 +177,7 @@ export async function GET(request: NextRequest) {
     console.error('Error message:', error.message);
     
     // Always use production URL for error redirects, never localhost
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
-    
-    // Log the error details for debugging
+    const appUrl = getAppUrl();
     const errorMessage = error.message || 'server_error';
     console.error('Redirecting to error page with message:', errorMessage);
     

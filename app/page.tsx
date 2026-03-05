@@ -17,6 +17,7 @@ import { FaqSection } from "@/components/sections/faq"
 import { ContactSection } from "@/components/sections/contact"
 import { Footer } from "@/components/footer"
 import { FloatingButtons } from "@/components/floating-buttons"
+import { redirectToDashboard } from "@/lib/redirect"
 
 export default function LandingPage() {
   const { session, isLoading, showSuccessAnimation, hideSuccessAnimation } = useAuth()
@@ -51,15 +52,7 @@ export default function LandingPage() {
     hideSuccessAnimation()
     // Use setTimeout to ensure this happens after render
     setTimeout(() => {
-      // Use production URL in production, relative path in development
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'
-      const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('bonusfoodsellmanager.com'))
-      
-      if (isProduction && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-        window.location.href = `${appUrl}/dashboard`
-      } else {
-        router.push("/dashboard")
-      }
+      redirectToDashboard()
     }, 0)
   }
 
@@ -68,18 +61,10 @@ export default function LandingPage() {
     if (!isLoading && session && !showAnimation) {
       // Use setTimeout to ensure this happens after render
       setTimeout(() => {
-        // Use production URL in production, relative path in development
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'
-        const isProduction = process.env.NODE_ENV === 'production' || (typeof window !== 'undefined' && window.location.hostname.includes('bonusfoodsellmanager.com'))
-        
-        if (isProduction && typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-          window.location.href = `${appUrl}/dashboard`
-        } else {
-          router.push("/dashboard")
-        }
+        redirectToDashboard()
       }, 0)
     }
-  }, [session, isLoading, showAnimation, router])
+  }, [session, isLoading, showAnimation])
 
   // Show success animation if authentication just succeeded
   if (showAnimation && session) {

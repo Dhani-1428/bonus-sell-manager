@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { getAppUrl } from "@/lib/redirect"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-12-18.acacia",
@@ -42,8 +43,8 @@ export async function POST(request: NextRequest) {
       ],
       // Treat both as one‑time payments that unlock access for a fixed duration
       mode: "payment",
-      success_url: `${request.headers.get("origin") || "http://localhost:3000"}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.headers.get("origin") || "http://localhost:3000"}/subscription?canceled=true`,
+      success_url: `${getAppUrl()}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${getAppUrl()}/subscription?canceled=true`,
       client_reference_id: userId,
       metadata: {
         userId,
