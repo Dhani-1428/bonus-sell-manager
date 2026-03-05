@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { GoogleSignInButton } from "@/components/google-signin-button"
 
 export function SignupForm({
   onBack,
@@ -80,6 +81,19 @@ export function SignupForm({
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Create your account</h1>
           <p className="text-sm text-muted-foreground">Get started with your admin panel</p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <GoogleSignInButton disabled={isLoading} />
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
