@@ -119,6 +119,38 @@ export async function findOrCreateGoogleUser(
   } catch (error: any) {
     await connection.rollback();
     console.error('Error in findOrCreateGoogleUser:', error);
+    
+    // Check if error is due to missing columns
+    if (error.message && error.message.includes("doesn't exist")) {
+      console.error('⚠️  Database columns may not exist. Please run migration:');
+      console.error('   npx tsx scripts/migrate-add-google-fields.ts');
+      console.error('   OR POST /api/db/init');
+      throw new Error('Database schema not updated. Please initialize database schema.');
+    }
+    
+    // Check for duplicate entry errors (shouldn't happen but handle gracefully)
+    if (error.code === 'ER_DUP_ENTRY') {
+      console.error('⚠️  Duplicate entry detected, retrying...');
+      // Retry by finding existing user
+      try {
+        const [rows] = await connection.execute(
+          'SELECT id, name, email, avatar FROM users WHERE email = ? OR google_id = ?',
+          [email.toLowerCase(), googleId]
+        ) as any[];
+        
+        if (rows.length > 0) {
+          return {
+            id: rows[0].id,
+            name: rows[0].name,
+            email: rows[0].email,
+            avatar: rows[0].avatar || avatar || undefined,
+          };
+        }
+      } catch (retryError) {
+        // If retry fails, throw original error
+      }
+    }
+    
     throw error;
   } finally {
     connection.release();
