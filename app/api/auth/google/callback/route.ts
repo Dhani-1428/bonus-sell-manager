@@ -14,11 +14,20 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
+    // Get base URL from request origin (works in both dev and production)
+    const origin = request.headers.get('origin') || request.nextUrl.origin;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin || 'https://bonusfoodsellmanager.com';
+    
+    // Ensure we use production URL in production
+    const appUrl = process.env.NODE_ENV === 'production' 
+      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com')
+      : baseUrl;
+
     // Handle OAuth errors
     if (error) {
       console.error('Google OAuth error:', error);
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=${encodeURIComponent(error)}`
+        `${appUrl}/auth/login?error=${encodeURIComponent(error)}`
       );
     }
 
@@ -29,25 +38,34 @@ export async function GET(request: NextRequest) {
     if (!state || !storedState || state !== storedState) {
       console.error('Invalid OAuth state parameter');
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=invalid_state`
+        `${appUrl}/auth/login?error=invalid_state`
       );
+    }
+
+    // Extract redirect from state if present
+    let redirectFromState: string | null = null;
+    try {
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+      redirectFromState = stateData.redirect || null;
+    } catch (e) {
+      // State doesn't contain redirect, that's okay
     }
 
     if (!code) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=no_code`
+        `${appUrl}/auth/login?error=no_code`
       );
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/api/auth/google/callback`;
+      `${appUrl}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
       console.error('Google OAuth credentials not configured');
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=config_error`
+        `${appUrl}/auth/login?error=config_error`
       );
     }
 
@@ -70,7 +88,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text();
       console.error('Token exchange failed:', errorData);
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=token_exchange_failed`
+        `${appUrl}/auth/login?error=token_exchange_failed`
       );
     }
 
@@ -90,7 +108,7 @@ export async function GET(request: NextRequest) {
     if (!userInfoResponse.ok) {
       console.error('Failed to fetch user info from Google');
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=user_info_failed`
+        `${appUrl}/auth/login?error=user_info_failed`
       );
     }
 
@@ -116,15 +134,44 @@ export async function GET(request: NextRequest) {
     // Clear OAuth state cookie
     cookieStore.delete('oauth_state');
 
-    // Redirect to dashboard
-    const redirectUrl = searchParams.get('redirect') || '/dashboard';
-    return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}${redirectUrl}`
-    );
+    // Redirect to dashboard or previous route
+    // Priority: 1. redirect from state, 2. redirect query param, 3. referer, 4. default dashboard
+    const redirectParam = searchParams.get('redirect');
+    const referer = request.headers.get('referer');
+    
+    let redirectPath = '/dashboard';
+    
+    if (redirectFromState) {
+      // Use redirect from state (most reliable)
+      redirectPath = redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`;
+    } else if (redirectParam) {
+      // Use redirect parameter if provided
+      redirectPath = redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`;
+    } else if (referer) {
+      // Try to extract path from referer
+      try {
+        const refererUrl = new URL(referer);
+        const refererPath = refererUrl.pathname;
+        // Only use referer if it's a valid app route (not external or auth routes)
+        if (refererPath && 
+            refererPath !== '/api/auth/google' && 
+            !refererPath.startsWith('/api/auth/') &&
+            refererPath.startsWith('/')) {
+          redirectPath = refererPath;
+        }
+      } catch (e) {
+        // Invalid referer URL, use default
+      }
+    }
+    
+    return NextResponse.redirect(`${appUrl}${redirectPath}`);
   } catch (error: any) {
     console.error('Google OAuth callback error:', error);
+    const appUrl = process.env.NODE_ENV === 'production' 
+      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com')
+      : (request.headers.get('origin') || request.nextUrl.origin || 'https://bonusfoodsellmanager.com');
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/auth/login?error=server_error`
+      `${appUrl}/auth/login?error=server_error`
     );
   }
 }

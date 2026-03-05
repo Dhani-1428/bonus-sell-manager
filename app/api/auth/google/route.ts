@@ -7,9 +7,22 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Get base URL from request origin (works in both dev and production)
+    const origin = request.headers.get('origin') || request.nextUrl.origin;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin || 'https://bonusfoodsellmanager.com';
+    
+    // Ensure we use production URL in production
+    const appUrl = process.env.NODE_ENV === 'production' 
+      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com')
+      : baseUrl;
+    
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 
-      `${process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com'}/api/auth/google/callback`;
+      `${appUrl}/api/auth/google/callback`;
+    
+    // Preserve redirect parameter if provided
+    const searchParams = request.nextUrl.searchParams;
+    const redirectParam = searchParams.get('redirect');
     
     if (!clientId) {
       return NextResponse.json(
@@ -26,16 +39,41 @@ export async function GET(request: NextRequest) {
       })
     ).toString('base64');
 
+    // Build Google OAuth URL with redirect parameter if provided
+    const googleAuthParams = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state: state,
+      access_type: 'offline',
+      prompt: 'consent',
+    });
+    
+    // Add redirect parameter to state if provided (will be passed back in callback)
+    if (redirectParam) {
+      const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+      stateData.redirect = redirectParam;
+      const updatedState = Buffer.from(JSON.stringify(stateData)).toString('base64');
+      googleAuthParams.set('state', updatedState);
+      
+      // Update cookie with new state
+      const response = NextResponse.redirect(
+        `https://accounts.google.com/o/oauth2/v2/auth?${googleAuthParams.toString()}`
+      );
+      response.cookies.set('oauth_state', updatedState, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 10, // 10 minutes
+        path: '/',
+      });
+      return response;
+    }
+    
     // Store state in cookie for verification
     const response = NextResponse.redirect(
-      `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${encodeURIComponent(clientId)}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=code&` +
-      `scope=${encodeURIComponent('openid email profile')}&` +
-      `state=${encodeURIComponent(state)}&` +
-      `access_type=offline&` +
-      `prompt=consent`
+      `https://accounts.google.com/o/oauth2/v2/auth?${googleAuthParams.toString()}`
     );
 
     // Set state cookie (httpOnly, secure in production)

@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { usePathname } from "next/navigation"
 
 interface GoogleSignInButtonProps {
   disabled?: boolean
@@ -8,8 +9,17 @@ interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({ disabled, className }: GoogleSignInButtonProps) {
+  const pathname = usePathname()
+  
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/google"
+    // Preserve current route for redirect after login
+    const currentPath = pathname || window.location.pathname
+    const redirectPath = currentPath !== '/' && currentPath !== '/auth/login' && currentPath !== '/auth/signup'
+      ? currentPath
+      : '/dashboard'
+    
+    // Add redirect parameter to Google OAuth URL
+    window.location.href = `/api/auth/google?redirect=${encodeURIComponent(redirectPath)}`
   }
 
   return (
