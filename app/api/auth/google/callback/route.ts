@@ -158,6 +158,9 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('oauth_state');
 
     // Always redirect to dashboard/admin panel on successful login
+    // Use production URL, never localhost
+    const productionUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
+    
     // Priority: 1. redirect from state, 2. redirect query param, 3. default dashboard
     const redirectParam = searchParams.get('redirect');
     
@@ -166,9 +169,25 @@ export async function GET(request: NextRequest) {
     if (redirectFromState) {
       // Use redirect from state (most reliable)
       // Ensure it's a relative path, not a full URL
-      const cleanRedirect = redirectFromState.startsWith('http') 
-        ? new URL(redirectFromState).pathname 
-        : (redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`);
+      let cleanRedirect = redirectFromState;
+      
+      // If it's a full URL, extract pathname and check it's not localhost
+      if (redirectFromState.startsWith('http')) {
+        try {
+          const url = new URL(redirectFromState);
+          // Never use localhost URLs
+          if (url.hostname.includes('localhost') || url.hostname.includes('127.0.0.1')) {
+            cleanRedirect = '/dashboard';
+          } else {
+            cleanRedirect = url.pathname;
+          }
+        } catch (e) {
+          cleanRedirect = '/dashboard';
+        }
+      } else {
+        cleanRedirect = redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`;
+      }
+      
       // Only use if it's a valid dashboard route, otherwise use dashboard
       if (cleanRedirect.startsWith('/dashboard') || cleanRedirect.startsWith('/admin')) {
         redirectPath = cleanRedirect;
@@ -176,20 +195,38 @@ export async function GET(request: NextRequest) {
     } else if (redirectParam) {
       // Use redirect parameter if provided
       // Ensure it's a relative path, not a full URL
-      const cleanRedirect = redirectParam.startsWith('http')
-        ? new URL(redirectParam).pathname
-        : (redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`);
+      let cleanRedirect = redirectParam;
+      
+      // If it's a full URL, extract pathname and check it's not localhost
+      if (redirectParam.startsWith('http')) {
+        try {
+          const url = new URL(redirectParam);
+          // Never use localhost URLs
+          if (url.hostname.includes('localhost') || url.hostname.includes('127.0.0.1')) {
+            cleanRedirect = '/dashboard';
+          } else {
+            cleanRedirect = url.pathname;
+          }
+        } catch (e) {
+          cleanRedirect = '/dashboard';
+        }
+      } else {
+        cleanRedirect = redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`;
+      }
+      
       // Only use if it's a valid dashboard route, otherwise use dashboard
       if (cleanRedirect.startsWith('/dashboard') || cleanRedirect.startsWith('/admin')) {
         redirectPath = cleanRedirect;
       }
     }
     
-    // Final safety check - ensure we never redirect to localhost in production
-    const finalUrl = `${appUrl}${redirectPath}`;
-    if (finalUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
-      console.log('⚠️  Prevented localhost redirect, using dashboard');
-      return NextResponse.redirect(`${appUrl}/dashboard`);
+    // Always use production URL for redirect, never localhost
+    const finalUrl = `${productionUrl}${redirectPath}`;
+    
+    // Final safety check - ensure we never redirect to localhost
+    if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
+      console.log('⚠️  Prevented localhost redirect, using production dashboard');
+      return NextResponse.redirect(`${productionUrl}/dashboard`);
     }
     
     console.log('✅ Redirecting to:', finalUrl);

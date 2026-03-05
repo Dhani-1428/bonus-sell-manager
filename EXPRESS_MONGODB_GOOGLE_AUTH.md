@@ -110,7 +110,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: 'https://api.mydomain.com/auth/google/callback',
+      callbackURL: process.env.GOOGLE_REDIRECT_URI || 'https://bonusfoodsellmanager.com/api/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -217,9 +217,23 @@ router.get(
   }),
   (req, res) => {
     // Successful authentication
-    // Redirect to frontend dashboard
+    // Always use production URL, never localhost
+    const frontendUrl = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
     const redirectUrl = req.query.redirect || '/dashboard';
-    res.redirect(`${process.env.FRONTEND_URL || 'https://bonusfoodsellmanager.com'}${redirectUrl}`);
+    
+    // Ensure redirect URL is relative and doesn't contain localhost
+    const cleanRedirect = redirectUrl.startsWith('http') 
+      ? new URL(redirectUrl).pathname 
+      : (redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl}`);
+    
+    const finalUrl = `${frontendUrl}${cleanRedirect}`;
+    
+    // Safety check - never redirect to localhost in production
+    if (finalUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
+      return res.redirect(`${frontendUrl}/dashboard`);
+    }
+    
+    res.redirect(finalUrl);
   }
 );
 
