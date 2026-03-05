@@ -7,14 +7,22 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get base URL from request origin (works in both dev and production)
-    const origin = request.headers.get('origin') || request.nextUrl.origin;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin || 'https://bonusfoodsellmanager.com';
+    // Get the actual host from request headers
+    const host = request.headers.get('host') || request.headers.get('x-forwarded-host');
+    const protocol = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
     
-    // Ensure we use production URL in production
-    const appUrl = process.env.NODE_ENV === 'production' 
-      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com')
-      : baseUrl;
+    // Determine app URL - prioritize production URL, fallback to request host
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
+    
+    // Only use request host if it's NOT localhost and we're in development
+    if (process.env.NODE_ENV !== 'production' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      appUrl = `${protocol}://${host}`;
+    }
+    
+    // Always use production URL in production, never localhost
+    if (process.env.NODE_ENV === 'production' || host?.includes('bonusfoodsellmanager.com')) {
+      appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
+    }
     
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || 

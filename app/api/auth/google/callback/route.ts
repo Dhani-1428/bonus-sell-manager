@@ -14,14 +14,22 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    // Get base URL from request origin (works in both dev and production)
-    const origin = request.headers.get('origin') || request.nextUrl.origin;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin || 'https://bonusfoodsellmanager.com';
+    // Get the actual host from request headers
+    const host = request.headers.get('host') || request.headers.get('x-forwarded-host');
+    const protocol = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
     
-    // Ensure we use production URL in production
-    const appUrl = process.env.NODE_ENV === 'production' 
-      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com')
-      : baseUrl;
+    // Determine app URL - prioritize production URL, fallback to request host
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
+    
+    // Only use request host if it's NOT localhost and we're in development
+    if (process.env.NODE_ENV !== 'production' && host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      appUrl = `${protocol}://${host}`;
+    }
+    
+    // Always use production URL in production, never localhost
+    if (process.env.NODE_ENV === 'production' || host?.includes('bonusfoodsellmanager.com')) {
+      appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
+    }
 
     // Handle OAuth errors
     if (error) {
@@ -143,33 +151,50 @@ export async function GET(request: NextRequest) {
     
     if (redirectFromState) {
       // Use redirect from state (most reliable)
-      redirectPath = redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`;
+      // Ensure it's a relative path, not a full URL
+      const cleanRedirect = redirectFromState.startsWith('http') 
+        ? new URL(redirectFromState).pathname 
+        : (redirectFromState.startsWith('/') ? redirectFromState : `/${redirectFromState}`);
+      redirectPath = cleanRedirect;
     } else if (redirectParam) {
       // Use redirect parameter if provided
-      redirectPath = redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`;
+      // Ensure it's a relative path, not a full URL
+      const cleanRedirect = redirectParam.startsWith('http')
+        ? new URL(redirectParam).pathname
+        : (redirectParam.startsWith('/') ? redirectParam : `/${redirectParam}`);
+      redirectPath = cleanRedirect;
     } else if (referer) {
       // Try to extract path from referer
       try {
         const refererUrl = new URL(referer);
-        const refererPath = refererUrl.pathname;
-        // Only use referer if it's a valid app route (not external or auth routes)
-        if (refererPath && 
-            refererPath !== '/api/auth/google' && 
-            !refererPath.startsWith('/api/auth/') &&
-            refererPath.startsWith('/')) {
-          redirectPath = refererPath;
+        // Only use referer if it's from the same domain (not external)
+        if (refererUrl.hostname.includes('bonusfoodsellmanager.com') || 
+            (process.env.NODE_ENV !== 'production' && refererUrl.hostname.includes('localhost'))) {
+          const refererPath = refererUrl.pathname;
+          // Only use referer if it's a valid app route (not auth routes)
+          if (refererPath && 
+              refererPath !== '/api/auth/google' && 
+              !refererPath.startsWith('/api/auth/') &&
+              refererPath.startsWith('/')) {
+            redirectPath = refererPath;
+          }
         }
       } catch (e) {
         // Invalid referer URL, use default
       }
     }
     
-    return NextResponse.redirect(`${appUrl}${redirectPath}`);
+    // Final safety check - ensure we never redirect to localhost in production
+    const finalUrl = `${appUrl}${redirectPath}`;
+    if (finalUrl.includes('localhost') && process.env.NODE_ENV === 'production') {
+      return NextResponse.redirect(`${appUrl}/dashboard`);
+    }
+    
+    return NextResponse.redirect(finalUrl);
   } catch (error: any) {
     console.error('Google OAuth callback error:', error);
-    const appUrl = process.env.NODE_ENV === 'production' 
-      ? (process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com')
-      : (request.headers.get('origin') || request.nextUrl.origin || 'https://bonusfoodsellmanager.com');
+    // Always use production URL for error redirects, never localhost
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bonusfoodsellmanager.com';
     return NextResponse.redirect(
       `${appUrl}/auth/login?error=server_error`
     );
