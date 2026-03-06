@@ -55,9 +55,11 @@ export async function initializeSchema(): Promise<void> {
         subscription_end_date DATETIME,
         subscription_plan ENUM('monthly', 'yearly'),
         trial_expiration_email_sent BOOLEAN DEFAULT FALSE,
+        role ENUM('user', 'admin', 'super_admin') DEFAULT 'user',
         INDEX idx_email (email),
         INDEX idx_google_id (google_id),
-        INDEX idx_subscription_status (subscription_status)
+        INDEX idx_subscription_status (subscription_status),
+        INDEX idx_role (role)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     
@@ -178,6 +180,29 @@ export async function initializeSchema(): Promise<void> {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    // Create payments table for payment approvals
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS payments (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        currency VARCHAR(10) DEFAULT 'EUR',
+        plan ENUM('monthly', 'yearly') NOT NULL,
+        status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
+        stripe_session_id VARCHAR(255),
+        stripe_payment_intent_id VARCHAR(255),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        approved_by VARCHAR(255),
+        notes TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id),
+        INDEX idx_status (status),
+        INDEX idx_created_at (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    console.log('✅ Created payments table');
 
     console.log('✅ Database schema initialized successfully');
   } catch (error) {
