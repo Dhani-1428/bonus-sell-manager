@@ -146,8 +146,19 @@ export async function GET(request: NextRequest) {
     cookieStore.delete('oauth_state');
 
     // Send login notification email (don't block login if email fails)
+    // Fire and forget - email sending happens in background
+    // The redirect will happen immediately, but email will still be sent
     sendLoginEmail(user.email, user.name).catch((error) => {
-      console.error('Failed to send login email:', error);
+      console.error('❌ Failed to send login email for Google OAuth:', error);
+      console.error('Error details:', {
+        email: user.email,
+        name: user.name,
+        errorMessage: error.message,
+        errorCode: error.code,
+        errorCommand: error.command,
+        hasEmailUser: !!process.env.EMAIL_USER,
+        hasEmailPassword: !!process.env.EMAIL_APP_PASSWORD,
+      });
       // Continue anyway - email failure shouldn't block login
     });
 

@@ -36,9 +36,25 @@ function createTransporter() {
  * Send welcome/login email to user
  */
 export async function sendLoginEmail(userEmail: string, userName: string): Promise<void> {
+  // Validate inputs
+  if (!userEmail || !userName) {
+    console.error('❌ Cannot send login email: missing email or name', { userEmail, userName });
+    return;
+  }
+
   try {
+    console.log('📧 Attempting to send login email to:', userEmail);
     const transporter = createTransporter();
     const fromEmail = process.env.EMAIL_USER || 'bonusfoodsellmanager@gmail.com';
+    
+    // Verify transporter is configured
+    if (!transporter) {
+      throw new Error('Email transporter not configured');
+    }
+
+    // Verify email credentials
+    await transporter.verify();
+    console.log('✅ Email server connection verified');
     
     const mailOptions = {
       from: `"Bonus Food Sell Manager" <${fromEmail}>`,
@@ -119,11 +135,25 @@ Please do not reply to this email.
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Login email sent successfully:', info.messageId);
+    console.log('✅ Login email sent successfully:', {
+      messageId: info.messageId,
+      to: userEmail,
+      from: fromEmail,
+      response: info.response,
+    });
   } catch (error: any) {
-    console.error('❌ Failed to send login email:', error);
+    console.error('❌ Failed to send login email:', {
+      error: error.message,
+      code: error.code,
+      command: error.command,
+      to: userEmail,
+      fromEmail: process.env.EMAIL_USER || 'bonusfoodsellmanager@gmail.com',
+      hasAppPassword: !!process.env.EMAIL_APP_PASSWORD,
+      stack: error.stack,
+    });
     // Don't throw error - email failure shouldn't block login
     // Just log it for monitoring
+    throw error; // Re-throw so caller can handle it
   }
 }
 
