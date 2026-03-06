@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { GoogleSignInButton } from "@/components/google-signin-button"
-import { redirectToDashboard } from "@/lib/redirect"
+import { useAuth } from "@/components/auth-provider"
 
 export function SignupForm({
   onBack,
@@ -25,6 +25,7 @@ export function SignupForm({
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { signup } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,24 +43,18 @@ export function SignupForm({
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      })
+      const result = await signup(name, email, password)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast.error(data.error || "Failed to create account")
+      if (!result.success) {
+        toast.error(result.error || "Failed to create account")
         return
       }
 
       toast.success("Account created successfully!")
+      // onSuccess will be called by the auth provider's signup function
+      // which sets showSuccessAnimation, triggering the animation in page.tsx
       if (onSuccess) {
         onSuccess()
-      } else {
-        redirectToDashboard()
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.")
