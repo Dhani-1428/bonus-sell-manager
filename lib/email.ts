@@ -153,7 +153,6 @@ Please do not reply to this email.
     });
     // Don't throw error - email failure shouldn't block login
     // Just log it for monitoring
-    throw error; // Re-throw so caller can handle it
   }
 }
 
