@@ -9,9 +9,9 @@ import { closePool } from '../lib/db';
 async function main() {
   console.log('Creating super admin...\n');
   
-  // Get credentials from environment or prompt
-  const email = process.env.SUPER_ADMIN_EMAIL || 'admin@bonusfoodsellmanager.com';
-  const password = process.env.SUPER_ADMIN_PASSWORD || 'Admin123!';
+  // Get credentials from environment or use defaults
+  const email = process.env.SUPER_ADMIN_EMAIL || 'bonusfoodsellmanager@gmail.com';
+  const password = process.env.SUPER_ADMIN_PASSWORD || 'bonusfoodsellmanager.com';
   const name = process.env.SUPER_ADMIN_NAME || 'Super Admin';
   
   try {

@@ -9,8 +9,8 @@ import { getSuperAdminByEmail, createSuperAdmin, getAllSuperAdmins } from "@/lib
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
-    const email = searchParams.get("email") || "admin@bonusfoodsellmanager.com"
-    const password = searchParams.get("password") || "Admin123!"
+    const email = searchParams.get("email") || "bonusfoodsellmanager@gmail.com"
+    const password = searchParams.get("password") || "bonusfoodsellmanager.com"
     const name = searchParams.get("name") || "Super Admin"
 
     // Check if super admin exists
@@ -79,8 +79,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
-    const email = body.email || "admin@bonusfoodsellmanager.com"
-    const password = body.password || "Admin123!"
+    const email = body.email || "bonusfoodsellmanager@gmail.com"
+    const password = body.password || "bonusfoodsellmanager.com"
     const name = body.name || "Super Admin"
 
     // Check if super admin exists
