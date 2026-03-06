@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { GoogleSignInButton } from "@/components/google-signin-button"
-import { redirectToDashboard } from "@/lib/redirect"
+import { useAuth } from "@/components/auth-provider"
 
 export function LoginForm({
   onBack,
@@ -23,30 +23,25 @@ export function LoginForm({
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      })
+      const result = await login(email, password)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast.error(data.error || "Failed to sign in")
+      if (!result.success) {
+        toast.error(result.error || "Failed to sign in")
         return
       }
 
       toast.success("Welcome back!")
+      // onSuccess will be called by the auth provider's login function
+      // which sets showSuccessAnimation, triggering the animation in page.tsx
       if (onSuccess) {
         onSuccess()
-      } else {
-        redirectToDashboard()
       }
     } catch (error) {
       toast.error("An error occurred. Please try again.")
