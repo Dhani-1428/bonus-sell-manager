@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { sendSubscriptionConfirmationEmail } from "@/lib/email"
-import { query } from "@/lib/db"
+import { query, getPool } from "@/lib/db"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-12-18.acacia",
@@ -60,30 +60,65 @@ export async function POST(request: NextRequest) {
           const plan = (session.metadata?.plan || "yearly") as "monthly" | "yearly"
 
           if (userId) {
-            // Treat "monthly" as 6‑month (180 days) and "yearly" as 12‑month (365 days)
-            const durationDays = plan === "monthly" ? 180 : 365
-            await updateSubscription(userId, plan, durationDays)
-            console.log(`Subscription activated for user ${userId} - ${plan} plan`)
+            const pool = getPool()
+            const connection = await pool.getConnection()
             
-            // Send subscription confirmation email
             try {
-              const [users] = await query(
-                `SELECT name, email, subscription_end_date FROM users WHERE id = ?`,
-                [userId]
-              ) as any[]
+              // Create payment record for admin approval
+              const paymentId = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+              const amount = plan === "monthly" ? 120.00 : 199.00
               
-              if (users.length > 0) {
-                const user = users[0]
-                await sendSubscriptionConfirmationEmail(
-                  user.email,
-                  user.name,
+              await connection.execute(
+                `INSERT INTO payments (
+                  id,
+                  user_id,
+                  amount,
+                  currency,
                   plan,
-                  user.subscription_end_date || new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
-                )
+                  status,
+                  stripe_session_id,
+                  stripe_payment_intent_id,
+                  created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+                [
+                  paymentId,
+                  userId,
+                  amount,
+                  'EUR',
+                  plan,
+                  'completed', // Auto-approve Stripe payments
+                  session.id,
+                  session.payment_intent as string || null,
+                ]
+              )
+              
+              // Treat "monthly" as 6‑month (180 days) and "yearly" as 12‑month (365 days)
+              const durationDays = plan === "monthly" ? 180 : 365
+              await updateSubscription(userId, plan, durationDays)
+              console.log(`Subscription activated for user ${userId} - ${plan} plan`)
+              
+              // Send subscription confirmation email
+              try {
+                const [users] = await query(
+                  `SELECT name, email, subscription_end_date FROM users WHERE id = ?`,
+                  [userId]
+                ) as any[]
+                
+                if (users.length > 0) {
+                  const user = users[0]
+                  await sendSubscriptionConfirmationEmail(
+                    user.email,
+                    user.name,
+                    plan,
+                    user.subscription_end_date || new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+                  )
+                }
+              } catch (emailError: any) {
+                console.error("Failed to send subscription confirmation email:", emailError)
+                // Don't fail the webhook if email fails
               }
-            } catch (emailError: any) {
-              console.error("Failed to send subscription confirmation email:", emailError)
-              // Don't fail the webhook if email fails
+            } finally {
+              connection.release()
             }
           }
         }
