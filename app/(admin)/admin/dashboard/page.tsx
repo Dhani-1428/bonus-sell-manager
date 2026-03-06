@@ -61,7 +61,7 @@ export default function AdminDashboardPage() {
       
       const totalUsers = usersData.users?.length || 0
       const activeSubscriptions = usersData.users?.filter(
-        (u: User) => u.subscription_status === "active"
+        (u: any) => u.subscription_status === "active"
       ).length || 0
 
       // Load payments for stats
@@ -70,9 +70,9 @@ export default function AdminDashboardPage() {
       
       const allPayments = paymentsData.payments || []
       const totalRevenue = allPayments
-        .filter((p: Payment) => p.status === "completed" || p.status === "approved")
-        .reduce((sum: number, p: Payment) => sum + parseFloat(p.amount.toString()), 0)
-      const pendingPayments = allPayments.filter((p: Payment) => p.status === "pending").length
+        .filter((p: any) => p.status === "completed" || p.status === "approved")
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount.toString()), 0)
+      const pendingPayments = allPayments.filter((p: any) => p.status === "pending").length
 
       setStats({
         totalUsers,
@@ -101,7 +101,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-        {/* Stats Cards */}
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground">Overview of users, subscriptions, and payments</p>
+      </div>
+      
+      {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
