@@ -73,26 +73,49 @@ export async function verifySuperAdmin(
   const pool = getPool();
   const connection = await pool.getConnection();
   try {
+    console.log('🔐 Verifying super admin:', email.toLowerCase());
+    
     const [rows] = await connection.execute(
       'SELECT id, name, email, password, role, created_at FROM users WHERE email = ? AND role = ?',
       [email.toLowerCase(), 'super_admin']
     ) as any[];
     
-    if (rows.length === 0) return null;
+    console.log('📊 Found super admin records:', rows.length);
     
-    if (!verifyPassword(password, rows[0].password)) {
+    if (rows.length === 0) {
+      console.log('❌ No super admin found with email:', email);
+      return null;
+    }
+    
+    const user = rows[0];
+    console.log('✅ Found super admin:', user.email, 'Role:', user.role);
+    
+    if (!user.password) {
+      console.log('❌ Super admin has no password set');
+      return null;
+    }
+    
+    const isValid = verifyPassword(password, user.password);
+    console.log('🔑 Password verification:', isValid ? '✅ Valid' : '❌ Invalid');
+    
+    if (!isValid) {
       return null;
     }
     
     return {
-      id: rows[0].id,
-      name: rows[0].name,
-      email: rows[0].email,
+      id: user.id,
+      name: user.name,
+      email: user.email,
       role: 'super_admin',
-      createdAt: rows[0].created_at,
+      createdAt: user.created_at,
     };
   } catch (error: any) {
-    console.error('Error verifying super admin:', error);
+    console.error('❌ Error verifying super admin:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
     return null;
   } finally {
     connection.release();
