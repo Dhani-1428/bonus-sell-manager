@@ -268,7 +268,6 @@ Please do not reply to this email.
     };
 
     const info = await transporter.sendMail(mailOptions);
-    const info = await transporter.sendMail(mailOptions);
     console.log('✅ Welcome email sent successfully:', info.messageId);
   } catch (error: any) {
     console.error('❌ Failed to send welcome email:', error);

@@ -145,8 +145,6 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-      </div>
     </div>
   )
 }
