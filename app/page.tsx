@@ -59,10 +59,11 @@ export default function LandingPage() {
   // Handle redirect to dashboard when session exists (but not showing animation)
   useEffect(() => {
     if (!isLoading && session && !showAnimation) {
-      // Use setTimeout to ensure this happens after render
-      setTimeout(() => {
+      // Small delay to ensure session is fully initialized
+      const timer = setTimeout(() => {
         redirectToDashboard()
-      }, 0)
+      }, 100)
+      return () => clearTimeout(timer)
     }
   }, [session, isLoading, showAnimation])
 

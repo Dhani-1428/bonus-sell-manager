@@ -25,6 +25,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (session) {
+      // Initialize user data if not in localStorage
+      const initializeUserData = async () => {
+        try {
+          const user = getUserById(session.userId)
+          if (!user) {
+            // User not in localStorage - initialize it client-side
+            const { initializeUserData: initUser } = await import("@/lib/auth")
+            initUser(session.userId, session.name, session.email)
+          }
+        } catch (err) {
+          console.warn("Failed to initialize user data:", err)
+        }
+      }
+      
+      initializeUserData()
+      
       // Small delay to ensure user data is initialized
       const timer = setTimeout(() => {
         const user = getUserById(session.userId)
@@ -43,9 +59,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         } else {
           // User not found in localStorage - give access by default (trial users)
           // This might happen on first login before user data is fully initialized
+          // Allow dashboard access - user data will be initialized in background
           setSubscriptionCheck({ hasAccess: true, message: "Trial access" })
         }
-      }, 100) // Small delay to allow initialization
+      }, 200) // Small delay to allow initialization
       
       return () => clearTimeout(timer)
     } else {
@@ -64,12 +81,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // Show subscription page if no access (unless already on subscription page)
   // Allow subscription page to be accessible even without active subscription
   // Only show loader if we have a subscription check result and no access
+  // But don't block if subscription check is still null (user data initializing)
   if (subscriptionCheck && !subscriptionCheck.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
+    // Small delay before redirect to allow dashboard to render
+    setTimeout(() => {
+      router.push("/subscription")
+    }, 100)
     return <CookingLoader text="Checking subscription..." />
   }
 
   // If subscription check is still null but we have a session, show dashboard anyway
   // (user data might still be initializing - this prevents infinite loading)
+  // This ensures dashboard opens immediately after login/signup
 
   return (
     <SidebarProvider>

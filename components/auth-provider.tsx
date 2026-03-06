@@ -63,11 +63,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error || "Failed to login" }
       }
 
-      setSession({
+      // Set session immediately
+      const newSession = {
         userId: data.user.id,
         email: data.user.email,
         name: data.user.name,
-      })
+      }
+      setSession(newSession)
+      
+      // Initialize user data in localStorage (client-side)
+      if (typeof window !== "undefined") {
+        try {
+          // Import and use initializeUserData from lib/auth
+          const { initializeUserData } = await import("@/lib/auth")
+          initializeUserData(data.user.id, data.user.name, data.user.email)
+        } catch (err) {
+          console.warn("Failed to initialize user data:", err)
+          // Continue anyway - user data will be initialized on first dashboard load
+        }
+      }
+      
+      // Refresh session to ensure it's up to date
+      await checkSession()
+      
       setShowSuccessAnimation(true)
 
       return { success: true }
@@ -90,11 +108,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error || "Failed to create account" }
       }
 
-      setSession({
+      // Set session immediately
+      const newSession = {
         userId: data.user.id,
         email: data.user.email,
         name: data.user.name,
-      })
+      }
+      setSession(newSession)
+      
+      // Initialize user data in localStorage (client-side)
+      if (typeof window !== "undefined") {
+        try {
+          // Import and use initializeUserData from lib/auth
+          const { initializeUserData } = await import("@/lib/auth")
+          initializeUserData(data.user.id, data.user.name, data.user.email)
+        } catch (err) {
+          console.warn("Failed to initialize user data:", err)
+          // Continue anyway - user data will be initialized on first dashboard load
+        }
+      }
+      
+      // Refresh session to ensure it's up to date
+      await checkSession()
+      
       setShowSuccessAnimation(true)
 
       return { success: true }
