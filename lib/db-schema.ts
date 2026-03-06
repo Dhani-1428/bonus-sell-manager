@@ -54,6 +54,7 @@ export async function initializeSchema(): Promise<void> {
         subscription_status ENUM('trial', 'active', 'expired', 'cancelled') DEFAULT 'trial',
         subscription_end_date DATETIME,
         subscription_plan ENUM('monthly', 'yearly'),
+        trial_expiration_email_sent BOOLEAN DEFAULT FALSE,
         INDEX idx_email (email),
         INDEX idx_google_id (google_id),
         INDEX idx_subscription_status (subscription_status)

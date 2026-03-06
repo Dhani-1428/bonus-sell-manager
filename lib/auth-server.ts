@@ -51,7 +51,7 @@ export async function getUserById(userId: string) {
   const connection = await pool.getConnection()
   try {
     const [rows] = await connection.execute(
-      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
+      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, trial_expiration_email_sent FROM users WHERE id = ?',
       [userId]
     ) as any[]
     return rows.length > 0 ? rows[0] : null

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import { sendSubscriptionConfirmationEmail } from "@/lib/email"
+import { query } from "@/lib/db"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2024-12-18.acacia",
@@ -62,6 +64,27 @@ export async function POST(request: NextRequest) {
             const durationDays = plan === "monthly" ? 180 : 365
             await updateSubscription(userId, plan, durationDays)
             console.log(`Subscription activated for user ${userId} - ${plan} plan`)
+            
+            // Send subscription confirmation email
+            try {
+              const [users] = await query(
+                `SELECT name, email, subscription_end_date FROM users WHERE id = ?`,
+                [userId]
+              ) as any[]
+              
+              if (users.length > 0) {
+                const user = users[0]
+                await sendSubscriptionConfirmationEmail(
+                  user.email,
+                  user.name,
+                  plan,
+                  user.subscription_end_date || new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+                )
+              }
+            } catch (emailError: any) {
+              console.error("Failed to send subscription confirmation email:", emailError)
+              // Don't fail the webhook if email fails
+            }
           }
         }
         break

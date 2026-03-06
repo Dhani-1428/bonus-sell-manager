@@ -33,6 +33,18 @@ export default function SubscriptionPage() {
     refreshStatus()
     // Refresh status every minute to update days remaining
     const interval = setInterval(refreshStatus, 60000)
+    
+    // Scroll to subscription plans if coming from email link
+    const hash = window.location.hash
+    if (hash === '#subscribe' || hash === '#plans') {
+      setTimeout(() => {
+        const plansSection = document.getElementById('subscription-plans')
+        if (plansSection) {
+          plansSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 500)
+    }
+    
     return () => clearInterval(interval)
   }, [refreshStatus])
 
@@ -200,7 +212,7 @@ export default function SubscriptionPage() {
       </CardContainer>
 
       {/* Subscription Plans - always visible so user can easily subscribe/upgrade */}
-      <div>
+      <div id="subscription-plans">
         <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Plan</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {plans.map((plan) => (
