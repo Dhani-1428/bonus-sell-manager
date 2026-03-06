@@ -145,10 +145,12 @@ export async function GET(request: NextRequest) {
     // Clear OAuth state cookie
     cookieStore.delete('oauth_state');
 
-    // Send login notification email (don't block login if email fails)
-    // Fire and forget - email sending happens in background
-    // The redirect will happen immediately, but email will still be sent
-    sendLoginEmail(user.email, user.name).catch((error) => {
+    // Send login notification email
+    // Try to send email before redirect, but don't block if it fails
+    try {
+      await sendLoginEmail(user.email, user.name);
+      console.log('✅ Login email sent successfully for Google OAuth');
+    } catch (error: any) {
       console.error('❌ Failed to send login email for Google OAuth:', error);
       console.error('Error details:', {
         email: user.email,
@@ -158,9 +160,10 @@ export async function GET(request: NextRequest) {
         errorCommand: error.command,
         hasEmailUser: !!process.env.EMAIL_USER,
         hasEmailPassword: !!process.env.EMAIL_APP_PASSWORD,
+        emailUser: process.env.EMAIL_USER || 'not set',
       });
       // Continue anyway - email failure shouldn't block login
-    });
+    }
 
     // Always redirect to dashboard/admin panel on successful login
     // Priority: 1. redirect from state, 2. redirect query param, 3. default dashboard

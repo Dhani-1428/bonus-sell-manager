@@ -20,6 +20,15 @@ function getEmailConfig() {
  */
 function createTransporter() {
   const config = getEmailConfig();
+  const emailPassword = config.auth.pass.replace(/\s/g, ''); // Remove spaces from app password
+  
+  console.log('📧 Creating email transporter:', {
+    host: config.host,
+    port: config.port,
+    user: config.auth.user,
+    passwordLength: emailPassword.length,
+    hasPassword: !!emailPassword,
+  });
   
   return nodemailer.createTransport({
     host: config.host,
@@ -27,8 +36,12 @@ function createTransporter() {
     secure: config.secure,
     auth: {
       user: config.auth.user,
-      pass: config.auth.pass.replace(/\s/g, ''), // Remove spaces from app password
+      pass: emailPassword,
     },
+    // Add timeout settings
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 }
 
@@ -42,19 +55,29 @@ export async function sendLoginEmail(userEmail: string, userName: string): Promi
     return;
   }
 
+  // Check environment variables
+  const emailUser = process.env.EMAIL_USER || 'bonusfoodsellmanager@gmail.com';
+  const emailPassword = process.env.EMAIL_APP_PASSWORD || 'ktzjnnifigttlsre';
+  
+  if (!emailPassword || emailPassword === 'ktzjnnifigttlsre') {
+    console.warn('⚠️ Using default email password - make sure EMAIL_APP_PASSWORD is set in Vercel');
+  }
+
   try {
     console.log('📧 Attempting to send login email to:', userEmail);
+    console.log('📧 Email config:', {
+      from: emailUser,
+      hasPassword: !!emailPassword,
+      passwordLength: emailPassword?.length || 0,
+    });
+    
     const transporter = createTransporter();
-    const fromEmail = process.env.EMAIL_USER || 'bonusfoodsellmanager@gmail.com';
+    const fromEmail = emailUser;
     
     // Verify transporter is configured
     if (!transporter) {
       throw new Error('Email transporter not configured');
     }
-
-    // Verify email credentials
-    await transporter.verify();
-    console.log('✅ Email server connection verified');
     
     const mailOptions = {
       from: `"Bonus Food Sell Manager" <${fromEmail}>`,

@@ -40,11 +40,15 @@ export async function POST(request: NextRequest) {
       path: "/",
     })
 
-    // Send welcome email (don't block signup if email fails)
-    sendWelcomeEmail(user.email, user.name).catch((error) => {
-      console.error("Failed to send welcome email:", error)
+    // Send welcome email
+    // Try to send email, but don't block signup if it fails
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+      console.log("✅ Welcome email sent successfully");
+    } catch (error: any) {
+      console.error("❌ Failed to send welcome email:", error);
       // Continue anyway - email failure shouldn't block signup
-    })
+    }
 
     return NextResponse.json({
       success: true,

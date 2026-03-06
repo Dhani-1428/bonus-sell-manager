@@ -40,11 +40,15 @@ export async function POST(request: NextRequest) {
       path: "/",
     })
 
-    // Send login notification email (don't block login if email fails)
-    sendLoginEmail(user.email, user.name).catch((error) => {
-      console.error("Failed to send login email:", error)
+    // Send login notification email
+    // Try to send email, but don't block login if it fails
+    try {
+      await sendLoginEmail(user.email, user.name);
+      console.log("✅ Login email sent successfully");
+    } catch (error: any) {
+      console.error("❌ Failed to send login email:", error);
       // Continue anyway - email failure shouldn't block login
-    })
+    }
 
     return NextResponse.json({
       success: true,
