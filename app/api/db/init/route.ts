@@ -18,6 +18,33 @@ export async function POST(request: Request) {
     console.log(`Database: ${process.env.DB_NAME || 'foodsell_manager'}`)
     await initializeSchema()
     
+    // Also ensure trial_expiration_email_sent column exists (for existing databases)
+    try {
+      const { query } = await import('@/lib/db')
+      const [columns] = await query(`
+        SELECT COLUMN_NAME 
+        FROM INFORMATION_SCHEMA.COLUMNS 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME = 'users' 
+        AND COLUMN_NAME = 'trial_expiration_email_sent'
+      `) as any[]
+      
+      if (columns.length === 0) {
+        await query(`
+          ALTER TABLE users 
+          ADD COLUMN trial_expiration_email_sent BOOLEAN DEFAULT FALSE
+        `)
+        console.log('✅ Added trial_expiration_email_sent column')
+      } else {
+        console.log('✅ trial_expiration_email_sent column already exists')
+      }
+    } catch (migrationError: any) {
+      if (!migrationError.message.includes('Duplicate column name')) {
+        console.warn('⚠️ Could not add trial_expiration_email_sent column:', migrationError.message)
+        // Don't fail the init if migration fails
+      }
+    }
+    
     return NextResponse.json({
       success: true,
       message: "Database schema initialized successfully",
