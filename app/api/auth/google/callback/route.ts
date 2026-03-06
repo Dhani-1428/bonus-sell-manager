@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findOrCreateGoogleUser } from '@/lib/google-auth';
 import { getServerRedirectUrl, cleanRedirectPath, getAppUrl } from '@/lib/redirect';
+import { sendLoginEmail } from '@/lib/email';
 
 /**
  * GET /api/auth/google/callback
@@ -143,6 +144,12 @@ export async function GET(request: NextRequest) {
 
     // Clear OAuth state cookie
     cookieStore.delete('oauth_state');
+
+    // Send login notification email (don't block login if email fails)
+    sendLoginEmail(user.email, user.name).catch((error) => {
+      console.error('Failed to send login email:', error);
+      // Continue anyway - email failure shouldn't block login
+    });
 
     // Always redirect to dashboard/admin panel on successful login
     // Priority: 1. redirect from state, 2. redirect query param, 3. default dashboard

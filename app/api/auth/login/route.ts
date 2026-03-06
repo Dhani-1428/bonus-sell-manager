@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyUser } from "@/lib/auth-server"
 import { cookies } from "next/headers"
+import { sendLoginEmail } from "@/lib/email"
 
 /**
  * POST /api/auth/login
@@ -37,6 +38,12 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
+    })
+
+    // Send login notification email (don't block login if email fails)
+    sendLoginEmail(user.email, user.name).catch((error) => {
+      console.error("Failed to send login email:", error)
+      // Continue anyway - email failure shouldn't block login
     })
 
     return NextResponse.json({

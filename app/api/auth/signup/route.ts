@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createUser } from "@/lib/auth-server"
 import { cookies } from "next/headers"
+import { sendWelcomeEmail } from "@/lib/email"
 
 /**
  * POST /api/auth/signup
@@ -37,6 +38,12 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
+    })
+
+    // Send welcome email (don't block signup if email fails)
+    sendWelcomeEmail(user.email, user.name).catch((error) => {
+      console.error("Failed to send welcome email:", error)
+      // Continue anyway - email failure shouldn't block signup
     })
 
     return NextResponse.json({
