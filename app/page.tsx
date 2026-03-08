@@ -87,6 +87,15 @@ export default function LandingPage() {
   }
 
   if (session && !showAnimation) {
+    // Force redirect if we have session but haven't redirected yet
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        console.log('🔄 Force redirecting to dashboard, session:', session);
+        redirectToDashboard(session);
+      }, 50);
+      return () => clearTimeout(timer);
+    }, [session]);
+    
     return <CookingLoader text="Opening your dashboard..." />
   }
 
