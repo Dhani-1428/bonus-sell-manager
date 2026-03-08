@@ -67,36 +67,20 @@ export function redirectToDashboard(session?: { role?: string } | null): void {
   const localhost = isLocalhost();
 
   // Determine dashboard path based on role
-  // If session doesn't have role, fetch it from the API
-  const determinePath = async () => {
-    let dashboardPath = '/dashboard'; // Default to regular dashboard
-    
-    if (session?.role === 'super_admin') {
-      dashboardPath = '/admin/dashboard';
-    } else if (!session?.role) {
-      // If role is not in session, try to get it from API
-      try {
-        const response = await fetch('/api/auth/session');
-        const data = await response.json();
-        if (data.user?.role === 'super_admin') {
-          dashboardPath = '/admin/dashboard';
-        }
-      } catch (error) {
-        console.warn('Could not fetch user role, using default dashboard');
-      }
-    }
+  const isSuperAdmin = session?.role === 'super_admin';
+  const dashboardPath = isSuperAdmin ? '/admin/dashboard' : '/dashboard';
 
-    // Use current origin for redirect to ensure correct domain
-    const origin = window.location.origin;
-    const finalUrl = production && !localhost 
-      ? `${appUrl}${dashboardPath}` 
-      : `${origin}${dashboardPath}`;
-    
-    console.log('Redirecting to dashboard:', finalUrl, 'role:', session?.role);
-    window.location.href = finalUrl;
-  };
-
-  determinePath();
+  // Use current origin for redirect to ensure correct domain
+  // This ensures redirect works even if session role is not yet loaded
+  const origin = window.location.origin;
+  const finalUrl = production && !localhost 
+    ? `${appUrl}${dashboardPath}` 
+    : `${origin}${dashboardPath}`;
+  
+  console.log('Redirecting to dashboard:', finalUrl, 'role:', session?.role || 'unknown');
+  
+  // Use window.location.href for reliable redirect
+  window.location.href = finalUrl;
 }
 
 /**
