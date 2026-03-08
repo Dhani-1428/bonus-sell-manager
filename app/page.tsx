@@ -63,20 +63,17 @@ export default function LandingPage() {
   const handleAnimationComplete = () => {
     setShowAnimation(false)
     hideSuccessAnimation()
-    // Use setTimeout to ensure this happens after render
-    setTimeout(() => {
+    // Redirect immediately after animation
+    if (session) {
       redirectToDashboard(session)
-    }, 0)
+    }
   }
 
   // Handle redirect to dashboard when session exists (but not showing animation)
   useEffect(() => {
     if (!isLoading && session && !showAnimation) {
-      // Small delay to ensure session is fully initialized
-      const timer = setTimeout(() => {
-        redirectToDashboard(session)
-      }, 100)
-      return () => clearTimeout(timer)
+      // Redirect immediately - don't wait
+      redirectToDashboard(session)
     }
   }, [session, isLoading, showAnimation])
 

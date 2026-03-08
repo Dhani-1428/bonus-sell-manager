@@ -78,25 +78,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return <CookingLoader text="Redirecting..." />
   }
 
-  // Show subscription page if no access (unless already on subscription page)
-  // Allow subscription page to be accessible even without active subscription
-  // Only show loader if we have a subscription check result and no access
-  // But don't block if subscription check is still null (user data initializing)
+  // Always show dashboard if session exists - don't block on subscription check
+  // Subscription check happens in background and won't block dashboard access
+  // Only redirect to subscription page if explicitly needed and not already there
   if (subscriptionCheck && !subscriptionCheck.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
-    // Small delay before redirect to allow dashboard to render
-    setTimeout(() => {
-      router.push("/subscription")
-    }, 100)
-    return <CookingLoader text="Checking subscription..." />
-  }
-
-  // If subscription check is still null but we have a session, show dashboard anyway
-  // (user data might still be initializing - this prevents infinite loading)
-  // This ensures dashboard opens immediately after login/signup
-  // Don't block dashboard access - always show if session exists
-  if (!subscriptionCheck && session) {
-    // User data is still initializing, but show dashboard anyway
-    // Subscription check will happen in background
+    // Only redirect if subscription is explicitly expired/cancelled
+    // Don't redirect for trial users - they should see dashboard
+    if (subscriptionCheck.message && (subscriptionCheck.message.includes('expired') || subscriptionCheck.message.includes('cancelled'))) {
+      setTimeout(() => {
+        router.push("/subscription")
+      }, 100)
+      return <CookingLoader text="Redirecting to subscription..." />
+    }
+    // For trial users, show dashboard anyway
   }
 
   return (

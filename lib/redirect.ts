@@ -62,25 +62,16 @@ export function redirectToDashboard(session?: { role?: string } | null): void {
     return;
   }
 
-  const appUrl = getAppUrl();
-  const production = isProduction();
-  const localhost = isLocalhost();
-
-  // Determine dashboard path based on role
+  // Always use relative path for client-side redirects - more reliable
+  // The browser will use the current origin automatically
   const isSuperAdmin = session?.role === 'super_admin';
   const dashboardPath = isSuperAdmin ? '/admin/dashboard' : '/dashboard';
-
-  // Use current origin for redirect to ensure correct domain
-  // This ensures redirect works even if session role is not yet loaded
-  const origin = window.location.origin;
-  const finalUrl = production && !localhost 
-    ? `${appUrl}${dashboardPath}` 
-    : `${origin}${dashboardPath}`;
   
-  console.log('Redirecting to dashboard:', finalUrl, 'role:', session?.role || 'unknown');
+  console.log('🔄 Redirecting to dashboard:', dashboardPath, 'role:', session?.role || 'user');
   
-  // Use window.location.href for reliable redirect
-  window.location.href = finalUrl;
+  // Use window.location.href with relative path - this is the most reliable
+  // The browser will automatically use the correct origin
+  window.location.href = dashboardPath;
 }
 
 /**
