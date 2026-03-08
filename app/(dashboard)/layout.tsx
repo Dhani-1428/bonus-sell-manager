@@ -15,32 +15,43 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [subscriptionCheck, setSubscriptionCheck] = useState<{ hasAccess: boolean; message: string } | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
-  // Handle redirect if no session - but be very patient
+  // Handle redirect if no session - but give it time to load
   useEffect(() => {
-    // Give session plenty of time to load (3 seconds)
+    // Wait a bit for session to load before redirecting
     if (isLoading) {
-      return // Still loading, wait
+      setIsInitializing(true)
+      return
     }
     
-    // Only redirect if we're absolutely certain there's no session
+    setIsInitializing(false)
+    
+    // Only redirect if we're absolutely sure there's no session after multiple checks
     if (!session) {
-      const timer = setTimeout(async () => {
-        // Final check before redirecting
-        try {
-          const response = await fetch("/api/auth/session")
-          const data = await response.json()
-          if (!data.user) {
-            console.log("❌ No session found after waiting, redirecting to home")
-            router.push("/")
-          } else {
-            console.log("✅ Session found, staying on dashboard")
+      const timer = setTimeout(() => {
+        // Double check session one more time before redirecting
+        const checkSession = async () => {
+          try {
+            const response = await fetch("/api/auth/session")
+            const data = await response.json()
+            if (!data.user) {
+              // Only redirect if we're 100% sure there's no session
+              // This prevents redirect loops
+              console.log("No session found, redirecting to home")
+              router.push("/")
+            } else {
+              // Session exists, don't redirect
+              console.log("Session found, staying on dashboard")
+            }
+          } catch (error) {
+            console.error("Session check failed:", error)
+            // Don't redirect on error - might be temporary network issue
+            // Only redirect if we're absolutely sure
           }
-        } catch (error) {
-          console.error("Session check failed:", error)
-          // Don't redirect on network errors - might be temporary
         }
-      }, 3000) // Wait 3 seconds before redirecting
+        checkSession()
+      }, 1000) // Longer delay to ensure session has time to load
       return () => clearTimeout(timer)
     }
   }, [session, isLoading, router])
@@ -87,13 +98,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [session, pathname, router])
 
-  // Show loader only if we're loading AND don't have session yet
-  // If we have session, show dashboard immediately
-  if (isLoading && !session) {
-    return <CookingLoader text="Loading dashboard..." />
-  }
-
-  // If we have session, ALWAYS show dashboard - don't block on anything
+  // If we have a session, ALWAYS show dashboard immediately - don't block on anything
   if (session) {
     const userName = session.name || "User"
     
@@ -121,13 +126,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     )
   }
 
-  // Only show redirecting if we're sure there's no session and not loading
-  if (!isLoading && !session) {
-    return <CookingLoader text="Redirecting..." />
+  // Only show loader/redirect if we don't have session
+  if (isLoading || isInitializing) {
+    return <CookingLoader text="Loading dashboard..." />
   }
 
-  // Fallback - show loader while waiting
-  return <CookingLoader text="Loading..." />
+  // No session and not loading - redirect to home
+  return <CookingLoader text="Redirecting..." />
 
   return (
     <SidebarProvider>
