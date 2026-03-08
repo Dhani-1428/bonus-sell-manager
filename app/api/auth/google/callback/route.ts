@@ -244,19 +244,24 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Use request origin for redirect to ensure correct domain
-    // Fallback to appUrl if origin is not available
-    const origin = request.headers.get('origin') || request.nextUrl.origin || appUrl;
-    const finalUrl = `${origin}${redirectPath}`;
-    
-    console.log('✅ Redirecting to:', finalUrl, '(user role:', userRole, ', path:', redirectPath, ')');
+    // Use relative path for redirect - more reliable
+    // Next.js will handle the full URL automatically
+    console.log('✅ Redirecting to dashboard:', redirectPath, '(user role:', userRole, ')');
     
     try {
-      return NextResponse.redirect(finalUrl);
+      // Use NextResponse.redirect with relative path - Next.js handles the domain
+      const redirectUrl = new URL(redirectPath, request.nextUrl.origin);
+      return NextResponse.redirect(redirectUrl);
     } catch (redirectError: any) {
       console.error('❌ Error creating redirect:', redirectError);
-      // Fallback to home page if redirect fails
-      return NextResponse.redirect(`${appUrl}/`);
+      // Fallback: use appUrl if relative redirect fails
+      try {
+        return NextResponse.redirect(`${appUrl}${redirectPath}`);
+      } catch (fallbackError: any) {
+        console.error('❌ Fallback redirect also failed:', fallbackError);
+        // Last resort: redirect to home page
+        return NextResponse.redirect(`${appUrl}/`);
+      }
     }
   } catch (error: any) {
     console.error('❌ Google OAuth callback error:', error);
