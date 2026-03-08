@@ -165,11 +165,17 @@ export async function GET(request: NextRequest) {
       // Continue anyway - email failure shouldn't block login
     }
 
+    // Get user role to determine redirect path
+    const { getUserById } = await import('@/lib/auth-server');
+    const userWithRole = await getUserById(user.id);
+    const userRole = userWithRole?.role || 'user';
+    
     // Always redirect to dashboard/admin panel on successful login
-    // Priority: 1. redirect from state, 2. redirect query param, 3. default dashboard
+    // Priority: 1. redirect from state, 2. redirect query param, 3. default based on role
     const redirectParam = searchParams.get('redirect');
     
-    let redirectPath = '/dashboard'; // Default to admin panel
+    // Default redirect path based on user role
+    let redirectPath = userRole === 'super_admin' ? '/admin/dashboard' : '/dashboard';
     
     if (redirectFromState) {
       // Clean redirect path from state
@@ -190,7 +196,7 @@ export async function GET(request: NextRequest) {
     // Get server redirect URL (always production, never localhost)
     const finalUrl = getServerRedirectUrl(redirectPath);
     
-    console.log('✅ Redirecting to:', finalUrl);
+    console.log('✅ Redirecting to:', finalUrl, '(user role:', userRole, ')');
     return NextResponse.redirect(finalUrl);
   } catch (error: any) {
     console.error('❌ Google OAuth callback error:', error);

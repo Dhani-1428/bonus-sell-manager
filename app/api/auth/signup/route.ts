@@ -30,6 +30,10 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await createUser(name, email, password)
 
+    // Get user with role from database
+    const { getUserById } = await import("@/lib/auth-server")
+    const userWithRole = await getUserById(user.id)
+
     // Create session cookie
     const cookieStore = await cookies()
     cookieStore.set("session", user.id, {
@@ -56,6 +60,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: userWithRole?.role || 'user',
       },
     })
   } catch (error: any) {

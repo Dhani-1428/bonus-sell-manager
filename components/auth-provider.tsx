@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           userId: data.user.id,
           email: data.user.email,
           name: data.user.name,
+          role: data.user.role || 'user',
         })
       } else {
         setSession(null)
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userId: data.user.id,
         email: data.user.email,
         name: data.user.name,
+        role: data.user.role || 'user',
       }
       setSession(newSession)
       
@@ -113,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userId: data.user.id,
         email: data.user.email,
         name: data.user.name,
+        role: data.user.role || 'user',
       }
       setSession(newSession)
       

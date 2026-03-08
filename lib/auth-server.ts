@@ -28,7 +28,7 @@ export async function getUserByEmail(email: string) {
   const connection = await pool.getConnection()
   try {
     const [rows] = await connection.execute(
-      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE email = ?',
+      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, role FROM users WHERE email = ?',
       [email.toLowerCase()]
     ) as any[]
     return rows.length > 0 ? rows[0] : null
@@ -51,7 +51,7 @@ export async function getUserById(userId: string) {
   const connection = await pool.getConnection()
   try {
     const [rows] = await connection.execute(
-      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, trial_expiration_email_sent FROM users WHERE id = ?',
+      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, trial_expiration_email_sent, role FROM users WHERE id = ?',
       [userId]
     ) as any[]
     return rows.length > 0 ? rows[0] : null
@@ -133,7 +133,7 @@ export async function createUser(
 export async function verifyUser(
   email: string,
   password: string
-): Promise<{ id: string; name: string; email: string } | null> {
+): Promise<{ id: string; name: string; email: string; role?: string } | null> {
   const user = await getUserByEmail(email)
   if (!user) {
     return null
@@ -147,5 +147,6 @@ export async function verifyUser(
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role || 'user',
   }
 }

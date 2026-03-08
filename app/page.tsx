@@ -52,7 +52,7 @@ export default function LandingPage() {
     hideSuccessAnimation()
     // Use setTimeout to ensure this happens after render
     setTimeout(() => {
-      redirectToDashboard()
+      redirectToDashboard(session)
     }, 0)
   }
 
@@ -61,7 +61,7 @@ export default function LandingPage() {
     if (!isLoading && session && !showAnimation) {
       // Small delay to ensure session is fully initialized
       const timer = setTimeout(() => {
-        redirectToDashboard()
+        redirectToDashboard(session)
       }, 100)
       return () => clearTimeout(timer)
     }

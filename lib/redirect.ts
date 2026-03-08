@@ -53,10 +53,11 @@ export function getLoginUrl(): string {
 }
 
 /**
- * Redirect to dashboard
+ * Redirect to dashboard based on user role
  * Uses production URL in production, relative path in development
+ * Super admins go to /admin/dashboard, regular users go to /dashboard
  */
-export function redirectToDashboard(): void {
+export function redirectToDashboard(session?: { role?: string } | null): void {
   if (typeof window === 'undefined') {
     return;
   }
@@ -65,12 +66,16 @@ export function redirectToDashboard(): void {
   const production = isProduction();
   const localhost = isLocalhost();
 
+  // Determine dashboard path based on role
+  const isSuperAdmin = session?.role === 'super_admin';
+  const dashboardPath = isSuperAdmin ? '/admin/dashboard' : '/dashboard';
+
   if (production && !localhost) {
     // Production: use full URL
-    window.location.href = getDashboardUrl();
+    window.location.href = `${appUrl}${dashboardPath}`;
   } else {
     // Development: use relative path
-    window.location.href = '/dashboard';
+    window.location.href = dashboardPath;
   }
 }
 
