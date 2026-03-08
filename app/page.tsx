@@ -70,10 +70,15 @@ export default function LandingPage() {
   }
 
   // Handle redirect to dashboard when session exists (but not showing animation)
+  // Only redirect if we're on the home page - don't redirect if already on dashboard
   useEffect(() => {
     if (!isLoading && session && !showAnimation) {
-      // Redirect immediately - don't wait
-      redirectToDashboard(session)
+      // Only redirect if we're on the home page (pathname is "/")
+      // Don't redirect if already on dashboard or other pages
+      const currentPath = window.location.pathname
+      if (currentPath === "/" || currentPath === "/#login" || currentPath === "/#signup") {
+        redirectToDashboard(session)
+      }
     }
   }, [session, isLoading, showAnimation])
 

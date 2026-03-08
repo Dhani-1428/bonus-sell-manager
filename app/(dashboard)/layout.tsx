@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     
     setIsInitializing(false)
     
-    // Only redirect if we're sure there's no session after loading completes
+    // Only redirect if we're absolutely sure there's no session after multiple checks
     if (!session) {
       const timer = setTimeout(() => {
         // Double check session one more time before redirecting
@@ -36,15 +36,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             const response = await fetch("/api/auth/session")
             const data = await response.json()
             if (!data.user) {
+              // Only redirect if we're 100% sure there's no session
+              // This prevents redirect loops
+              console.log("No session found, redirecting to home")
               router.push("/")
+            } else {
+              // Session exists, don't redirect
+              console.log("Session found, staying on dashboard")
             }
           } catch (error) {
             console.error("Session check failed:", error)
-            router.push("/")
+            // Don't redirect on error - might be temporary network issue
+            // Only redirect if we're absolutely sure
           }
         }
         checkSession()
-      }, 500)
+      }, 1000) // Longer delay to ensure session has time to load
       return () => clearTimeout(timer)
     }
   }, [session, isLoading, router])
@@ -74,14 +81,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           const status = getSubscriptionStatus(user)
           setSubscriptionCheck({ hasAccess: status.hasAccess, message: status.message })
           
-          // Redirect to subscription page if no access (except if already on subscription page)
-          // Allow subscription page to be accessible even without active subscription
-          // Use setTimeout to ensure redirect happens after state update
-          if (!status.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
-            setTimeout(() => {
-              router.push("/subscription")
-            }, 0)
-          }
+          // DON'T automatically redirect to subscription page
+          // Let users stay on dashboard - they can navigate to subscription page manually if needed
+          // Only show subscription status in UI, don't force redirect
         } else {
           // User not found in localStorage - give access by default (trial users)
           // This might happen on first login before user data is fully initialized
@@ -111,20 +113,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     return <CookingLoader text="Redirecting..." />
   }
 
-  // Always show dashboard if session exists - don't block on subscription check
-  // Subscription check happens in background and won't block dashboard access
-  // Only redirect to subscription page if explicitly needed and not already there
-  if (subscriptionCheck && !subscriptionCheck.hasAccess && pathname !== "/subscription" && !pathname.startsWith("/subscription")) {
-    // Only redirect if subscription is explicitly expired/cancelled
-    // Don't redirect for trial users - they should see dashboard
-    if (subscriptionCheck.message && (subscriptionCheck.message.includes('expired') || subscriptionCheck.message.includes('cancelled'))) {
-      setTimeout(() => {
-        router.push("/subscription")
-      }, 100)
-      return <CookingLoader text="Redirecting to subscription..." />
-    }
-    // For trial users, show dashboard anyway
-  }
+  // NEVER automatically redirect away from dashboard
+  // Users should stay on dashboard unless they explicitly logout
+  // Subscription status is just informational - don't force redirects
 
   // Always show dashboard if we have session - don't block on anything
   if (!session && !isLoading && !isInitializing) {
