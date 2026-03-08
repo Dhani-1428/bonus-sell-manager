@@ -15,11 +15,37 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
   const [subscriptionCheck, setSubscriptionCheck] = useState<{ hasAccess: boolean; message: string } | null>(null)
+  const [isInitializing, setIsInitializing] = useState(true)
 
-  // Handle redirect if no session
+  // Handle redirect if no session - but give it time to load
   useEffect(() => {
-    if (!isLoading && !session) {
-      router.push("/")
+    // Wait a bit for session to load before redirecting
+    if (isLoading) {
+      setIsInitializing(true)
+      return
+    }
+    
+    setIsInitializing(false)
+    
+    // Only redirect if we're sure there's no session after loading completes
+    if (!session) {
+      const timer = setTimeout(() => {
+        // Double check session one more time before redirecting
+        const checkSession = async () => {
+          try {
+            const response = await fetch("/api/auth/session")
+            const data = await response.json()
+            if (!data.user) {
+              router.push("/")
+            }
+          } catch (error) {
+            console.error("Session check failed:", error)
+            router.push("/")
+          }
+        }
+        checkSession()
+      }, 500)
+      return () => clearTimeout(timer)
     }
   }, [session, isLoading, router])
 
@@ -70,11 +96,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     }
   }, [session, pathname, router])
 
-  if (isLoading) {
+  // Show dashboard immediately if we have session, even if still loading other things
+  // Don't block on isLoading - session might be set but isLoading might still be true
+  if (isLoading && !session) {
     return <CookingLoader text="Loading dashboard..." />
   }
 
-  if (!session) {
+  // If we have a session, show dashboard immediately
+  // Don't wait for subscription checks or other async operations
+  if (session) {
+    // Continue to render dashboard - don't block
+  } else if (!isInitializing && !isLoading) {
+    // Only show redirecting if we're sure there's no session
     return <CookingLoader text="Redirecting..." />
   }
 
@@ -93,13 +126,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     // For trial users, show dashboard anyway
   }
 
+  // Always show dashboard if we have session - don't block on anything
+  if (!session && !isLoading && !isInitializing) {
+    return <CookingLoader text="Redirecting..." />
+  }
+
+  // If we have session, show dashboard immediately
+  // Use session.name if available, otherwise use a default
+  const userName = session?.name || "User"
+
   return (
     <SidebarProvider>
       <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
-        <DashboardSidebar userName={session.name} />
+        <DashboardSidebar userName={userName} />
         <SidebarInset className="w-full flex-1 min-w-0">
           <DashboardHeader
-            userName={session.name}
+            userName={userName}
             onMenuToggle={() => {}}
             onLogout={() => {
               logout()
