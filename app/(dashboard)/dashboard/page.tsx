@@ -12,9 +12,14 @@ export default function DashboardPage() {
 
   const { orders, menuItems } = useMemo(() => {
     if (!session) return { orders: [], menuItems: [] }
-    return {
-      orders: getOrders(session.userId),
-      menuItems: getMenuItems(session.userId),
+    try {
+      return {
+        orders: getOrders(session.userId) || [],
+        menuItems: getMenuItems(session.userId) || [],
+      }
+    } catch (error) {
+      console.error("Error loading dashboard data:", error)
+      return { orders: [], menuItems: [] }
     }
   }, [session])
 
