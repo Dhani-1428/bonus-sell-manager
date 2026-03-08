@@ -35,25 +35,55 @@ export async function GET(
     const connection = await pool.getConnection()
     
     try {
-      // Get user details
-      const [users] = await connection.execute(
-        `SELECT 
-          id, 
-          name, 
-          email, 
-          created_at,
-          trial_start_date,
-          subscription_status,
-          subscription_end_date,
-          subscription_plan,
-          role,
-          trial_expiration_email_sent,
-          google_id,
-          avatar
-        FROM users 
-        WHERE id = ?`,
-        [params.userId]
-      ) as any[]
+      // Get user details - handle missing trial_expiration_email_sent column
+      let users: any[]
+      try {
+        [users] = await connection.execute(
+          `SELECT 
+            id, 
+            name, 
+            email, 
+            created_at,
+            trial_start_date,
+            subscription_status,
+            subscription_end_date,
+            subscription_plan,
+            role,
+            trial_expiration_email_sent,
+            google_id,
+            avatar
+          FROM users 
+          WHERE id = ?`,
+          [params.userId]
+        ) as any[]
+      } catch (error: any) {
+        // If column doesn't exist, retry without it
+        if (error.message && error.message.includes("trial_expiration_email_sent")) {
+          [users] = await connection.execute(
+            `SELECT 
+              id, 
+              name, 
+              email, 
+              created_at,
+              trial_start_date,
+              subscription_status,
+              subscription_end_date,
+              subscription_plan,
+              role,
+              google_id,
+              avatar
+            FROM users 
+            WHERE id = ?`,
+            [params.userId]
+          ) as any[]
+          // Set default value for missing column
+          if (users.length > 0) {
+            users[0].trial_expiration_email_sent = false
+          }
+        } else {
+          throw error
+        }
+      }
 
       if (users.length === 0) {
         return NextResponse.json(
