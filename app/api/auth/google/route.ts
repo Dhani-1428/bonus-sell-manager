@@ -61,7 +61,9 @@ export async function GET(request: NextRequest) {
         sameSite: 'lax',
         maxAge: 60 * 10, // 10 minutes
         path: '/',
+        // Don't set domain - let browser use default
       });
+      console.log('✅ Set oauth_state cookie with redirect param');
       return response;
     }
     
@@ -77,7 +79,10 @@ export async function GET(request: NextRequest) {
       sameSite: 'lax',
       maxAge: 60 * 10, // 10 minutes
       path: '/',
+      // Don't set domain - let browser use default
     });
+    
+    console.log('✅ Set oauth_state cookie');
 
     return response;
   } catch (error: any) {
