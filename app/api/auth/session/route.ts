@@ -26,7 +26,8 @@ export async function GET() {
     }
 
     // Check trial expiration and send email if 3 days left (only once)
-    if (user.subscription_status === 'trial' && user.trial_start_date && !user.trial_expiration_email_sent) {
+    // Only check if trial_expiration_email_sent column exists (it might not exist in older databases)
+    if (user.subscription_status === 'trial' && user.trial_start_date && user.trial_expiration_email_sent !== undefined && !user.trial_expiration_email_sent) {
       try {
         const trialStart = new Date(user.trial_start_date)
         const trialEnd = new Date(trialStart)
@@ -38,11 +39,20 @@ export async function GET() {
         if (daysRemaining >= 2 && daysRemaining <= 3) {
           await sendTrialExpirationEmail(user.email, user.name, daysRemaining)
           
-          // Mark email as sent
-          await query(
-            `UPDATE users SET trial_expiration_email_sent = TRUE WHERE id = ?`,
-            [user.id]
-          )
+          // Mark email as sent (only if column exists)
+          try {
+            await query(
+              `UPDATE users SET trial_expiration_email_sent = TRUE WHERE id = ?`,
+              [user.id]
+            )
+          } catch (updateError: any) {
+            // Column might not exist, that's okay - just log it
+            if (updateError.message && updateError.message.includes("trial_expiration_email_sent")) {
+              console.warn('⚠️  Cannot update trial_expiration_email_sent - column does not exist. Run /api/db/init to add it.')
+            } else {
+              throw updateError
+            }
+          }
           
           console.log(`✅ Sent trial expiration email to ${user.email} (${daysRemaining} days remaining)`)
         }

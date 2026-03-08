@@ -50,11 +50,30 @@ export async function getUserById(userId: string) {
   const pool = getPool()
   const connection = await pool.getConnection()
   try {
-    const [rows] = await connection.execute(
-      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, trial_expiration_email_sent, role FROM users WHERE id = ?',
-      [userId]
-    ) as any[]
-    return rows.length > 0 ? rows[0] : null
+    // Try to get user with all columns including trial_expiration_email_sent
+    try {
+      const [rows] = await connection.execute(
+        'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, trial_expiration_email_sent, role FROM users WHERE id = ?',
+        [userId]
+      ) as any[]
+      return rows.length > 0 ? rows[0] : null
+    } catch (error: any) {
+      // If column doesn't exist, try without it
+      if (error.message && error.message.includes("trial_expiration_email_sent")) {
+        console.warn('⚠️  trial_expiration_email_sent column not found, using fallback query. Run /api/db/init to add the column.')
+        const [rows] = await connection.execute(
+          'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, role FROM users WHERE id = ?',
+          [userId]
+        ) as any[]
+        if (rows.length > 0) {
+          // Set default value for missing column
+          rows[0].trial_expiration_email_sent = false
+          return rows[0]
+        }
+        return null
+      }
+      throw error
+    }
   } catch (error: any) {
     console.error('Error getting user by ID:', error)
     if (error.message && error.message.includes("doesn't exist")) {
