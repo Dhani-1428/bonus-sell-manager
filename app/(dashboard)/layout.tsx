@@ -93,6 +93,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   // If subscription check is still null but we have a session, show dashboard anyway
   // (user data might still be initializing - this prevents infinite loading)
   // This ensures dashboard opens immediately after login/signup
+  // Don't block dashboard access - always show if session exists
+  if (!subscriptionCheck && session) {
+    // User data is still initializing, but show dashboard anyway
+    // Subscription check will happen in background
+  }
 
   return (
     <SidebarProvider>
