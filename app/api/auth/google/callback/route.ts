@@ -193,10 +193,11 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // Get server redirect URL (always production, never localhost)
-    const finalUrl = getServerRedirectUrl(redirectPath);
+    // Use request origin for redirect to ensure correct domain
+    const origin = request.headers.get('origin') || request.nextUrl.origin;
+    const finalUrl = `${origin}${redirectPath}`;
     
-    console.log('✅ Redirecting to:', finalUrl, '(user role:', userRole, ')');
+    console.log('✅ Redirecting to:', finalUrl, '(user role:', userRole, ', path:', redirectPath, ')');
     return NextResponse.redirect(finalUrl);
   } catch (error: any) {
     console.error('❌ Google OAuth callback error:', error);
