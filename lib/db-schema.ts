@@ -133,6 +133,29 @@ export async function initializeSchema(): Promise<void> {
       }
     }
 
+    // Add trial_expiration_email_sent column if it doesn't exist (for existing databases)
+    try {
+      const [columns] = await connection.query(
+        `SELECT COLUMN_NAME 
+         FROM INFORMATION_SCHEMA.COLUMNS 
+         WHERE TABLE_SCHEMA = DATABASE() 
+         AND TABLE_NAME = 'users' 
+         AND COLUMN_NAME = 'trial_expiration_email_sent'`
+      ) as any[];
+      
+      if (columns.length === 0) {
+        await connection.query(`
+          ALTER TABLE users 
+          ADD COLUMN trial_expiration_email_sent BOOLEAN DEFAULT FALSE
+        `);
+        console.log('✅ Added trial_expiration_email_sent column');
+      }
+    } catch (error: any) {
+      if (!error.message.includes('Duplicate column name')) {
+        console.log('Note: trial_expiration_email_sent column may already exist');
+      }
+    }
+
     // Create menu_items table
     await connection.query(`
       CREATE TABLE IF NOT EXISTS menu_items (
