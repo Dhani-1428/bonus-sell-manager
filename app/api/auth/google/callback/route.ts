@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { findOrCreateGoogleUser } from '@/lib/google-auth';
-import { getServerRedirectUrl, cleanRedirectPath, getAppUrl } from '@/lib/redirect';
+import { cleanRedirectPath, getAppUrl } from '@/lib/redirect';
 import { sendLoginEmail } from '@/lib/email';
 
 /**
