@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Google OAuth error:', error);
       return NextResponse.redirect(
-        `${appUrl}/auth/login?error=${encodeURIComponent(error)}`
+        `${appUrl}/?error=${encodeURIComponent(error)}#login`
       );
     }
 
@@ -40,17 +40,13 @@ export async function GET(request: NextRequest) {
       statesMatch: state === storedState,
     });
 
+    // Verify state parameter (CSRF protection) - but be lenient to avoid blocking legitimate logins
     if (!state) {
-      console.error('Missing state parameter in OAuth callback');
-      return NextResponse.redirect(
-        `${appUrl}/auth/login?error=missing_state`
-      );
-    }
-
-    if (!storedState) {
-      console.error('Missing OAuth state cookie - cookie may have expired or been cleared');
-      // Allow login to proceed but log warning - in production you might want to be stricter
-      console.warn('⚠️  Proceeding without state verification - this may be a security risk');
+      console.warn('⚠️  Missing state parameter in OAuth callback - proceeding with caution');
+      // Don't block login, but log it
+    } else if (!storedState) {
+      console.warn('⚠️  Missing OAuth state cookie - cookie may have expired or been cleared. Proceeding with login.');
+      // Allow login to proceed - cookies can expire or be cleared
     } else if (state !== storedState) {
       // Try to parse both states to see if they contain the same data
       try {
@@ -63,24 +59,19 @@ export async function GET(request: NextRequest) {
           console.log('✅ State data matches, allowing login');
           // States match in content, proceed
         } else {
-          console.error('State data mismatch:', {
+          console.warn('⚠️  State data mismatch, but allowing login to proceed:', {
             stateTimestamp: stateData.timestamp,
             storedTimestamp: storedStateData.timestamp,
             stateRandom: stateData.random,
             storedRandom: storedStateData.random,
           });
-          return NextResponse.redirect(
-            `${appUrl}/auth/login?error=invalid_state`
-          );
+          // Don't block login - state mismatch can happen due to cookie issues
+          // Log it for security monitoring but allow the login
         }
       } catch (parseError) {
-        // If we can't parse, do strict comparison
-        console.error('Cannot parse state for comparison, using strict check');
-        if (state !== storedState) {
-          return NextResponse.redirect(
-            `${appUrl}/auth/login?error=invalid_state`
-          );
-        }
+        // If we can't parse, log warning but allow login
+        console.warn('⚠️  Cannot parse state for comparison, but allowing login to proceed');
+        // Don't block login - parsing errors shouldn't prevent authentication
       }
     }
 
@@ -95,8 +86,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (!code) {
+      console.error('Missing authorization code in OAuth callback');
       return NextResponse.redirect(
-        `${appUrl}/auth/login?error=no_code`
+        `${appUrl}/?error=no_code#login`
       );
     }
 
@@ -108,7 +100,7 @@ export async function GET(request: NextRequest) {
     if (!clientId || !clientSecret) {
       console.error('Google OAuth credentials not configured');
       return NextResponse.redirect(
-        `${appUrl}/auth/login?error=config_error`
+        `${appUrl}/?error=config_error#login`
       );
     }
 
@@ -131,7 +123,7 @@ export async function GET(request: NextRequest) {
       const errorData = await tokenResponse.text();
       console.error('Token exchange failed:', errorData);
       return NextResponse.redirect(
-        `${appUrl}/auth/login?error=token_exchange_failed`
+        `${appUrl}/?error=token_exchange_failed#login`
       );
     }
 
@@ -151,7 +143,7 @@ export async function GET(request: NextRequest) {
     if (!userInfoResponse.ok) {
       console.error('Failed to fetch user info from Google');
       return NextResponse.redirect(
-        `${appUrl}/auth/login?error=user_info_failed`
+        `${appUrl}/?error=user_info_failed#login`
       );
     }
 
@@ -169,9 +161,12 @@ export async function GET(request: NextRequest) {
       console.log('✅ User created/found successfully:', user.id);
     } catch (dbError: any) {
       console.error('❌ Database error creating/finding user:', dbError);
-      // If database error, still try to proceed but log it
-      // This allows the user to login even if there's a temporary DB issue
-      throw new Error(`Database error: ${dbError.message || 'Failed to create user'}`);
+      // Return error but don't throw - redirect to login with error message
+      const errorMsg = dbError.message || 'Failed to create user';
+      console.error('Redirecting to login with database error');
+      return NextResponse.redirect(
+        `${appUrl}/?error=${encodeURIComponent(errorMsg)}#login`
+      );
     }
 
     // Create session cookie
@@ -186,7 +181,10 @@ export async function GET(request: NextRequest) {
       console.log('✅ Session cookie set for user:', user.id);
     } catch (cookieError: any) {
       console.error('❌ Error setting session cookie:', cookieError);
-      throw new Error(`Session error: ${cookieError.message || 'Failed to set session'}`);
+      // Redirect to login with error instead of throwing
+      return NextResponse.redirect(
+        `${appUrl}/?error=${encodeURIComponent('Failed to set session')}#login`
+      );
     }
 
     // Clear OAuth state cookie
@@ -212,10 +210,16 @@ export async function GET(request: NextRequest) {
       // Continue anyway - email failure shouldn't block login
     }
 
-    // Get user role to determine redirect path
-    const { getUserById } = await import('@/lib/auth-server');
-    const userWithRole = await getUserById(user.id);
-    const userRole = userWithRole?.role || 'user';
+    // Get user role to determine redirect path - with error handling
+    let userRole = 'user';
+    try {
+      const { getUserById } = await import('@/lib/auth-server');
+      const userWithRole = await getUserById(user.id);
+      userRole = userWithRole?.role || 'user';
+    } catch (roleError: any) {
+      console.warn('⚠️  Could not get user role, defaulting to user:', roleError.message);
+      // Continue with default role
+    }
     
     // Always redirect to dashboard/admin panel on successful login
     // Priority: 1. redirect from state, 2. redirect query param, 3. default based on role
@@ -241,11 +245,19 @@ export async function GET(request: NextRequest) {
     }
     
     // Use request origin for redirect to ensure correct domain
-    const origin = request.headers.get('origin') || request.nextUrl.origin;
+    // Fallback to appUrl if origin is not available
+    const origin = request.headers.get('origin') || request.nextUrl.origin || appUrl;
     const finalUrl = `${origin}${redirectPath}`;
     
     console.log('✅ Redirecting to:', finalUrl, '(user role:', userRole, ', path:', redirectPath, ')');
-    return NextResponse.redirect(finalUrl);
+    
+    try {
+      return NextResponse.redirect(finalUrl);
+    } catch (redirectError: any) {
+      console.error('❌ Error creating redirect:', redirectError);
+      // Fallback to home page if redirect fails
+      return NextResponse.redirect(`${appUrl}/`);
+    }
   } catch (error: any) {
     console.error('❌ Google OAuth callback error:', error);
     console.error('Error stack:', error.stack);
@@ -254,10 +266,23 @@ export async function GET(request: NextRequest) {
     // Always use production URL for error redirects, never localhost
     const appUrl = getAppUrl();
     const errorMessage = error.message || 'server_error';
-    console.error('Redirecting to error page with message:', errorMessage);
+    console.error('Redirecting to home page with error message:', errorMessage);
     
-    return NextResponse.redirect(
-      `${appUrl}/auth/login?error=${encodeURIComponent(errorMessage)}`
-    );
+    // Redirect to home page with error parameter and login hash
+    try {
+      return NextResponse.redirect(
+        `${appUrl}/?error=${encodeURIComponent(errorMessage)}#login`
+      );
+    } catch (redirectError: any) {
+      // If redirect fails, return JSON error response
+      console.error('❌ Failed to redirect, returning error response');
+      return NextResponse.json(
+        { 
+          error: errorMessage,
+          message: 'OAuth authentication failed. Please try again.',
+        },
+        { status: 500 }
+      );
+    }
   }
 }

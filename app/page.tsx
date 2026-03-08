@@ -25,10 +25,23 @@ export default function LandingPage() {
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
   const [showAnimation, setShowAnimation] = useState(false)
 
-  // Handle hash routing
+  // Handle hash routing and error parameters
   useEffect(() => {
     if (typeof window !== "undefined") {
       const hash = window.location.hash
+      const urlParams = new URLSearchParams(window.location.search)
+      const error = urlParams.get("error")
+      
+      // Show error toast if error parameter exists
+      if (error) {
+        // Import toast dynamically to avoid SSR issues
+        import("sonner").then(({ toast }) => {
+          toast.error(decodeURIComponent(error))
+        })
+        // Clean up URL
+        window.history.replaceState({}, "", window.location.pathname + window.location.hash)
+      }
+      
       if (hash === "#login" || hash === "#sign-in") {
         setView("login")
       } else if (hash === "#signup" || hash === "#sign-up") {
