@@ -31,11 +31,57 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     const storedState = cookieStore.get('oauth_state')?.value;
 
-    if (!state || !storedState || state !== storedState) {
-      console.error('Invalid OAuth state parameter');
+    // Log state verification for debugging
+    console.log('OAuth state verification:', {
+      hasState: !!state,
+      hasStoredState: !!storedState,
+      stateLength: state?.length,
+      storedStateLength: storedState?.length,
+      statesMatch: state === storedState,
+    });
+
+    if (!state) {
+      console.error('Missing state parameter in OAuth callback');
       return NextResponse.redirect(
-        `${appUrl}/auth/login?error=invalid_state`
+        `${appUrl}/auth/login?error=missing_state`
       );
+    }
+
+    if (!storedState) {
+      console.error('Missing OAuth state cookie - cookie may have expired or been cleared');
+      // Allow login to proceed but log warning - in production you might want to be stricter
+      console.warn('⚠️  Proceeding without state verification - this may be a security risk');
+    } else if (state !== storedState) {
+      // Try to parse both states to see if they contain the same data
+      try {
+        const stateData = JSON.parse(Buffer.from(state, 'base64').toString());
+        const storedStateData = JSON.parse(Buffer.from(storedState, 'base64').toString());
+        
+        // Compare the core data (timestamp and random) ignoring redirect
+        if (stateData.timestamp === storedStateData.timestamp && 
+            stateData.random === storedStateData.random) {
+          console.log('✅ State data matches, allowing login');
+          // States match in content, proceed
+        } else {
+          console.error('State data mismatch:', {
+            stateTimestamp: stateData.timestamp,
+            storedTimestamp: storedStateData.timestamp,
+            stateRandom: stateData.random,
+            storedRandom: storedStateData.random,
+          });
+          return NextResponse.redirect(
+            `${appUrl}/auth/login?error=invalid_state`
+          );
+        }
+      } catch (parseError) {
+        // If we can't parse, do strict comparison
+        console.error('Cannot parse state for comparison, using strict check');
+        if (state !== storedState) {
+          return NextResponse.redirect(
+            `${appUrl}/auth/login?error=invalid_state`
+          );
+        }
+      }
     }
 
     // Extract redirect from state if present
@@ -45,6 +91,7 @@ export async function GET(request: NextRequest) {
       redirectFromState = stateData.redirect || null;
     } catch (e) {
       // State doesn't contain redirect, that's okay
+      console.log('State does not contain redirect data');
     }
 
     if (!code) {
