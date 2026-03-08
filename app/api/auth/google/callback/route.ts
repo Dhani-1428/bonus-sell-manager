@@ -179,6 +179,12 @@ export async function GET(request: NextRequest) {
         path: '/',
       });
       console.log('✅ Session cookie set for user:', user.id);
+      console.log('✅ Cookie settings:', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      });
     } catch (cookieError: any) {
       console.error('❌ Error setting session cookie:', cookieError);
       // Redirect to login with error instead of throwing
