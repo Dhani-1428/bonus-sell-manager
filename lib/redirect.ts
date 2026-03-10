@@ -62,16 +62,37 @@ export function redirectToDashboard(session?: { role?: string } | null): void {
     return;
   }
 
-  // Always use relative path for client-side redirects - more reliable
-  // The browser will use the current origin automatically
-  const isSuperAdmin = session?.role === 'super_admin';
-  const dashboardPath = isSuperAdmin ? '/admin/dashboard' : '/dashboard';
+  // Check if user is super admin by checking admin_session cookie
+  const checkAdminAndRedirect = async () => {
+    try {
+      const adminResponse = await fetch("/api/admin/session", {
+        cache: 'no-store',
+        credentials: 'include'
+      })
+      const adminData = await adminResponse.json()
+      
+      if (adminData.admin) {
+        // User is super admin, redirect to admin panel
+        console.log('🔄 Super admin detected, redirecting to /admin/dashboard');
+        window.location.href = '/admin/dashboard';
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
+    
+    // Fallback to role-based redirect
+    const isSuperAdmin = session?.role === 'super_admin';
+    const dashboardPath = isSuperAdmin ? '/admin/dashboard' : '/dashboard';
+    
+    console.log('🔄 Redirecting to dashboard:', dashboardPath, 'role:', session?.role || 'user');
+    
+    // Use window.location.href with relative path - this is the most reliable
+    // The browser will automatically use the correct origin
+    window.location.href = dashboardPath;
+  };
   
-  console.log('🔄 Redirecting to dashboard:', dashboardPath, 'role:', session?.role || 'user');
-  
-  // Use window.location.href with relative path - this is the most reliable
-  // The browser will automatically use the correct origin
-  window.location.href = dashboardPath;
+  checkAdminAndRedirect();
 }
 
 /**

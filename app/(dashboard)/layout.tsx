@@ -17,6 +17,40 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [subscriptionCheck, setSubscriptionCheck] = useState<{ hasAccess: boolean; message: string } | null>(null)
   const [isInitializing, setIsInitializing] = useState(true)
 
+  // Check if user is super admin and redirect to admin panel
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        // Check if user has admin_session cookie (super admin)
+        const adminResponse = await fetch("/api/admin/session", {
+          cache: 'no-store',
+          credentials: 'include'
+        })
+        const adminData = await adminResponse.json()
+        
+        if (adminData.admin) {
+          // User is super admin, redirect to admin panel immediately
+          console.log("Super admin detected, redirecting to /admin/dashboard")
+          window.location.href = "/admin/dashboard"
+          return
+        }
+        
+        // Also check session role
+        if (session?.role === 'super_admin') {
+          console.log("Super admin role detected in session, redirecting to /admin/dashboard")
+          window.location.href = "/admin/dashboard"
+          return
+        }
+      } catch (error) {
+        console.error("Error checking admin status:", error)
+      }
+    }
+
+    if (!isLoading && session) {
+      checkAdminStatus()
+    }
+  }, [session, isLoading, router])
+
   // Handle redirect if no session - but give it time to load
   useEffect(() => {
     // Wait a bit for session to load before redirecting
