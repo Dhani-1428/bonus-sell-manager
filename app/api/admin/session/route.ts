@@ -11,21 +11,16 @@ export async function GET() {
   try {
     const cookieStore = await cookies()
     let sessionId = cookieStore.get("admin_session")?.value
-    console.log("🍪 Admin session API: admin_session cookie:", sessionId ? "exists" : "not found")
 
     // If no admin_session, check regular session cookie
     // This allows super_admins to access admin panel after logging in via Google or email/password
     if (!sessionId) {
       sessionId = cookieStore.get("session")?.value
-      console.log("🍪 Admin session API: session cookie:", sessionId ? "exists" : "not found")
     }
 
     if (!sessionId) {
-      console.log("❌ Admin session API: No session cookies found")
       return NextResponse.json({ admin: null })
     }
-
-    console.log("🔍 Admin session API: Checking user with sessionId:", sessionId)
 
     const pool = getPool()
     const connection = await pool.getConnection()
