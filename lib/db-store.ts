@@ -380,8 +380,23 @@ export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderN
       orderNumber,
       createdAt,
     }
-  } catch (error) {
-    console.error('Error adding order:', error)
+  } catch (error: any) {
+    console.error('❌ Error adding order:', error)
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage,
+      userId,
+      orderId: id,
+    })
+    
+    // Check for foreign key constraint error
+    if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.message?.includes('foreign key constraint')) {
+      console.error(`⚠️ Foreign key constraint failed. User ${userId} might not exist in users table.`)
+      throw new Error(`User not found. Please log in again.`)
+    }
+    
     throw error
   } finally {
     connection.release()
