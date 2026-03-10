@@ -24,6 +24,7 @@ export default function LandingPage() {
   const router = useRouter()
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
   const [showAnimation, setShowAnimation] = useState(false)
+  const [hasRedirected, setHasRedirected] = useState(false)
 
   // Handle hash routing and error parameters
   useEffect(() => {
@@ -72,15 +73,23 @@ export default function LandingPage() {
   // Handle redirect to dashboard when session exists (but not showing animation)
   // Only redirect if we're on the home page - don't redirect if already on dashboard
   useEffect(() => {
-    if (!isLoading && session && !showAnimation) {
+    if (!isLoading && session && !showAnimation && !hasRedirected) {
       // Only redirect if we're on the home page (pathname is "/")
       // Don't redirect if already on dashboard or other pages
-      const currentPath = window.location.pathname
-      if (currentPath === "/" || currentPath === "/#login" || currentPath === "/#signup") {
-        redirectToDashboard(session)
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname
+        if (currentPath === "/" || currentPath === "/#login" || currentPath === "/#signup") {
+          // Use a small delay to prevent infinite loops and mark as redirected
+          setHasRedirected(true)
+          const timer = setTimeout(() => {
+            console.log('🔄 Redirecting to dashboard, session:', session);
+            redirectToDashboard(session);
+          }, 100);
+          return () => clearTimeout(timer);
+        }
       }
     }
-  }, [session, isLoading, showAnimation])
+  }, [session, isLoading, showAnimation, hasRedirected])
 
   // Show success animation if authentication just succeeded
   if (showAnimation && session) {
@@ -92,15 +101,6 @@ export default function LandingPage() {
   }
 
   if (session && !showAnimation) {
-    // Force redirect if we have session but haven't redirected yet
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        console.log('🔄 Force redirecting to dashboard, session:', session);
-        redirectToDashboard(session);
-      }, 50);
-      return () => clearTimeout(timer);
-    }, [session]);
-    
     return <CookingLoader text="Opening your dashboard..." />
   }
 
