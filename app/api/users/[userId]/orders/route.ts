@@ -60,14 +60,29 @@ export async function POST(
 
     const body = await request.json()
     console.log(`[POST /api/users/${params.userId}/orders] Adding order:`, { ...body, items: body.items?.length || 0 })
+    console.log(`[POST /api/users/${params.userId}/orders] Session userId: ${session.userId}, params userId: ${params.userId}`)
+    
     const order = await addOrder(params.userId, body)
-    console.log(`[POST /api/users/${params.userId}/orders] Order added successfully:`, order.id)
+    console.log(`[POST /api/users/${params.userId}/orders] ✅ Order added successfully:`, order.id)
     
     return NextResponse.json({ order }, { status: 201 })
   } catch (error: any) {
-    console.error("Error adding order:", error)
+    console.error(`❌ [POST /api/users/${params.userId}/orders] Error adding order:`, error)
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage,
+      userId: params.userId,
+    })
     return NextResponse.json(
-      { error: error.message },
+      { 
+        error: error.message || "Failed to add order",
+        details: process.env.NODE_ENV === 'development' ? {
+          code: error.code,
+          sqlState: error.sqlState,
+        } : undefined,
+      },
       { status: 500 }
     )
   }

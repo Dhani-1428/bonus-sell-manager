@@ -45,13 +45,23 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, "id" | "c
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item),
     })
+    
     if (!response.ok) {
-      throw new Error("Failed to add menu item")
+      const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+      console.error(`❌ Failed to add menu item: ${response.status}`, errorData)
+      throw new Error(errorData.error || `Failed to add menu item: ${response.statusText}`)
     }
+    
     const data = await response.json()
+    console.log(`✅ Menu item added successfully via API:`, data.item?.id)
     return data.item
-  } catch (error) {
-    console.error("Error adding menu item:", error)
+  } catch (error: any) {
+    console.error("❌ Error adding menu item:", error)
+    console.error("Error details:", {
+      userId,
+      itemName: item.name,
+      errorMessage: error.message,
+    })
     throw error
   }
 }
@@ -131,13 +141,23 @@ export async function addOrder(userId: string, order: Omit<Order, "id" | "orderN
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(order),
     })
+    
     if (!response.ok) {
-      throw new Error("Failed to add order")
+      const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+      console.error(`❌ Failed to add order: ${response.status}`, errorData)
+      throw new Error(errorData.error || `Failed to add order: ${response.statusText}`)
     }
+    
     const data = await response.json()
+    console.log(`✅ Order added successfully via API:`, data.order?.id)
     return data.order
-  } catch (error) {
-    console.error("Error adding order:", error)
+  } catch (error: any) {
+    console.error("❌ Error adding order:", error)
+    console.error("Error details:", {
+      userId,
+      itemCount: order.items.length,
+      errorMessage: error.message,
+    })
     throw error
   }
 }

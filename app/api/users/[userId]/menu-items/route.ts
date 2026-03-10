@@ -67,14 +67,29 @@ export async function POST(
 
     const body = await request.json()
     console.log(`[POST /api/users/${params.userId}/menu-items] Adding menu item:`, body)
+    console.log(`[POST /api/users/${params.userId}/menu-items] Session userId: ${session.userId}, params userId: ${params.userId}`)
+    
     const item = await addMenuItem(params.userId, body)
-    console.log(`[POST /api/users/${params.userId}/menu-items] Menu item added successfully:`, item.id)
+    console.log(`[POST /api/users/${params.userId}/menu-items] ✅ Menu item added successfully:`, item.id)
     
     return NextResponse.json({ item }, { status: 201 })
   } catch (error: any) {
-    console.error("Error adding menu item:", error)
+    console.error(`❌ [POST /api/users/${params.userId}/menu-items] Error adding menu item:`, error)
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage,
+      userId: params.userId,
+    })
     return NextResponse.json(
-      { error: error.message },
+      { 
+        error: error.message || "Failed to add menu item",
+        details: process.env.NODE_ENV === 'development' ? {
+          code: error.code,
+          sqlState: error.sqlState,
+        } : undefined,
+      },
       { status: 500 }
     )
   }
