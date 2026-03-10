@@ -22,40 +22,42 @@ export default function AdminLayout({
     // Don't check session on login page
     if (pathname === "/admin/login") {
       setIsLoading(false)
+      setAdmin(null)
       return
     }
 
     const checkSession = async () => {
+      setIsLoading(true)
       try {
         // Add a small delay to ensure cookies are available after redirect
         // This helps when coming from login page
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise(resolve => setTimeout(resolve, 200))
         
+        console.log("🔍 Checking admin session...")
         const response = await fetch("/api/admin/session", {
           cache: 'no-store', // Ensure fresh session check
           credentials: 'include' // Include cookies
         })
         const data = await response.json()
 
+        console.log("📊 Session check response:", data)
+
         if (!data.admin) {
           // Redirect immediately if no admin session
-          console.log("No admin session found, redirecting to login")
+          console.log("❌ No admin session found, redirecting to login")
+          setIsLoading(false)
           router.push("/admin/login")
           return
         }
 
         // Set admin immediately - this will trigger the panel to show
-        console.log("Admin session found:", data.admin.email)
+        console.log("✅ Admin session found:", data.admin.email)
         setAdmin(data.admin)
         setIsLoading(false) // Stop loading immediately when admin is found
       } catch (error) {
-        console.error("Session check error:", error)
+        console.error("❌ Session check error:", error)
+        setIsLoading(false)
         router.push("/admin/login")
-      } finally {
-        // Only set loading to false if we haven't already set admin
-        if (!admin) {
-          setIsLoading(false)
-        }
       }
     }
 
@@ -74,16 +76,6 @@ export default function AdminLayout({
   // Don't show sidebar on login page
   if (pathname === "/admin/login") {
     return <>{children}</>
-  }
-
-  // Show loader only while checking session
-  if (isLoading && !admin) {
-    return <CookingLoader text="Loading admin panel..." />
-  }
-
-  // If no admin after loading, redirect (handled by useEffect)
-  if (!admin && !isLoading) {
-    return <CookingLoader text="Redirecting..." />
   }
 
   // Show admin panel immediately when admin data is available
@@ -109,6 +101,12 @@ export default function AdminLayout({
     )
   }
 
-  // Fallback (shouldn't reach here)
-  return <CookingLoader text="Loading admin panel..." />
+  // Show loader while checking session or if loading
+  if (isLoading) {
+    return <CookingLoader text="Loading admin panel..." />
+  }
+
+  // If no admin after loading, show redirecting message
+  // The useEffect will handle the redirect
+  return <CookingLoader text="Redirecting..." />
 }
