@@ -170,6 +170,26 @@ export async function addOrder(userId: string, order: Omit<Order, "id" | "orderN
     
     const data = await response.json()
     console.log(`✅ Order added successfully via API:`, data.order?.id)
+    
+    // Immediately verify it was saved to database
+    if (data.order?.id) {
+      try {
+        const verifyResponse = await fetch(`/api/debug/trace-save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: 'order', orderId: data.order.id }),
+        })
+        const verifyData = await verifyResponse.json()
+        if (!verifyData.found) {
+          console.error(`⚠️ WARNING: Order ${data.order.id} was not found in database after save!`)
+        } else {
+          console.log(`✅ Verified: Order ${data.order.id} exists in database`)
+        }
+      } catch (verifyError) {
+        console.warn("Could not verify order save:", verifyError)
+      }
+    }
+    
     return data.order
   } catch (error: any) {
     console.error("❌ Error adding order:", error)
