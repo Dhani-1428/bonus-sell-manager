@@ -384,7 +384,19 @@ export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderN
         createdAt,
       ]
     )
-    console.log(`[db-store] Order inserted successfully: ${id}`)
+    console.log(`[db-store] ✅ Order inserted successfully: ${id}`)
+    
+    // Immediately verify the insert by reading it back
+    const [verifyRows] = await connection.execute(
+      `SELECT id, order_number, total_amount, final_amount FROM orders WHERE id = ? AND user_id = ?`,
+      [id, userId]
+    ) as any[]
+    
+    if (verifyRows.length === 0) {
+      console.error(`❌ CRITICAL: Order ${id} was inserted but cannot be read back!`)
+    } else {
+      console.log(`✅ Verified: Order ${id} can be read back from database`)
+    }
 
     return {
       ...order,
