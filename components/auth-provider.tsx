@@ -73,6 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setSession(newSession)
       
+      // If super admin, redirect immediately to admin panel (skip animation)
+      if (data.user.role === 'super_admin') {
+        console.log("✅ Super admin logged in from main login page, redirecting to admin panel")
+        // Small delay to ensure cookies are set
+        setTimeout(() => {
+          window.location.href = "/admin/dashboard"
+        }, 300)
+        return { success: true, isSuperAdmin: true }
+      }
+      
       // Initialize user data in localStorage (client-side)
       if (typeof window !== "undefined") {
         try {
