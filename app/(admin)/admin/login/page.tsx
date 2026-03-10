@@ -41,13 +41,14 @@ export default function AdminLoginPage() {
       // Show cooking loader after successful login
       setShowSuccessLoader(true)
       
-      // Wait for loader to show, then redirect to admin dashboard
+      // Wait for loader to show and ensure cookie is set, then redirect to admin dashboard
       // This ensures user sees the loader before admin panel appears
       setTimeout(() => {
         // Use window.location.href for full page reload to ensure cookies are available
         // This ensures the admin_session cookie is properly set before checking session
+        console.log("🔄 Redirecting to admin dashboard...")
         window.location.href = "/admin/dashboard"
-      }, 1500) // 1.5 seconds to show the loader
+      }, 2000) // 2 seconds to show the loader and ensure cookie is set
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {
