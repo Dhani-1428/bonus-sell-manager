@@ -229,7 +229,7 @@ export async function PUT(
         )
       }
 
-      params.push(userId)
+      params.push(params.userId)
 
       await connection.execute(
         `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
@@ -250,7 +250,7 @@ export async function PUT(
           role
         FROM users 
         WHERE id = ?`,
-        [userId]
+        [params.userId]
       ) as any[]
 
       return NextResponse.json({

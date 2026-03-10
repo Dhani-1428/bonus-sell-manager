@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Users, CreditCard, LogOut, Shield, Package, ShoppingCart } from "lucide-react"
+import { LayoutDashboard, Users, CreditCard, LogOut, Shield, Package, ShoppingCart, BarChart3, Calendar } from "lucide-react"
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
 import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
@@ -10,9 +10,11 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/menu-items", label: "Menu Items", icon: Package },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/subscriptions", label: "Subscriptions", icon: Calendar },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/admin/menu-items", label: "Menus Of All Users", icon: Package },
+  { href: "/admin/orders", label: "All Orders", icon: ShoppingCart },
 ]
 
 export function AdminSidebar({
