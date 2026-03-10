@@ -37,6 +37,13 @@ export function LoginForm({
         return
       }
 
+      // Check if super admin - if so, redirect happens automatically
+      if (result.isSuperAdmin) {
+        toast.success("Welcome back, Super Admin!")
+        // Redirect is handled by auth provider
+        return
+      }
+      
       toast.success("Welcome back!")
       // onSuccess will be called by the auth provider's login function
       // which sets showSuccessAnimation, triggering the animation in page.tsx
