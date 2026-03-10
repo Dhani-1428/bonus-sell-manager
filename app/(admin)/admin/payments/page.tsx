@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle } from "lucide-react"
 import { toast } from "sonner"
+import { CookingLoader } from "@/components/cooking-loader"
 import {
   Table,
   TableBody,
@@ -141,7 +142,9 @@ export default function PaymentsPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading payments...</div>
+            <div className="flex items-center justify-center py-12">
+              <CookingLoader text="Loading payments..." />
+            </div>
           ) : (
             <Table>
               <TableHeader>

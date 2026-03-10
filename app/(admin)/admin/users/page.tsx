@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Eye } from "lucide-react"
 import { toast } from "sonner"
+import { CookingLoader } from "@/components/cooking-loader"
 import {
   Table,
   TableBody,
@@ -93,7 +94,9 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading users...</div>
+            <div className="flex items-center justify-center py-12">
+              <CookingLoader text="Loading users..." />
+            </div>
           ) : (
             <Table>
               <TableHeader>
