@@ -9,8 +9,6 @@ import {
   DollarSign, 
   TrendingUp
 } from "lucide-react"
-import { CookingLoader } from "@/components/cooking-loader"
-
 interface Admin {
   id: string
   name: string
@@ -82,12 +80,7 @@ export default function AdminDashboardPage() {
       </div>
       
       {/* Stats Cards */}
-      {isLoadingStats ? (
-        <div className="flex items-center justify-center py-12">
-          <CookingLoader text="Loading dashboard stats..." />
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -125,7 +118,6 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
-      )}
     </div>
   )
 }

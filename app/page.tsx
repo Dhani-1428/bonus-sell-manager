@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
-import { CookingLoader } from "@/components/cooking-loader"
 import { AuthSuccessAnimation } from "@/components/auth-success-animation"
 import { LoginForm } from "@/components/login-form"
 import { SignupForm } from "@/components/signup-form"
@@ -122,20 +121,7 @@ export default function LandingPage() {
     return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
   }
 
-  // Show loading only briefly - don't block content forever
-  if (isLoading && !loadingTimeout && !session) {
-    return <CookingLoader text="Preparing your kitchen..." />
-  }
-
-  // If user has session, redirect them (but don't block if redirect fails)
-  if (session && !showAnimation && !hasRedirected && !redirectTimeout) {
-    // Show loader briefly while redirecting
-    return <CookingLoader text="Opening your dashboard..." />
-  }
-
-  // If redirect was attempted but we're still here, show content anyway
-  // This prevents infinite loading if redirect fails
-  // Also show content if no session (user not logged in)
+  // Show content immediately - no loaders
 
   if (view === "login") {
     return (

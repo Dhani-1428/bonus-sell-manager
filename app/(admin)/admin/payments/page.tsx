@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle } from "lucide-react"
 import { toast } from "sonner"
-import { CookingLoader } from "@/components/cooking-loader"
 import {
   Table,
   TableBody,
@@ -141,12 +140,7 @@ export default function PaymentsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <CookingLoader text="Loading payments..." />
-            </div>
-          ) : (
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
@@ -214,7 +208,6 @@ export default function PaymentsPage() {
                 )}
               </TableBody>
             </Table>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Eye } from "lucide-react"
 import { toast } from "sonner"
-import { CookingLoader } from "@/components/cooking-loader"
 import {
   Table,
   TableBody,
@@ -93,12 +92,7 @@ export default function UsersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <CookingLoader text="Loading users..." />
-            </div>
-          ) : (
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
@@ -147,7 +141,6 @@ export default function UsersPage() {
                 )}
               </TableBody>
             </Table>
-          )}
         </CardContent>
       </Card>
     </div>

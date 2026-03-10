@@ -2,7 +2,6 @@
 
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
-import { CookingLoader } from "@/components/cooking-loader"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
@@ -126,15 +125,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     )
   }
 
-  // Only show loader/redirect if we don't have session
-  if (isLoading || isInitializing) {
-    return <CookingLoader text="Loading dashboard..." />
-  }
-
-  // No session and not loading - redirect to home
-  return <CookingLoader text="Redirecting..." />
-
-  return (
+  // No session - redirect to home (handled by useEffect)
+  return null
     <SidebarProvider>
       <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
         <DashboardSidebar userName={userName} />

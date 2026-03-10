@@ -18,7 +18,6 @@ import {
   FileText
 } from "lucide-react"
 import { toast } from "sonner"
-import { CookingLoader } from "@/components/cooking-loader"
 import {
   Select,
   SelectContent,
@@ -141,11 +140,7 @@ export default function UserDetailsPage() {
     }
   }
 
-  if (isLoading) {
-    return <CookingLoader text="Loading user details..." />
-  }
-
-  if (!userData) {
+  if (isLoading || !userData) {
     return null
   }
 
