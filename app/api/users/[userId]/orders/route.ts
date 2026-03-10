@@ -28,6 +28,7 @@ export async function GET(
     }
 
     const orders = await getOrders(params.userId)
+    console.log(`[GET /api/users/${params.userId}/orders] Found ${orders.length} orders`)
     return NextResponse.json({ orders })
   } catch (error: any) {
     console.error("Error getting orders:", error)
@@ -58,7 +59,9 @@ export async function POST(
     }
 
     const body = await request.json()
+    console.log(`[POST /api/users/${params.userId}/orders] Adding order:`, { ...body, items: body.items?.length || 0 })
     const order = await addOrder(params.userId, body)
+    console.log(`[POST /api/users/${params.userId}/orders] Order added successfully:`, order.id)
     
     return NextResponse.json({ order }, { status: 201 })
   } catch (error: any) {

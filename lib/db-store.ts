@@ -83,6 +83,7 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, 'id' | 'c
   const connection = await pool.getConnection()
 
   try {
+    console.log(`[db-store] Inserting menu item for user ${userId}:`, { id, name: item.name, price: item.price })
     await connection.execute(
       `INSERT INTO menu_items (id, user_id, name, price, category, extras, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -96,6 +97,7 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, 'id' | 'c
         createdAt,
       ]
     )
+    console.log(`[db-store] Menu item inserted successfully: ${id}`)
 
     return {
       ...item,
@@ -336,6 +338,7 @@ export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderN
   const connection = await pool.getConnection()
 
   try {
+    console.log(`[db-store] Inserting order for user ${userId}:`, { id, orderNumber, itemCount: order.items.length })
     await connection.execute(
       `INSERT INTO orders (
         id, user_id, order_number, date, items, total_amount, 
@@ -354,6 +357,7 @@ export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderN
         createdAt,
       ]
     )
+    console.log(`[db-store] Order inserted successfully: ${id}`)
 
     return {
       ...order,

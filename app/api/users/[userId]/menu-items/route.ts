@@ -35,6 +35,7 @@ export async function GET(
     }
 
     const items = await getMenuItems(params.userId)
+    console.log(`[GET /api/users/${params.userId}/menu-items] Found ${items.length} menu items`)
     return NextResponse.json({ items })
   } catch (error: any) {
     console.error("Error getting menu items:", error)
@@ -65,7 +66,9 @@ export async function POST(
     }
 
     const body = await request.json()
+    console.log(`[POST /api/users/${params.userId}/menu-items] Adding menu item:`, body)
     const item = await addMenuItem(params.userId, body)
+    console.log(`[POST /api/users/${params.userId}/menu-items] Menu item added successfully:`, item.id)
     
     return NextResponse.json({ item }, { status: 201 })
   } catch (error: any) {
