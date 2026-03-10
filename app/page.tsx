@@ -25,6 +25,20 @@ export default function LandingPage() {
   const [view, setView] = useState<"landing" | "login" | "signup">("landing")
   const [showAnimation, setShowAnimation] = useState(false)
   const [hasRedirected, setHasRedirected] = useState(false)
+  const [loadingTimeout, setLoadingTimeout] = useState(false)
+  const [redirectTimeout, setRedirectTimeout] = useState(false)
+
+  // Timeout fallback for loading state - prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.warn("Loading timeout - showing content anyway")
+        setLoadingTimeout(true)
+      }
+    }, 3000) // 3 second timeout
+    
+    return () => clearTimeout(timer)
+  }, [isLoading])
 
   // Handle hash routing and error parameters
   useEffect(() => {
@@ -70,10 +84,22 @@ export default function LandingPage() {
     }
   }
 
+  // Timeout for redirect loader - if redirect doesn't happen, show content
+  useEffect(() => {
+    if (session && !showAnimation && !hasRedirected) {
+      const timer = setTimeout(() => {
+        console.warn("Redirect timeout - showing content anyway")
+        setRedirectTimeout(true)
+      }, 2000) // 2 second timeout for redirect
+      
+      return () => clearTimeout(timer)
+    }
+  }, [session, showAnimation, hasRedirected])
+
   // Handle redirect to dashboard when session exists (but not showing animation)
   // Only redirect if we're on the home page - don't redirect if already on dashboard
   useEffect(() => {
-    if (!isLoading && session && !showAnimation && !hasRedirected) {
+    if ((!isLoading || loadingTimeout) && session && !showAnimation && !hasRedirected && !redirectTimeout) {
       // Only redirect if we're on the home page (pathname is "/")
       // Don't redirect if already on dashboard or other pages
       if (typeof window !== "undefined") {
@@ -84,25 +110,32 @@ export default function LandingPage() {
           const timer = setTimeout(() => {
             console.log('🔄 Redirecting to dashboard, session:', session);
             redirectToDashboard(session);
-          }, 100);
+          }, 200);
           return () => clearTimeout(timer);
         }
       }
     }
-  }, [session, isLoading, showAnimation, hasRedirected])
+  }, [session, isLoading, loadingTimeout, showAnimation, hasRedirected, redirectTimeout])
 
   // Show success animation if authentication just succeeded
   if (showAnimation && session) {
     return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
   }
 
-  if (isLoading) {
+  // Show loading only briefly - don't block content forever
+  if (isLoading && !loadingTimeout && !session) {
     return <CookingLoader text="Preparing your kitchen..." />
   }
 
-  if (session && !showAnimation) {
+  // If user has session, redirect them (but don't block if redirect fails)
+  if (session && !showAnimation && !hasRedirected && !redirectTimeout) {
+    // Show loader briefly while redirecting
     return <CookingLoader text="Opening your dashboard..." />
   }
+
+  // If redirect was attempted but we're still here, show content anyway
+  // This prevents infinite loading if redirect fails
+  // Also show content if no session (user not logged in)
 
   if (view === "login") {
     return (
