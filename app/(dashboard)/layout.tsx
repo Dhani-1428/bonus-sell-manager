@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (session) {
-      // Initialize user data if not in localStorage
+      // Initialize user data and migrate localStorage to database
       const initializeUserData = async () => {
         try {
           const user = getUserById(session.userId)
@@ -66,6 +66,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             // User not in localStorage - initialize it client-side
             const { initializeUserData: initUser } = await import("@/lib/auth")
             initUser(session.userId, session.name, session.email)
+          }
+
+          // Migrate localStorage data to database if it exists
+          const { hasLocalStorageData, migrateLocalStorageToDatabase } = await import("@/lib/migrate-localStorage-to-db")
+          if (hasLocalStorageData(session.userId)) {
+            console.log("Found localStorage data, migrating to database...")
+            const migrationResult = await migrateLocalStorageToDatabase(session.userId)
+            if (migrationResult.success) {
+              console.log("✅ Migration successful:", migrationResult.migrated)
+            } else {
+              console.warn("⚠️ Migration had errors:", migrationResult.errors)
+            }
           }
         } catch (err) {
           console.warn("Failed to initialize user data:", err)
