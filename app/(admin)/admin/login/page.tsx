@@ -8,11 +8,13 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Loader2, Shield } from "lucide-react"
+import { CookingLoader } from "@/components/cooking-loader"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showSuccessLoader, setShowSuccessLoader] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,17 +38,26 @@ export default function AdminLoginPage() {
 
       toast.success("Login successful!")
       
-      // Use window.location.href for full page reload to ensure cookies are available
-      // This ensures the admin_session cookie is properly set before checking session
-      // Small delay to ensure cookie is set before redirect
+      // Show cooking loader after successful login
+      setShowSuccessLoader(true)
+      
+      // Wait for loader to show, then redirect to admin dashboard
+      // This ensures user sees the loader before admin panel appears
       setTimeout(() => {
+        // Use window.location.href for full page reload to ensure cookies are available
+        // This ensures the admin_session cookie is properly set before checking session
         window.location.href = "/admin/dashboard"
-      }, 200)
+      }, 1500) // 1.5 seconds to show the loader
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show cooking loader after successful login
+  if (showSuccessLoader) {
+    return <CookingLoader text="Opening admin panel..." />
   }
 
   return (
