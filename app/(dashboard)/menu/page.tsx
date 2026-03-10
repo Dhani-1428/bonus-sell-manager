@@ -143,17 +143,29 @@ export default function MenuPage() {
 
     try {
       if (editingItem) {
-        await updateMenuItem(session.userId, editingItem.id, menuItemData)
+        const updatedItem = await updateMenuItem(session.userId, editingItem.id, menuItemData)
+        if (!updatedItem) {
+          toast.error("Failed to update menu item - item not found")
+          return
+        }
         toast.success("Menu item updated!")
       } else {
-        await addMenuItem(session.userId, menuItemData)
+        const newItem = await addMenuItem(session.userId, menuItemData)
+        console.log("✅ Menu item added via UI:", newItem)
         toast.success("Menu item added!")
       }
+      // Wait a bit for database to update, then refresh
+      await new Promise(resolve => setTimeout(resolve, 500))
       await refreshItems()
       setDialogOpen(false)
-    } catch (error) {
-      console.error("Error saving menu item:", error)
-      toast.error("Failed to save menu item")
+    } catch (error: any) {
+      console.error("❌ Error saving menu item:", error)
+      console.error("Error details:", {
+        message: error.message,
+        userId: session.userId,
+        itemData: menuItemData,
+      })
+      toast.error(`Failed to save menu item: ${error.message || "Unknown error"}`)
     }
   }
 

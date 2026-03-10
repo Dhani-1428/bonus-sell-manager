@@ -123,7 +123,7 @@ export default function NewOrderPage() {
     }
 
     try {
-      await addOrder(session.userId, {
+      const newOrder = await addOrder(session.userId, {
         date: new Date().toISOString().split("T")[0],
         items: orderItems,
         totalAmount: Math.round(grossTotal * 100) / 100,
@@ -131,14 +131,20 @@ export default function NewOrderPage() {
         finalAmount: Math.round(netTotal * 100) / 100,
         paymentMethod,
       })
-
+      
+      console.log("✅ Order added via UI:", newOrder)
       toast.success("Order saved successfully!")
       setOrderItems([])
       setDiscount("")
       setPaymentMethod("cash")
-    } catch (error) {
-      console.error("Error saving order:", error)
-      toast.error("Failed to save order")
+    } catch (error: any) {
+      console.error("❌ Error saving order:", error)
+      console.error("Error details:", {
+        message: error.message,
+        userId: session.userId,
+        itemCount: orderItems.length,
+      })
+      toast.error(`Failed to save order: ${error.message || "Unknown error"}`)
     }
   }
 
