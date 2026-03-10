@@ -18,6 +18,61 @@ export async function POST(request: Request) {
     console.log(`Database: ${process.env.DB_NAME || 'foodsell_manager'}`)
     await initializeSchema()
     
+    // Ensure payments table exists (it might have been missed)
+    try {
+      const { getPool } = await import('@/lib/db')
+      const pool = getPool()
+      const connection = await pool.getConnection()
+      
+      try {
+        let dbName = process.env.DB_NAME || 'foodsell_manager';
+        if (dbName === 'mysql' || dbName === 'information_schema' || dbName === 'performance_schema' || dbName === 'sys') {
+          dbName = 'foodsell_manager';
+        }
+
+        // Check if payments table exists
+        const [paymentsTables] = await connection.query(
+          `SELECT TABLE_NAME 
+           FROM INFORMATION_SCHEMA.TABLES 
+           WHERE TABLE_SCHEMA = ? 
+           AND TABLE_NAME = 'payments'`,
+          [dbName]
+        ) as any[]
+
+        if (paymentsTables.length === 0) {
+          console.log('Creating payments table...')
+          await connection.query(`
+            CREATE TABLE IF NOT EXISTS payments (
+              id VARCHAR(255) PRIMARY KEY,
+              user_id VARCHAR(255) NOT NULL,
+              amount DECIMAL(10, 2) NOT NULL,
+              currency VARCHAR(10) DEFAULT 'EUR',
+              plan ENUM('monthly', 'yearly') NOT NULL,
+              status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
+              stripe_session_id VARCHAR(255),
+              stripe_payment_intent_id VARCHAR(255),
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              approved_by VARCHAR(255),
+              notes TEXT,
+              FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+              INDEX idx_user_id (user_id),
+              INDEX idx_status (status),
+              INDEX idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+          `)
+          console.log('✅ Created payments table')
+        } else {
+          console.log('✅ Payments table already exists')
+        }
+      } finally {
+        connection.release()
+      }
+    } catch (paymentsError: any) {
+      console.warn('⚠️ Could not create payments table:', paymentsError.message)
+      // Don't fail the init if payments table creation fails
+    }
+    
     // Also ensure role column exists (for existing databases)
     try {
       const { getPool } = await import('@/lib/db')
