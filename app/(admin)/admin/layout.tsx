@@ -27,16 +27,25 @@ export default function AdminLayout({
 
     const checkSession = async () => {
       try {
-        const response = await fetch("/api/admin/session")
+        // Add a small delay to ensure cookies are available after redirect
+        // This helps when coming from login page
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        const response = await fetch("/api/admin/session", {
+          cache: 'no-store', // Ensure fresh session check
+          credentials: 'include' // Include cookies
+        })
         const data = await response.json()
 
         if (!data.admin) {
           // Redirect immediately if no admin session
+          console.log("No admin session found, redirecting to login")
           router.push("/admin/login")
           return
         }
 
         // Set admin immediately - this will trigger the panel to show
+        console.log("Admin session found:", data.admin.email)
         setAdmin(data.admin)
         setIsLoading(false) // Stop loading immediately when admin is found
       } catch (error) {

@@ -30,11 +30,18 @@ export default function AdminLoginPage() {
 
       if (!response.ok) {
         toast.error(data.error || "Failed to login")
+        setIsLoading(false)
         return
       }
 
       toast.success("Login successful!")
-      router.push("/admin/dashboard")
+      
+      // Use window.location.href for full page reload to ensure cookies are available
+      // This ensures the admin_session cookie is properly set before checking session
+      // Small delay to ensure cookie is set before redirect
+      setTimeout(() => {
+        window.location.href = "/admin/dashboard"
+      }, 200)
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {
