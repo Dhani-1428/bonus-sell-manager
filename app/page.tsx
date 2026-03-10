@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
+import { CookingLoader } from "@/components/cooking-loader"
 import { AuthSuccessAnimation } from "@/components/auth-success-animation"
 import { LoginForm } from "@/components/login-form"
 import { SignupForm } from "@/components/signup-form"
@@ -77,8 +78,9 @@ export default function LandingPage() {
   const handleAnimationComplete = () => {
     setShowAnimation(false)
     hideSuccessAnimation()
-    // Redirect immediately after animation
-    if (session) {
+    // Redirect immediately after animation - use window.location.href for reliable redirect
+    if (session && typeof window !== "undefined") {
+      console.log('🔄 Animation complete, redirecting to dashboard, session:', session);
       redirectToDashboard(session)
     }
   }
@@ -95,33 +97,62 @@ export default function LandingPage() {
     }
   }, [session, showAnimation, hasRedirected])
 
-  // Handle redirect to dashboard when session exists (but not showing animation)
+  // Handle redirect to dashboard when session exists
   // Only redirect if we're on the home page - don't redirect if already on dashboard
   useEffect(() => {
-    if ((!isLoading || loadingTimeout) && session && !showAnimation && !hasRedirected && !redirectTimeout) {
+    if ((!isLoading || loadingTimeout) && session && !hasRedirected) {
       // Only redirect if we're on the home page (pathname is "/")
       // Don't redirect if already on dashboard or other pages
       if (typeof window !== "undefined") {
         const currentPath = window.location.pathname
-        if (currentPath === "/" || currentPath === "/#login" || currentPath === "/#signup") {
-          // Use a small delay to prevent infinite loops and mark as redirected
+        // Allow redirect from home page or hash routes
+        if (currentPath === "/" || currentPath.startsWith("/#")) {
+          // Mark as redirected immediately to prevent multiple redirects
           setHasRedirected(true)
-          const timer = setTimeout(() => {
-            console.log('🔄 Redirecting to dashboard, session:', session);
-            redirectToDashboard(session);
-          }, 200);
-          return () => clearTimeout(timer);
+          
+          // If showing animation, wait for it to complete
+          if (showAnimation) {
+            // Animation will handle redirect via handleAnimationComplete
+            return
+          }
+          
+          // Otherwise redirect immediately
+          console.log('🔄 Redirecting to dashboard, session:', session);
+          redirectToDashboard(session);
         }
       }
     }
-  }, [session, isLoading, loadingTimeout, showAnimation, hasRedirected, redirectTimeout])
+  }, [session, isLoading, loadingTimeout, showAnimation, hasRedirected])
 
   // Show success animation if authentication just succeeded
   if (showAnimation && session) {
     return <AuthSuccessAnimation onComplete={handleAnimationComplete} />
   }
 
-  // Show content immediately - no loaders
+  // Show loading only briefly - don't block content forever
+  if (isLoading && !loadingTimeout && !session) {
+    return <CookingLoader text="Preparing your kitchen..." />
+  }
+
+  // If user has session and we're on home page, redirect immediately
+  if (session && !showAnimation && typeof window !== "undefined") {
+    const currentPath = window.location.pathname
+    // Only redirect from home page
+    if (currentPath === "/" || currentPath.startsWith("/#")) {
+      // Redirect immediately - don't wait
+      if (!hasRedirected) {
+        setHasRedirected(true)
+        console.log('🔄 Immediate redirect to dashboard, session:', session);
+        redirectToDashboard(session)
+        // Show loader while redirecting
+        return <CookingLoader text="Opening your dashboard..." />
+      }
+    }
+  }
+
+  // If redirect was attempted but we're still here, show content anyway
+  // This prevents infinite loading if redirect fails
+  // Also show content if no session (user not logged in)
 
   if (view === "login") {
     return (
