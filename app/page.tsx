@@ -105,8 +105,9 @@ export default function LandingPage() {
       // Don't redirect if already on dashboard or other pages
       if (typeof window !== "undefined") {
         const currentPath = window.location.pathname
-        // Allow redirect from home page or hash routes
-        if (currentPath === "/" || currentPath.startsWith("/#")) {
+        const currentHash = window.location.hash
+        // Allow redirect from home page (with or without hash)
+        if (currentPath === "/") {
           // Mark as redirected immediately to prevent multiple redirects
           setHasRedirected(true)
           
@@ -117,7 +118,7 @@ export default function LandingPage() {
           }
           
           // Otherwise redirect immediately
-          console.log('🔄 Redirecting to dashboard, session:', session);
+          console.log('🔄 Redirecting to dashboard, session:', session, 'path:', currentPath, 'hash:', currentHash);
           redirectToDashboard(session);
         }
       }
@@ -134,19 +135,17 @@ export default function LandingPage() {
     return <CookingLoader text="Preparing your kitchen..." />
   }
 
-  // If user has session and we're on home page, redirect immediately
-  if (session && !showAnimation && typeof window !== "undefined") {
+  // If user has session and we're on home page, redirect immediately (fallback)
+  if (session && !showAnimation && typeof window !== "undefined" && !hasRedirected) {
     const currentPath = window.location.pathname
     // Only redirect from home page
-    if (currentPath === "/" || currentPath.startsWith("/#")) {
+    if (currentPath === "/") {
       // Redirect immediately - don't wait
-      if (!hasRedirected) {
-        setHasRedirected(true)
-        console.log('🔄 Immediate redirect to dashboard, session:', session);
-        redirectToDashboard(session)
-        // Show loader while redirecting
-        return <CookingLoader text="Opening your dashboard..." />
-      }
+      setHasRedirected(true)
+      console.log('🔄 Immediate redirect to dashboard (fallback), session:', session);
+      redirectToDashboard(session)
+      // Show loader while redirecting
+      return <CookingLoader text="Opening your dashboard..." />
     }
   }
 
