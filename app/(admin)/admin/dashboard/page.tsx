@@ -19,55 +19,32 @@ interface Admin {
 
 export default function AdminDashboardPage() {
   const router = useRouter()
-  const [admin, setAdmin] = useState<Admin | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeSubscriptions: 0,
     totalRevenue: 0,
     pendingPayments: 0,
   })
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
 
-  // Check admin session
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch("/api/admin/session")
-        const data = await response.json()
-
-        if (!data.admin) {
-          router.push("/admin/login")
-          return
-        }
-
-        setAdmin(data.admin)
-        loadStats()
-      } catch (error) {
-        console.error("Session check error:", error)
-        router.push("/admin/login")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkSession()
-  }, [router])
-
+  // Load stats function
   const loadStats = async () => {
+    setIsLoadingStats(true)
     try {
-      // Load users for stats
-      const usersResponse = await fetch("/api/admin/users?limit=1000")
+      // Load users and payments in parallel for faster loading
+      const [usersResponse, paymentsResponse] = await Promise.all([
+        fetch("/api/admin/users?limit=1000"),
+        fetch("/api/admin/payments?limit=1000")
+      ])
+      
       const usersData = await usersResponse.json()
+      const paymentsData = await paymentsResponse.json()
       
       const totalUsers = usersData.users?.length || 0
       const activeSubscriptions = usersData.users?.filter(
         (u: any) => u.subscription_status === "active"
       ).length || 0
 
-      // Load payments for stats
-      const paymentsResponse = await fetch("/api/admin/payments?limit=1000")
-      const paymentsData = await paymentsResponse.json()
-      
       const allPayments = paymentsData.payments || []
       const totalRevenue = allPayments
         .filter((p: any) => p.status === "completed" || p.status === "approved")
@@ -82,22 +59,19 @@ export default function AdminDashboardPage() {
       })
     } catch (error) {
       console.error("Error loading stats:", error)
+    } finally {
+      setIsLoadingStats(false)
     }
   }
 
+  // Load stats immediately when component mounts
+  // Admin session is already checked by layout
+  useEffect(() => {
+    loadStats()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!admin) {
-    return null
-  }
 
   return (
     <div className="space-y-6">
@@ -107,6 +81,22 @@ export default function AdminDashboardPage() {
       </div>
       
       {/* Stats Cards */}
+      {isLoadingStats ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -145,6 +135,7 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
+      )}
     </div>
   )
 }
