@@ -62,37 +62,39 @@ export function redirectToDashboard(session?: { role?: string } | null): void {
     return;
   }
 
-  // Check if user is super admin by checking admin_session cookie
-  const checkAdminAndRedirect = async () => {
-    try {
-      const adminResponse = await fetch("/api/admin/session", {
-        cache: 'no-store',
-        credentials: 'include'
-      })
-      const adminData = await adminResponse.json()
-      
-      if (adminData.admin) {
-        // User is super admin, redirect to admin panel
-        console.log('🔄 Super admin detected, redirecting to /admin/dashboard');
-        window.location.href = '/admin/dashboard';
-        return;
-      }
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-    }
-    
-    // Fallback to role-based redirect
-    const isSuperAdmin = session?.role === 'super_admin';
-    const dashboardPath = isSuperAdmin ? '/admin/dashboard' : '/dashboard';
-    
-    console.log('🔄 Redirecting to dashboard:', dashboardPath, 'role:', session?.role || 'user');
-    
-    // Use window.location.href with relative path - this is the most reliable
-    // The browser will automatically use the correct origin
-    window.location.href = dashboardPath;
-  };
+  // First check session role if available
+  const isSuperAdminFromSession = session?.role === 'super_admin';
   
-  checkAdminAndRedirect();
+  if (isSuperAdminFromSession) {
+    console.log('🔄 Super admin role detected, redirecting to /admin/dashboard');
+    window.location.href = '/admin/dashboard';
+    return;
+  }
+
+  // If role not available in session, check admin_session cookie
+  fetch("/api/admin/session", {
+    cache: 'no-store',
+    credentials: 'include'
+  })
+  .then(adminResponse => adminResponse.json())
+  .then(adminData => {
+    if (adminData.admin) {
+      // User is super admin, redirect to admin panel
+      console.log('🔄 Super admin detected via admin_session, redirecting to /admin/dashboard');
+      window.location.href = '/admin/dashboard';
+    } else {
+      // Regular user, redirect to user dashboard
+      console.log('🔄 Redirecting to user dashboard');
+      window.location.href = '/dashboard';
+    }
+  })
+  .catch(error => {
+    console.error("Error checking admin status:", error);
+    // Fallback to role-based redirect
+    const dashboardPath = isSuperAdminFromSession ? '/admin/dashboard' : '/dashboard';
+    console.log('🔄 Fallback redirect to dashboard:', dashboardPath);
+    window.location.href = dashboardPath;
+  });
 }
 
 /**
