@@ -7,7 +7,10 @@ import {
   Users, 
   CreditCard, 
   DollarSign, 
-  TrendingUp
+  TrendingUp,
+  Package,
+  FileText,
+  Settings
 } from "lucide-react"
 
 interface Admin {
@@ -24,6 +27,10 @@ export default function AdminDashboardPage() {
     activeSubscriptions: 0,
     totalRevenue: 0,
     pendingPayments: 0,
+    totalMenuItems: 0,
+    totalOrders: 0,
+    totalPayments: 0,
+    totalRestaurantSettings: 0,
   })
   const [isLoadingStats, setIsLoadingStats] = useState(true)
 
@@ -31,34 +38,43 @@ export default function AdminDashboardPage() {
   const loadStats = async () => {
     setIsLoadingStats(true)
     try {
-      // Load users and payments in parallel for faster loading
-      const [usersResponse, paymentsResponse] = await Promise.all([
-        fetch("/api/admin/users?limit=1000"),
-        fetch("/api/admin/payments?limit=1000")
-      ])
+      // Load comprehensive stats from dedicated endpoint
+      const statsResponse = await fetch("/api/admin/stats")
       
-      const usersData = await usersResponse.json()
-      const paymentsData = await paymentsResponse.json()
+      if (!statsResponse.ok) {
+        throw new Error("Failed to load stats")
+      }
       
-      const totalUsers = usersData.users?.length || 0
-      const activeSubscriptions = usersData.users?.filter(
-        (u: any) => u.subscription_status === "active"
-      ).length || 0
-
-      const allPayments = paymentsData.payments || []
-      const totalRevenue = allPayments
-        .filter((p: any) => p.status === "completed" || p.status === "approved")
-        .reduce((sum: number, p: any) => sum + parseFloat(p.amount.toString()), 0)
-      const pendingPayments = allPayments.filter((p: any) => p.status === "pending").length
+      const statsData = await statsResponse.json()
+      console.log("Admin stats data:", statsData) // Debug log
 
       setStats({
-        totalUsers,
-        activeSubscriptions,
-        totalRevenue,
-        pendingPayments,
+        totalUsers: statsData.stats.totalUsers || 0,
+        activeSubscriptions: statsData.stats.activeSubscriptions || 0,
+        totalRevenue: statsData.stats.totalRevenue || 0,
+        pendingPayments: statsData.stats.pendingPayments || 0,
+        totalMenuItems: statsData.stats.totalMenuItems || 0,
+        totalOrders: statsData.stats.totalOrders || 0,
+        totalPayments: statsData.stats.totalPayments || 0,
+        totalRestaurantSettings: statsData.stats.totalRestaurantSettings || 0,
       })
     } catch (error) {
       console.error("Error loading stats:", error)
+      // Show error details
+      if (error instanceof Error) {
+        console.error("Error details:", error.message, error.stack)
+      }
+      // Set error state so user knows something went wrong
+      setStats({
+        totalUsers: 0,
+        activeSubscriptions: 0,
+        totalRevenue: 0,
+        pendingPayments: 0,
+        totalMenuItems: 0,
+        totalOrders: 0,
+        totalPayments: 0,
+        totalRestaurantSettings: 0,
+      })
     } finally {
       setIsLoadingStats(false)
     }
@@ -132,6 +148,50 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingPayments}</div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Additional Data Stats */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Menu Items</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalMenuItems}</div>
+              <p className="text-xs text-muted-foreground mt-1">Across all users</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              <p className="text-xs text-muted-foreground mt-1">Across all users</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalPayments}</div>
+              <p className="text-xs text-muted-foreground mt-1">All payment records</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Restaurant Settings</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalRestaurantSettings}</div>
+              <p className="text-xs text-muted-foreground mt-1">Configured restaurants</p>
             </CardContent>
           </Card>
         </div>
