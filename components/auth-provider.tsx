@@ -79,6 +79,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Import and use initializeUserData from lib/auth
           const { initializeUserData } = await import("@/lib/auth")
           initializeUserData(data.user.id, data.user.name, data.user.email)
+
+          // Migrate localStorage data to database if it exists
+          const { hasLocalStorageData, migrateLocalStorageToDatabase } = await import("@/lib/migrate-localStorage-to-db")
+          if (hasLocalStorageData(data.user.id)) {
+            console.log("Found localStorage data, migrating to database...")
+            const migrationResult = await migrateLocalStorageToDatabase(data.user.id)
+            if (migrationResult.success) {
+              console.log("✅ Migration successful:", migrationResult.migrated)
+            } else {
+              console.warn("⚠️ Migration had errors:", migrationResult.errors)
+            }
+          }
         } catch (err) {
           console.warn("Failed to initialize user data:", err)
           // Continue anyway - user data will be initialized on first dashboard load
@@ -125,6 +137,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Import and use initializeUserData from lib/auth
           const { initializeUserData } = await import("@/lib/auth")
           initializeUserData(data.user.id, data.user.name, data.user.email)
+
+          // Migrate localStorage data to database if it exists
+          const { hasLocalStorageData, migrateLocalStorageToDatabase } = await import("@/lib/migrate-localStorage-to-db")
+          if (hasLocalStorageData(data.user.id)) {
+            console.log("Found localStorage data, migrating to database...")
+            const migrationResult = await migrateLocalStorageToDatabase(data.user.id)
+            if (migrationResult.success) {
+              console.log("✅ Migration successful:", migrationResult.migrated)
+            } else {
+              console.warn("⚠️ Migration had errors:", migrationResult.errors)
+            }
+          }
         } catch (err) {
           console.warn("Failed to initialize user data:", err)
           // Continue anyway - user data will be initialized on first dashboard load
