@@ -54,6 +54,26 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, "id" | "c
     
     const data = await response.json()
     console.log(`✅ Menu item added successfully via API:`, data.item?.id)
+    
+    // Immediately verify it was saved to database
+    if (data.item?.id) {
+      try {
+        const verifyResponse = await fetch(`/api/debug/trace-save`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: 'menu_item', itemId: data.item.id }),
+        })
+        const verifyData = await verifyResponse.json()
+        if (!verifyData.found) {
+          console.error(`⚠️ WARNING: Menu item ${data.item.id} was not found in database after save!`)
+        } else {
+          console.log(`✅ Verified: Menu item ${data.item.id} exists in database`)
+        }
+      } catch (verifyError) {
+        console.warn("Could not verify menu item save:", verifyError)
+      }
+    }
+    
     return data.item
   } catch (error: any) {
     console.error("❌ Error adding menu item:", error)

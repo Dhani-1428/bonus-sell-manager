@@ -97,7 +97,19 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, 'id' | 'c
         createdAt,
       ]
     )
-    console.log(`[db-store] Menu item inserted successfully: ${id}`)
+    console.log(`[db-store] ✅ Menu item inserted successfully: ${id}`)
+    
+    // Immediately verify the insert by reading it back
+    const [verifyRows] = await connection.execute(
+      `SELECT id, name, price, category FROM menu_items WHERE id = ? AND user_id = ?`,
+      [id, userId]
+    ) as any[]
+    
+    if (verifyRows.length === 0) {
+      console.error(`❌ CRITICAL: Menu item ${id} was inserted but cannot be read back!`)
+    } else {
+      console.log(`✅ Verified: Menu item ${id} can be read back from database`)
+    }
 
     return {
       ...item,
