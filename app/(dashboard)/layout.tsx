@@ -127,25 +127,4 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // No session - redirect to home (handled by useEffect)
   return null
-    <SidebarProvider>
-      <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
-        <DashboardSidebar userName={userName} />
-        <SidebarInset className="w-full flex-1 min-w-0">
-          <DashboardHeader
-            userName={userName}
-            onMenuToggle={() => {}}
-            onLogout={() => {
-              logout()
-              router.push("/")
-            }}
-          />
-          <main className="flex-1 overflow-y-auto w-full h-full">
-            <div className="w-full h-full p-4 lg:p-6">
-              {children}
-            </div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
-  )
 }
