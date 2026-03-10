@@ -76,8 +76,9 @@ export async function GET(request: NextRequest) {
         [users] = await connection.execute(query, params) as any[]
       } catch (error: any) {
         // If column doesn't exist, retry without it
-        if (error.message && error.message.includes("trial_expiration_email_sent")) {
-          query = `
+        if (error.message && (error.message.includes("trial_expiration_email_sent") || error.message.includes("Unknown column 'role'"))) {
+          // If role column doesn't exist, get all users (no role filtering)
+          let fallbackQuery = `
             SELECT 
               id, 
               name, 
@@ -86,29 +87,32 @@ export async function GET(request: NextRequest) {
               trial_start_date,
               subscription_status,
               subscription_end_date,
-              subscription_plan,
-              role
+              subscription_plan
             FROM users
-            WHERE role != 'super_admin'
+            WHERE 1=1
           `
           const fallbackParams: any[] = []
           
           if (search) {
-            query += ` AND (name LIKE ? OR email LIKE ?)`
+            fallbackQuery += ` AND (name LIKE ? OR email LIKE ?)`
             fallbackParams.push(`%${search}%`, `%${search}%`)
           }
 
           if (statusFilter) {
-            query += ` AND subscription_status = ?`
+            fallbackQuery += ` AND subscription_status = ?`
             fallbackParams.push(statusFilter)
           }
 
-          query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+          fallbackQuery += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
           fallbackParams.push(limit, offset)
           
-          [users] = await connection.execute(query, fallbackParams) as any[]
-          // Set default value for missing column
-          users = users.map((u: any) => ({ ...u, trial_expiration_email_sent: false }))
+          [users] = await connection.execute(fallbackQuery, fallbackParams) as any[]
+          // Set default values for missing columns
+          users = users.map((u: any) => ({ 
+            ...u, 
+            trial_expiration_email_sent: false,
+            role: 'user'
+          }))
         } else {
           throw error
         }
@@ -128,8 +132,33 @@ export async function GET(request: NextRequest) {
         countParams.push(statusFilter)
       }
 
-      const [countResult] = await connection.execute(countQuery, countParams) as any[]
-      const total = countResult[0]?.total || 0
+      let total = 0
+      try {
+        const [countResult] = await connection.execute(countQuery, countParams) as any[]
+        total = countResult[0]?.total || 0
+      } catch (countError: any) {
+        // If role column doesn't exist, count all users
+        if (countError.message && countError.message.includes("Unknown column 'role'")) {
+          console.warn('⚠️  Role column not found. Counting all users. Run /api/db/migrate-role to add it.');
+          let fallbackCountQuery = `SELECT COUNT(*) as total FROM users WHERE 1=1`
+          const fallbackParams: any[] = []
+          
+          if (search) {
+            fallbackCountQuery += ` AND (name LIKE ? OR email LIKE ?)`
+            fallbackParams.push(`%${search}%`, `%${search}%`)
+          }
+
+          if (statusFilter) {
+            fallbackCountQuery += ` AND subscription_status = ?`
+            fallbackParams.push(statusFilter)
+          }
+
+          const [fallbackCountResult] = await connection.execute(fallbackCountQuery, fallbackParams) as any[]
+          total = fallbackCountResult[0]?.total || 0
+        } else {
+          throw countError
+        }
+      }
 
       return NextResponse.json({
         users,

@@ -40,6 +40,19 @@ export async function POST(request: NextRequest) {
       path: "/",
     })
 
+    // If user is super_admin, also set admin_session cookie
+    // This allows super_admins to access admin panel after regular login
+    if (user.role === 'super_admin') {
+      cookieStore.set("admin_session", user.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: "/",
+      })
+      console.log("✅ Admin session cookie set for super_admin:", user.email)
+    }
+
     // Send login notification email
     // Try to send email, but don't block login if it fails
     try {

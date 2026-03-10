@@ -18,29 +18,52 @@ export async function POST(request: Request) {
     console.log(`Database: ${process.env.DB_NAME || 'foodsell_manager'}`)
     await initializeSchema()
     
-    // Also ensure trial_expiration_email_sent column exists (for existing databases)
+    // Also ensure role column exists (for existing databases)
     try {
-      const { query } = await import('@/lib/db')
-      const [columns] = await query(`
-        SELECT COLUMN_NAME 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'users' 
-        AND COLUMN_NAME = 'trial_expiration_email_sent'
-      `) as any[]
+      const { getPool } = await import('@/lib/db')
+      const pool = getPool()
+      const connection = await pool.getConnection()
       
-      if (columns.length === 0) {
-        await query(`
-          ALTER TABLE users 
-          ADD COLUMN trial_expiration_email_sent BOOLEAN DEFAULT FALSE
-        `)
-        console.log('✅ Added trial_expiration_email_sent column')
-      } else {
-        console.log('✅ trial_expiration_email_sent column already exists')
+      try {
+        let dbName = process.env.DB_NAME || 'foodsell_manager';
+        if (dbName === 'mysql' || dbName === 'information_schema' || dbName === 'performance_schema' || dbName === 'sys') {
+          dbName = 'foodsell_manager';
+        }
+
+        const [columns] = await connection.query(
+          `SELECT COLUMN_NAME 
+           FROM INFORMATION_SCHEMA.COLUMNS 
+           WHERE TABLE_SCHEMA = ? 
+           AND TABLE_NAME = 'users' 
+           AND COLUMN_NAME = 'role'`,
+          [dbName]
+        ) as any[]
+        
+        if (columns.length === 0) {
+          await connection.query(`
+            ALTER TABLE users 
+            ADD COLUMN role ENUM('user', 'admin', 'super_admin') DEFAULT 'user'
+          `)
+          console.log('✅ Added role column')
+          
+          // Add index
+          try {
+            await connection.query(`CREATE INDEX idx_role ON users(role)`)
+            console.log('✅ Added index for role')
+          } catch (indexError: any) {
+            if (!indexError.message.includes('Duplicate key name')) {
+              console.log('Note: idx_role index may already exist')
+            }
+          }
+        } else {
+          console.log('✅ role column already exists')
+        }
+      } finally {
+        connection.release()
       }
     } catch (migrationError: any) {
       if (!migrationError.message.includes('Duplicate column name')) {
-        console.warn('⚠️ Could not add trial_expiration_email_sent column:', migrationError.message)
+        console.warn('⚠️ Could not add role column:', migrationError.message)
         // Don't fail the init if migration fails
       }
     }

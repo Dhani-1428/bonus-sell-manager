@@ -16,7 +16,13 @@ export async function initializeSchema(): Promise<void> {
   
   try {
     // First, try to create the database if it doesn't exist
-    const dbName = process.env.DB_NAME || 'foodsell_manager';
+    let dbName = process.env.DB_NAME || 'foodsell_manager';
+    
+    // Prevent using MySQL system database
+    if (dbName === 'mysql' || dbName === 'information_schema' || dbName === 'performance_schema' || dbName === 'sys') {
+      console.warn(`⚠️  Warning: Database name '${dbName}' is a MySQL system database. Using 'foodsell_manager' instead.`);
+      dbName = 'foodsell_manager';
+    }
     
     try {
       // Connect without database first
@@ -65,13 +71,14 @@ export async function initializeSchema(): Promise<void> {
     
     // Add google_id and avatar columns if they don't exist (for existing databases)
     try {
-      // Check if google_id column exists
+      // Check if google_id column exists - use explicit database name instead of DATABASE()
       const [columns] = await connection.query(
         `SELECT COLUMN_NAME 
          FROM INFORMATION_SCHEMA.COLUMNS 
-         WHERE TABLE_SCHEMA = DATABASE() 
+         WHERE TABLE_SCHEMA = ? 
          AND TABLE_NAME = 'users' 
-         AND COLUMN_NAME = 'google_id'`
+         AND COLUMN_NAME = 'google_id'`,
+        [dbName]
       ) as any[];
       
       if (columns.length === 0) {
@@ -88,13 +95,14 @@ export async function initializeSchema(): Promise<void> {
     }
     
     try {
-      // Check if avatar column exists
+      // Check if avatar column exists - use explicit database name instead of DATABASE()
       const [columns] = await connection.query(
         `SELECT COLUMN_NAME 
          FROM INFORMATION_SCHEMA.COLUMNS 
-         WHERE TABLE_SCHEMA = DATABASE() 
+         WHERE TABLE_SCHEMA = ? 
          AND TABLE_NAME = 'users' 
-         AND COLUMN_NAME = 'avatar'`
+         AND COLUMN_NAME = 'avatar'`,
+        [dbName]
       ) as any[];
       
       if (columns.length === 0) {
@@ -115,9 +123,10 @@ export async function initializeSchema(): Promise<void> {
       const [indexes] = await connection.query(
         `SELECT INDEX_NAME 
          FROM INFORMATION_SCHEMA.STATISTICS 
-         WHERE TABLE_SCHEMA = DATABASE() 
+         WHERE TABLE_SCHEMA = ? 
          AND TABLE_NAME = 'users' 
-         AND INDEX_NAME = 'idx_google_id'`
+         AND INDEX_NAME = 'idx_google_id'`,
+        [dbName]
       ) as any[];
       
       if (indexes.length === 0) {
@@ -138,9 +147,10 @@ export async function initializeSchema(): Promise<void> {
       const [columns] = await connection.query(
         `SELECT COLUMN_NAME 
          FROM INFORMATION_SCHEMA.COLUMNS 
-         WHERE TABLE_SCHEMA = DATABASE() 
+         WHERE TABLE_SCHEMA = ? 
          AND TABLE_NAME = 'users' 
-         AND COLUMN_NAME = 'trial_expiration_email_sent'`
+         AND COLUMN_NAME = 'trial_expiration_email_sent'`,
+        [dbName]
       ) as any[];
       
       if (columns.length === 0) {
@@ -153,6 +163,42 @@ export async function initializeSchema(): Promise<void> {
     } catch (error: any) {
       if (!error.message.includes('Duplicate column name')) {
         console.log('Note: trial_expiration_email_sent column may already exist');
+      }
+    }
+
+    // Add role column if it doesn't exist (for existing databases)
+    try {
+      const [columns] = await connection.query(
+        `SELECT COLUMN_NAME 
+         FROM INFORMATION_SCHEMA.COLUMNS 
+         WHERE TABLE_SCHEMA = ? 
+         AND TABLE_NAME = 'users' 
+         AND COLUMN_NAME = 'role'`,
+        [dbName]
+      ) as any[];
+      
+      if (columns.length === 0) {
+        await connection.query(`
+          ALTER TABLE users 
+          ADD COLUMN role ENUM('user', 'admin', 'super_admin') DEFAULT 'user'
+        `);
+        console.log('✅ Added role column');
+        
+        // Add index for role if it doesn't exist
+        try {
+          await connection.query(`
+            CREATE INDEX idx_role ON users(role)
+          `);
+          console.log('✅ Added index for role');
+        } catch (indexError: any) {
+          if (!indexError.message.includes('Duplicate key name')) {
+            console.log('Note: idx_role index may already exist');
+          }
+        }
+      }
+    } catch (error: any) {
+      if (!error.message.includes('Duplicate column name')) {
+        console.log('Note: role column may already exist');
       }
     }
 

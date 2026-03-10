@@ -169,6 +169,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Get user role to determine redirect path and set appropriate cookies - with error handling
+    let userRole = 'user';
+    try {
+      const { getUserById } = await import('@/lib/auth-server');
+      const userWithRole = await getUserById(user.id);
+      userRole = userWithRole?.role || 'user';
+    } catch (roleError: any) {
+      console.warn('⚠️  Could not get user role, defaulting to user:', roleError.message);
+      // Continue with default role
+    }
+
     // Create session cookie
     try {
       cookieStore.set('session', user.id, {
@@ -179,6 +190,20 @@ export async function GET(request: NextRequest) {
         path: '/',
       });
       console.log('✅ Session cookie set for user:', user.id);
+      
+      // If user is super_admin, also set admin_session cookie
+      // This allows super_admins to access admin panel after Google OAuth login
+      if (userRole === 'super_admin') {
+        cookieStore.set('admin_session', user.id, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 30, // 30 days
+          path: '/',
+        });
+        console.log('✅ Admin session cookie set for super_admin:', user.email);
+      }
+      
       console.log('✅ Cookie settings:', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -214,17 +239,6 @@ export async function GET(request: NextRequest) {
         emailUser: process.env.EMAIL_USER || 'not set',
       });
       // Continue anyway - email failure shouldn't block login
-    }
-
-    // Get user role to determine redirect path - with error handling
-    let userRole = 'user';
-    try {
-      const { getUserById } = await import('@/lib/auth-server');
-      const userWithRole = await getUserById(user.id);
-      userRole = userWithRole?.role || 'user';
-    } catch (roleError: any) {
-      console.warn('⚠️  Could not get user role, defaulting to user:', roleError.message);
-      // Continue with default role
     }
     
     // Always redirect to dashboard/admin panel on successful login

@@ -20,12 +20,21 @@ export async function isSuperAdmin(userId: string): Promise<boolean> {
   const pool = getPool();
   const connection = await pool.getConnection();
   try {
-    const [rows] = await connection.execute(
-      'SELECT role FROM users WHERE id = ?',
-      [userId]
-    ) as any[];
-    
-    return rows.length > 0 && rows[0].role === 'super_admin';
+    try {
+      const [rows] = await connection.execute(
+        'SELECT role FROM users WHERE id = ?',
+        [userId]
+      ) as any[];
+      
+      return rows.length > 0 && rows[0].role === 'super_admin';
+    } catch (error: any) {
+      // If role column doesn't exist, user is not a super admin
+      if (error.message && error.message.includes("Unknown column 'role'")) {
+        console.warn('⚠️  Role column not found. Run /api/db/migrate-role to add it.');
+        return false;
+      }
+      throw error;
+    }
   } catch (error: any) {
     console.error('Error checking super admin status:', error);
     return false;
@@ -41,20 +50,29 @@ export async function getSuperAdminByEmail(email: string): Promise<SuperAdmin | 
   const pool = getPool();
   const connection = await pool.getConnection();
   try {
-    const [rows] = await connection.execute(
-      'SELECT id, name, email, role, created_at FROM users WHERE email = ? AND role = ?',
-      [email.toLowerCase(), 'super_admin']
-    ) as any[];
-    
-    if (rows.length === 0) return null;
-    
-    return {
-      id: rows[0].id,
-      name: rows[0].name,
-      email: rows[0].email,
-      role: 'super_admin',
-      createdAt: rows[0].created_at,
-    };
+    try {
+      const [rows] = await connection.execute(
+        'SELECT id, name, email, role, created_at FROM users WHERE email = ? AND role = ?',
+        [email.toLowerCase(), 'super_admin']
+      ) as any[];
+      
+      if (rows.length === 0) return null;
+      
+      return {
+        id: rows[0].id,
+        name: rows[0].name,
+        email: rows[0].email,
+        role: 'super_admin',
+        createdAt: rows[0].created_at,
+      };
+    } catch (error: any) {
+      // If role column doesn't exist, no super admins exist yet
+      if (error.message && error.message.includes("Unknown column 'role'")) {
+        console.warn('⚠️  Role column not found. Run /api/db/migrate-role to add it.');
+        return null;
+      }
+      throw error;
+    }
   } catch (error: any) {
     console.error('Error getting super admin:', error);
     return null;
@@ -75,40 +93,49 @@ export async function verifySuperAdmin(
   try {
     console.log('🔐 Verifying super admin:', email.toLowerCase());
     
-    const [rows] = await connection.execute(
-      'SELECT id, name, email, password, role, created_at FROM users WHERE email = ? AND role = ?',
-      [email.toLowerCase(), 'super_admin']
-    ) as any[];
-    
-    console.log('📊 Found super admin records:', rows.length);
-    
-    if (rows.length === 0) {
-      console.log('❌ No super admin found with email:', email);
-      return null;
+    try {
+      const [rows] = await connection.execute(
+        'SELECT id, name, email, password, role, created_at FROM users WHERE email = ? AND role = ?',
+        [email.toLowerCase(), 'super_admin']
+      ) as any[];
+      
+      console.log('📊 Found super admin records:', rows.length);
+      
+      if (rows.length === 0) {
+        console.log('❌ No super admin found with email:', email);
+        return null;
+      }
+      
+      const user = rows[0];
+      console.log('✅ Found super admin:', user.email, 'Role:', user.role);
+      
+      if (!user.password) {
+        console.log('❌ Super admin has no password set');
+        return null;
+      }
+      
+      const isValid = verifyPassword(password, user.password);
+      console.log('🔑 Password verification:', isValid ? '✅ Valid' : '❌ Invalid');
+      
+      if (!isValid) {
+        return null;
+      }
+      
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: 'super_admin',
+        createdAt: user.created_at,
+      };
+    } catch (error: any) {
+      // If role column doesn't exist, no super admins exist yet
+      if (error.message && error.message.includes("Unknown column 'role'")) {
+        console.warn('⚠️  Role column not found. Run /api/db/migrate-role to add it.');
+        return null;
+      }
+      throw error;
     }
-    
-    const user = rows[0];
-    console.log('✅ Found super admin:', user.email, 'Role:', user.role);
-    
-    if (!user.password) {
-      console.log('❌ Super admin has no password set');
-      return null;
-    }
-    
-    const isValid = verifyPassword(password, user.password);
-    console.log('🔑 Password verification:', isValid ? '✅ Valid' : '❌ Invalid');
-    
-    if (!isValid) {
-      return null;
-    }
-    
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: 'super_admin',
-      createdAt: user.created_at,
-    };
   } catch (error: any) {
     console.error('❌ Error verifying super admin:', error);
     console.error('Error details:', {
@@ -185,18 +212,27 @@ export async function getAllSuperAdmins(): Promise<SuperAdmin[]> {
   const pool = getPool();
   const connection = await pool.getConnection();
   try {
-    const [rows] = await connection.execute(
-      'SELECT id, name, email, role, created_at FROM users WHERE role = ? ORDER BY created_at DESC',
-      ['super_admin']
-    ) as any[];
-    
-    return rows.map((row: any) => ({
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      role: 'super_admin' as const,
-      createdAt: row.created_at,
-    }));
+    try {
+      const [rows] = await connection.execute(
+        'SELECT id, name, email, role, created_at FROM users WHERE role = ? ORDER BY created_at DESC',
+        ['super_admin']
+      ) as any[];
+      
+      return rows.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        role: 'super_admin' as const,
+        createdAt: row.created_at,
+      }));
+    } catch (error: any) {
+      // If role column doesn't exist, no super admins exist yet
+      if (error.message && error.message.includes("Unknown column 'role'")) {
+        console.warn('⚠️  Role column not found. Run /api/db/migrate-role to add it.');
+        return [];
+      }
+      throw error;
+    }
   } catch (error: any) {
     console.error('Error getting super admins:', error);
     return [];

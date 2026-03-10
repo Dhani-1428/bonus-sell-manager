@@ -27,11 +27,37 @@ export async function getUserByEmail(email: string) {
   const pool = getPool()
   const connection = await pool.getConnection()
   try {
-    const [rows] = await connection.execute(
-      'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, role FROM users WHERE email = ?',
-      [email.toLowerCase()]
-    ) as any[]
-    return rows.length > 0 ? rows[0] : null
+    // Try to get user with role column
+    try {
+      const [rows] = await connection.execute(
+        'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, role FROM users WHERE email = ?',
+        [email.toLowerCase()]
+      ) as any[]
+      if (rows.length > 0) {
+        // Set default role if null
+        if (!rows[0].role) {
+          rows[0].role = 'user'
+        }
+        return rows[0]
+      }
+      return null
+    } catch (error: any) {
+      // If role column doesn't exist, try without it
+      if (error.message && error.message.includes("Unknown column 'role'")) {
+        console.warn('⚠️  role column not found, using fallback query. Run /api/db/init to add the column.')
+        const [rows] = await connection.execute(
+          'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE email = ?',
+          [email.toLowerCase()]
+        ) as any[]
+        if (rows.length > 0) {
+          // Set default role for missing column
+          rows[0].role = 'user'
+          return rows[0]
+        }
+        return null
+      }
+      throw error
+    }
   } catch (error: any) {
     console.error('Error getting user by email:', error)
     if (error.message && error.message.includes("doesn't exist")) {
@@ -59,18 +85,37 @@ export async function getUserById(userId: string) {
       return rows.length > 0 ? rows[0] : null
     } catch (error: any) {
       // If column doesn't exist, try without it
-      if (error.message && error.message.includes("trial_expiration_email_sent")) {
-        console.warn('⚠️  trial_expiration_email_sent column not found, using fallback query. Run /api/db/init to add the column.')
-        const [rows] = await connection.execute(
-          'SELECT id, name, email, password, created_at, subscription_status, trial_start_date, role FROM users WHERE id = ?',
-          [userId]
-        ) as any[]
-        if (rows.length > 0) {
-          // Set default value for missing column
-          rows[0].trial_expiration_email_sent = false
-          return rows[0]
+      if (error.message && (error.message.includes("trial_expiration_email_sent") || error.message.includes("Unknown column 'role'"))) {
+        console.warn('⚠️  Column not found, using fallback query. Run /api/db/migrate-role to add the role column.')
+        try {
+          const [rows] = await connection.execute(
+            'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
+            [userId]
+          ) as any[]
+          if (rows.length > 0) {
+            // Set default values for missing columns
+            rows[0].trial_expiration_email_sent = false
+            rows[0].role = 'user'
+            return rows[0]
+          }
+          return null
+        } catch (fallbackError: any) {
+          // If fallback also fails, check if it's a role error
+          if (fallbackError.message && fallbackError.message.includes("Unknown column 'role'")) {
+            // Try one more time without role
+            const [rows] = await connection.execute(
+              'SELECT id, name, email, password, created_at, subscription_status, trial_start_date FROM users WHERE id = ?',
+              [userId]
+            ) as any[]
+            if (rows.length > 0) {
+              rows[0].trial_expiration_email_sent = false
+              rows[0].role = 'user'
+              return rows[0]
+            }
+            return null
+          }
+          throw fallbackError
         }
-        return null
       }
       throw error
     }
