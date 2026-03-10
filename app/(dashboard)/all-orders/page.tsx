@@ -3,7 +3,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react"
 import { AnimatePresence, motion } from "motion/react"
 import { useAuth } from "@/components/auth-provider"
-import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/store"
+import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/api-store"
 import type { Order, OrderItem, MenuItem } from "@/lib/types"
 import { Download, Search, Pencil, Printer, Plus, Minus, Trash2 } from "lucide-react"
 import { HoverEffect } from "@/components/ui/card-hover-effect"
@@ -128,21 +128,36 @@ export default function AllOrdersPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
 
   useEffect(() => {
-    if (session) {
-      const allOrders = getOrders(session.userId)
-      setOrders(allOrders)
-      const items = getMenuItems(session.userId)
-      setMenuItems(items)
-    } else {
-      setOrders([])
-      setMenuItems([])
+    const loadData = async () => {
+      if (session) {
+        try {
+          const [allOrders, items] = await Promise.all([
+            getOrders(session.userId),
+            getMenuItems(session.userId)
+          ])
+          setOrders(allOrders)
+          setMenuItems(items)
+        } catch (error) {
+          console.error("Error loading orders and menu items:", error)
+          toast.error("Failed to load data")
+        }
+      } else {
+        setOrders([])
+        setMenuItems([])
+      }
     }
+    loadData()
   }, [session])
 
-  const refreshOrders = useCallback(() => {
+  const refreshOrders = useCallback(async () => {
     if (session) {
-      const allOrders = getOrders(session.userId)
-      setOrders(allOrders)
+      try {
+        const allOrders = await getOrders(session.userId)
+        setOrders(allOrders)
+      } catch (error) {
+        console.error("Error refreshing orders:", error)
+        toast.error("Failed to refresh orders")
+      }
     }
   }, [session])
 
@@ -242,7 +257,7 @@ export default function AllOrdersPage() {
   const discountAmount = parseFloat(discount) || 0
   const netTotal = Math.max(0, grossTotal - discountAmount)
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!session || !editingOrder) return
 
     if (editingItems.length === 0) {
@@ -254,26 +269,31 @@ export default function AllOrdersPage() {
     const finalGrossTotal = Math.round(grossTotal * 100) / 100
     const finalNetTotal = Math.round(netTotal * 100) / 100
 
-    updateOrder(session.userId, editingOrder.id, {
-      date: orderDate,
-      items: editingItems,
-      discountAmount: finalDiscountAmount,
-      finalAmount: finalNetTotal,
-      totalAmount: finalGrossTotal,
-      paymentMethod,
-    })
+    try {
+      await updateOrder(session.userId, editingOrder.id, {
+        date: orderDate,
+        items: editingItems,
+        discountAmount: finalDiscountAmount,
+        finalAmount: finalNetTotal,
+        totalAmount: finalGrossTotal,
+        paymentMethod,
+      })
 
-    toast.success("Order updated successfully!")
-    refreshOrders()
-    setDialogOpen(false)
-    setEditingOrder(null)
-    setEditingItems([])
+      toast.success("Order updated successfully!")
+      await refreshOrders()
+      setDialogOpen(false)
+      setEditingOrder(null)
+      setEditingItems([])
+    } catch (error) {
+      console.error("Error updating order:", error)
+      toast.error("Failed to update order")
+    }
   }
 
-  const handlePrint = (order: Order) => {
+  const handlePrint = async (order: Order) => {
     if (!session) return
     
-    const restaurantSettings = getRestaurantSettings(session.userId)
+    const restaurantSettings = await getRestaurantSettings(session.userId)
     const restaurantName = restaurantSettings?.name || session.name || "Restaurant"
     const restaurantAddress = restaurantSettings?.address || ""
     const restaurantContact = restaurantSettings?.contactNumber || ""

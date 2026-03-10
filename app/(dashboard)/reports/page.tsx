@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { getOrders } from "@/lib/store"
+import { getOrders } from "@/lib/api-store"
 import type { Order } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -48,8 +48,30 @@ function getDateRange(period: FilterPeriod): { start: Date; end: Date } {
 
 export default function ReportsPage() {
   const { session } = useAuth()
-  const allOrders = useMemo(() => (session ? getOrders(session.userId) : []), [session])
+  const [allOrders, setAllOrders] = useState<any[]>([])
   const [period, setPeriod] = useState<FilterPeriod>("all")
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load orders from database
+  useEffect(() => {
+    const loadOrders = async () => {
+      if (session) {
+        setIsLoading(true)
+        try {
+          const ordersData = await getOrders(session.userId)
+          setAllOrders(ordersData || [])
+        } catch (error) {
+          console.error("Error loading orders:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setAllOrders([])
+        setIsLoading(false)
+      }
+    }
+    loadOrders()
+  }, [session])
 
   const filteredOrders = useMemo(() => {
     const { start, end } = getDateRange(period)

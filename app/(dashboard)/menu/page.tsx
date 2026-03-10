@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { getMenuItems, addMenuItem, updateMenuItem, deleteMenuItem, saveMenuItems } from "@/lib/store"
+import { getMenuItems, addMenuItem, updateMenuItem, deleteMenuItem, saveMenuItems } from "@/lib/api-store"
 import type { MenuItem } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -48,17 +48,39 @@ export default function MenuPage() {
   const [ocrConfidence, setOcrConfidence] = useState<number>(0)
   const [processingStep, setProcessingStep] = useState<string>("")
 
-  // Load items when session changes
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Load items when session changes - fetch from database
   useEffect(() => {
-    if (session) {
-      setItems(getMenuItems(session.userId))
-    } else {
-      setItems([])
+    const loadItems = async () => {
+      if (session) {
+        setIsLoading(true)
+        try {
+          const fetchedItems = await getMenuItems(session.userId)
+          setItems(fetchedItems)
+        } catch (error) {
+          console.error("Error loading menu items:", error)
+          toast.error("Failed to load menu items")
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setItems([])
+      }
     }
+    loadItems()
   }, [session])
 
-  const refreshItems = useCallback(() => {
-    if (session) setItems(getMenuItems(session.userId))
+  const refreshItems = useCallback(async () => {
+    if (session) {
+      try {
+        const fetchedItems = await getMenuItems(session.userId)
+        setItems(fetchedItems)
+      } catch (error) {
+        console.error("Error refreshing menu items:", error)
+        toast.error("Failed to refresh menu items")
+      }
+    }
   }, [session])
 
   const groupedItems = useMemo(() => {
@@ -88,7 +110,7 @@ export default function MenuPage() {
     setDialogOpen(true)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!session) return
     if (!name.trim() || !price) {
       toast.error("Please fill in all fields")
@@ -119,16 +141,20 @@ export default function MenuPage() {
       menuItemData.extras = validExtras
     }
 
-    if (editingItem) {
-      updateMenuItem(session.userId, editingItem.id, menuItemData)
-      toast.success("Menu item updated!")
-    } else {
-      addMenuItem(session.userId, menuItemData)
-      toast.success("Menu item added!")
+    try {
+      if (editingItem) {
+        await updateMenuItem(session.userId, editingItem.id, menuItemData)
+        toast.success("Menu item updated!")
+      } else {
+        await addMenuItem(session.userId, menuItemData)
+        toast.success("Menu item added!")
+      }
+      await refreshItems()
+      setDialogOpen(false)
+    } catch (error) {
+      console.error("Error saving menu item:", error)
+      toast.error("Failed to save menu item")
     }
-
-    refreshItems()
-    setDialogOpen(false)
   }
 
   const addExtra = () => {
@@ -143,19 +169,33 @@ export default function MenuPage() {
     setExtras(extras.map((e, i) => i === index ? { ...e, [field]: value } : e))
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!session) return
-    deleteMenuItem(session.userId, id)
-    toast.success("Menu item deleted")
-    refreshItems()
+    try {
+      const success = await deleteMenuItem(session.userId, id)
+      if (success) {
+        toast.success("Menu item deleted")
+        await refreshItems()
+      } else {
+        toast.error("Failed to delete menu item")
+      }
+    } catch (error) {
+      console.error("Error deleting menu item:", error)
+      toast.error("Failed to delete menu item")
+    }
     setDeleteConfirm(null)
   }
 
-  const handleDeleteAll = () => {
+  const handleDeleteAll = async () => {
     if (!session) return
-    saveMenuItems(session.userId, [])
-    toast.success("All menu items deleted")
-    refreshItems()
+    try {
+      await saveMenuItems(session.userId, [])
+      toast.success("All menu items deleted")
+      await refreshItems()
+    } catch (error) {
+      console.error("Error deleting all menu items:", error)
+      toast.error("Failed to delete all menu items")
+    }
     setDeleteAllConfirm(false)
   }
 
@@ -764,13 +804,13 @@ export default function MenuPage() {
     }
   }
 
-  const handleAddExtractedItems = () => {
+  const handleAddExtractedItems = async () => {
     if (!session) return
 
     let addedCount = 0
-    extractedItems.forEach((item) => {
+    for (const item of extractedItems) {
       try {
-        addMenuItem(session.userId, {
+        await addMenuItem(session.userId, {
           name: item.name,
           price: item.price,
           category: item.category,
@@ -779,11 +819,11 @@ export default function MenuPage() {
       } catch (error) {
         console.error("Error adding item:", error)
       }
-    })
+    }
 
     if (addedCount > 0) {
       toast.success(`Added ${addedCount} menu items!`)
-      refreshItems()
+      await refreshItems()
     }
 
     setOcrDialogOpen(false)

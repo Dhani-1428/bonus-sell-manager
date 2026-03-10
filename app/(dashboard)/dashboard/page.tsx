@@ -1,26 +1,42 @@
 "use client"
 
 import { useAuth } from "@/components/auth-provider"
-import { getOrders, getMenuItems } from "@/lib/store"
+import { getOrders, getMenuItems } from "@/lib/api-store"
 import { StatsCards } from "@/components/stats-cards"
 import { RevenueChart } from "@/components/revenue-chart"
 import { PaymentChart } from "@/components/payment-chart"
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
 
 export default function DashboardPage() {
   const { session } = useAuth()
+  const [orders, setOrders] = useState<any[]>([])
+  const [menuItems, setMenuItems] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const { orders, menuItems } = useMemo(() => {
-    if (!session) return { orders: [], menuItems: [] }
-    try {
-      return {
-        orders: getOrders(session.userId) || [],
-        menuItems: getMenuItems(session.userId) || [],
+  // Load data from database
+  useEffect(() => {
+    const loadData = async () => {
+      if (session) {
+        setIsLoading(true)
+        try {
+          const [ordersData, menuItemsData] = await Promise.all([
+            getOrders(session.userId),
+            getMenuItems(session.userId)
+          ])
+          setOrders(ordersData || [])
+          setMenuItems(menuItemsData || [])
+        } catch (error) {
+          console.error("Error loading dashboard data:", error)
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setOrders([])
+        setMenuItems([])
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error("Error loading dashboard data:", error)
-      return { orders: [], menuItems: [] }
     }
+    loadData()
   }, [session])
 
   const todayStr = new Date().toISOString().split("T")[0]

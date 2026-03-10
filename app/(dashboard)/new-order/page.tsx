@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { getMenuItems, addOrder } from "@/lib/store"
-import type { OrderItem } from "@/lib/types"
+import { getMenuItems, addOrder } from "@/lib/api-store"
+import type { OrderItem, MenuItem } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +16,29 @@ const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: 
 
 export default function NewOrderPage() {
   const { session } = useAuth()
-  const menuItems = useMemo(() => (session ? getMenuItems(session.userId) : []), [session])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Load menu items from database
+  useEffect(() => {
+    const loadMenuItems = async () => {
+      if (session) {
+        setIsLoading(true)
+        try {
+          const items = await getMenuItems(session.userId)
+          setMenuItems(items)
+        } catch (error) {
+          console.error("Error loading menu items:", error)
+          toast.error("Failed to load menu items")
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setMenuItems([])
+      }
+    }
+    loadMenuItems()
+  }, [session])
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [selectedItem, setSelectedItem] = useState("")
@@ -93,26 +115,31 @@ export default function NewOrderPage() {
     setOrderItems((prev) => prev.filter((o) => o.menuItemId !== menuItemId))
   }
 
-  const handleSaveOrder = () => {
+  const handleSaveOrder = async () => {
     if (!session) return
     if (orderItems.length === 0) {
       toast.error("Add at least one item to the order")
       return
     }
 
-    addOrder(session.userId, {
-      date: new Date().toISOString().split("T")[0],
-      items: orderItems,
-      totalAmount: Math.round(grossTotal * 100) / 100,
-      discountAmount: Math.round(discountAmount * 100) / 100,
-      finalAmount: Math.round(netTotal * 100) / 100,
-      paymentMethod,
-    })
+    try {
+      await addOrder(session.userId, {
+        date: new Date().toISOString().split("T")[0],
+        items: orderItems,
+        totalAmount: Math.round(grossTotal * 100) / 100,
+        discountAmount: Math.round(discountAmount * 100) / 100,
+        finalAmount: Math.round(netTotal * 100) / 100,
+        paymentMethod,
+      })
 
-    toast.success("Order saved successfully!")
-    setOrderItems([])
-    setDiscount("")
-    setPaymentMethod("cash")
+      toast.success("Order saved successfully!")
+      setOrderItems([])
+      setDiscount("")
+      setPaymentMethod("cash")
+    } catch (error) {
+      console.error("Error saving order:", error)
+      toast.error("Failed to save order")
+    }
   }
 
   return (
