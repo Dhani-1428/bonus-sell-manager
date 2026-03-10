@@ -8,7 +8,7 @@ const testimonials = [
     name: "Marco R.",
     role: "Owner, Trattoria Bella",
     quote:
-      "SalesRocket replaced our entire spreadsheet system in one afternoon. I can finally see which dishes actually make money.",
+      "Bonus Food Sell Manager replaced our entire spreadsheet system in one afternoon. I can finally see which dishes actually make money.",
     stars: 5,
   },
   {
@@ -44,7 +44,7 @@ export function TestimonialsSection() {
             Loved by restaurants everywhere
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty lg:text-lg">
-            Hear from real restaurant owners and managers who use SalesRocket every day.
+            Hear from real restaurant owners and managers who use Bonus Food Sell Manager every day.
           </p>
         </div>
 

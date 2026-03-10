@@ -12,7 +12,7 @@ const faqs = [
   {
     question: "Do I need to install anything?",
     answer:
-      "No. SalesRocket runs entirely in your browser. Just sign up, log in, and start managing your sales from any device - phone, tablet, or desktop.",
+      "No. Bonus Food Sell Manager runs entirely in your browser. Just sign up, log in, and start managing your sales from any device - phone, tablet, or desktop.",
   },
   {
     question: "Can I use it for multiple restaurants?",
@@ -48,7 +48,7 @@ export function FaqSection() {
             Frequently asked questions
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty lg:text-lg">
-            Everything you need to know about SalesRocket.
+            Everything you need to know about Bonus Food Sell Manager.
           </p>
         </div>
 

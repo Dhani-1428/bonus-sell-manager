@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
             currency: "eur",
             product_data: {
               name: `${plan === "monthly" ? "6 Months" : "12 Months"} Subscription`,
-              description: `SalesRocket ${plan === "monthly" ? "6 Months" : "12 Months"} Plan`,
+              description: `Bonus Food Sell Manager ${plan === "monthly" ? "6 Months" : "12 Months"} Plan`,
             },
             unit_amount: price,
           },

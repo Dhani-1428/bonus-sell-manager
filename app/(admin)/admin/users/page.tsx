@@ -92,7 +92,10 @@ export default function UsersPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading users...</div>
+          ) : (
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
@@ -141,6 +144,7 @@ export default function UsersPage() {
                 )}
               </TableBody>
             </Table>
+          )}
         </CardContent>
       </Card>
     </div>

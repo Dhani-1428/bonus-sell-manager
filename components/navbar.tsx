@@ -46,7 +46,7 @@ export function Navbar({
               <path d="M8 7c0-2 1-3 4-3s4 1 4 3" />
             </svg>
           </div>
-          <span className="text-lg font-bold text-foreground">SalesRocket</span>
+          <span className="text-lg font-bold text-foreground">Bonus Food Sell Manager</span>
         </a>
 
         {/* Desktop Nav */}

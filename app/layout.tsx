@@ -10,7 +10,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'SalesRocket - Restaurant Sales Manager',
+  title: 'Bonus Food Sell Manager - Restaurant Sales Manager',
   description: 'Easy-to-use restaurant sales management dashboard. Track orders, manage your menu, and view reports.',
   generator: 'v0.app',
   icons: {

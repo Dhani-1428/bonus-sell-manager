@@ -55,7 +55,7 @@ export function FeaturesSection() {
             Everything you need to manage sales
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty lg:text-lg">
-            From quick order entry to detailed reports, SalesRocket gives you the tools to stay on top of every aspect of your restaurant's sales.
+            From quick order entry to detailed reports, Bonus Food Sell Manager gives you the tools to stay on top of every aspect of your restaurant's sales.
           </p>
         </div>
 

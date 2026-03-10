@@ -1,3 +1,5 @@
+import { CookingLoader } from "@/components/cooking-loader"
+
 export default function Loading() {
-  return null
+  return <CookingLoader />
 }

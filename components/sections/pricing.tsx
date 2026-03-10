@@ -9,7 +9,7 @@ const plans = [
     price: "100",
     period: "/6 months",
     perMonth: "16.67",
-    description: "Great for trying out SalesRocket with your restaurant.",
+    description: "Great for trying out Bonus Food Sell Manager with your restaurant.",
     features: [
       "Unlimited orders & menu items",
       "Full dashboard & reports",

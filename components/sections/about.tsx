@@ -5,12 +5,12 @@ export function AboutSection() {
     <section id="about" className="scroll-mt-20 border-t border-border bg-card px-4 py-20 lg:py-28">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto mb-14 max-w-2xl text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">About SalesRocket</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wider text-primary">About Bonus Food Sell Manager</p>
           <h2 className="text-3xl font-bold tracking-tight text-card-foreground lg:text-4xl text-balance">
             Built by restaurant owners, for restaurant owners
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty lg:text-lg">
-            We know the chaos of running a busy kitchen. SalesRocket was born out of frustration with complicated POS systems and messy spreadsheets. Our goal is one thing: make your sales data work for you, not against you.
+            We know the chaos of running a busy kitchen. Bonus Food Sell Manager was born out of frustration with complicated POS systems and messy spreadsheets. Our goal is one thing: make your sales data work for you, not against you.
           </p>
         </div>
 

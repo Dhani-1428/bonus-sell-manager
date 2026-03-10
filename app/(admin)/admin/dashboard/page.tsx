@@ -9,6 +9,7 @@ import {
   DollarSign, 
   TrendingUp
 } from "lucide-react"
+
 interface Admin {
   id: string
   name: string
@@ -80,7 +81,23 @@ export default function AdminDashboardPage() {
       </div>
       
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {isLoadingStats ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -118,6 +135,7 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
         </div>
+      )}
     </div>
   )
 }

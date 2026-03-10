@@ -17,7 +17,7 @@ export function FloatingButtons() {
   }, [])
 
   const handleWhatsAppClick = () => {
-    const message = encodeURIComponent("Hello! I'm interested in SalesRocket.")
+    const message = encodeURIComponent("Hello! I'm interested in Bonus Food Sell Manager.")
     const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}?text=${message}`
     window.open(whatsappUrl, "_blank")
   }

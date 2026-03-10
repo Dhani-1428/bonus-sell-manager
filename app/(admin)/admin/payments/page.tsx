@@ -140,7 +140,10 @@ export default function PaymentsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading payments...</div>
+          ) : (
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
@@ -208,6 +211,7 @@ export default function PaymentsPage() {
                 )}
               </TableBody>
             </Table>
+          )}
         </CardContent>
       </Card>
     </div>

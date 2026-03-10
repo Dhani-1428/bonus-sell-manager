@@ -10,7 +10,7 @@ export function Footer() {
               <path d="M8 7c0-2 1-3 4-3s4 1 4 3" />
             </svg>
           </div>
-          <span className="text-sm font-bold text-foreground">SalesRocket</span>
+          <span className="text-sm font-bold text-foreground">Bonus Food Sell Manager</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
           <a href="#about" className="transition-colors hover:text-foreground">About</a>
@@ -19,7 +19,7 @@ export function Footer() {
           <a href="#contact" className="transition-colors hover:text-foreground">Contact</a>
         </div>
         <p className="text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} SalesRocket. All rights reserved.
+          &copy; {new Date().getFullYear()} Bonus Food Sell Manager. All rights reserved.
         </p>
       </div>
     </footer>
