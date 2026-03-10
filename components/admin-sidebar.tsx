@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Users, CreditCard, LogOut, Shield } from "lucide-react"
+import { LayoutDashboard, Users, CreditCard, LogOut, Shield, Package, ShoppingCart } from "lucide-react"
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
 import { motion } from "motion/react"
 import { cn } from "@/lib/utils"
@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/menu-items", label: "Menu Items", icon: Package },
+  { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
 ]
 
