@@ -36,10 +36,11 @@ export default function AdminLoginPage() {
 
       toast.success("Login successful!")
       
-      // Redirect immediately to admin dashboard without showing loader
       // Use window.location.href for full page reload to ensure cookies are available
-      console.log("🔄 Redirecting to admin dashboard...")
-      window.location.href = "/admin/dashboard"
+      // This is more reliable than router.push for authentication redirects
+      setTimeout(() => {
+        window.location.href = "/admin/dashboard"
+      }, 300) // Small delay to ensure cookie is set and toast is visible
     } catch (error) {
       toast.error("An error occurred. Please try again.")
     } finally {
