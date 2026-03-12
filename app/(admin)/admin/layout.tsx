@@ -60,9 +60,12 @@ export default function AdminLayout({
   const handleLogout = async () => {
     try {
       await fetch("/api/admin/logout", { method: "POST" })
-      router.push("/admin/login")
+      // Redirect to home page instead of admin login
+      window.location.href = "/"
     } catch (error) {
       console.error("Logout error:", error)
+      // Still redirect even if API call fails
+      window.location.href = "/"
     }
   }
 

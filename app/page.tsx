@@ -99,7 +99,19 @@ export default function LandingPage() {
 
   // Handle redirect to dashboard when session exists
   // Only redirect if we're on the home page - don't redirect if already on dashboard
+  // Also check for logout flag to prevent auto-login after logout
   useEffect(() => {
+    // Check for logout flag first - if present, don't auto-redirect
+    if (typeof window !== "undefined") {
+      const logoutFlag = document.cookie.split('; ').find(row => row.startsWith('logout_flag='))
+      if (logoutFlag) {
+        console.log("🚫 Logout flag detected - preventing auto-redirect")
+        // Clear the logout flag cookie
+        document.cookie = "logout_flag=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+        return // Don't redirect
+      }
+    }
+
     if ((!isLoading || loadingTimeout) && session && !hasRedirected) {
       // Only redirect if we're on the home page (pathname is "/")
       // Don't redirect if already on dashboard or other pages

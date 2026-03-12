@@ -25,6 +25,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check session on mount and when needed
   const checkSession = useCallback(async () => {
     try {
+      // Check for logout flag - if present, don't auto-login
+      if (typeof window !== "undefined") {
+        const logoutFlag = document.cookie.split('; ').find(row => row.startsWith('logout_flag='))
+        if (logoutFlag) {
+          console.log("🚫 Logout flag detected - skipping auto-login")
+          // Clear the logout flag cookie
+          document.cookie = "logout_flag=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+          setSession(null)
+          setIsLoading(false)
+          return
+        }
+      }
+
       const response = await fetch("/api/auth/session")
       const data = await response.json()
 
@@ -179,11 +192,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" })
+      
+      // Set logout flag to prevent auto-login
+      if (typeof window !== "undefined") {
+        document.cookie = "logout_flag=true; path=/; max-age=60" // 1 minute
+      }
+      
       setSession(null)
       setShowSuccessAnimation(false)
-      router.push("/")
+      
+      // Use window.location.href for reliable redirect
+      if (typeof window !== "undefined") {
+        window.location.href = "/"
+      } else {
+        router.push("/")
+      }
     } catch (error) {
       console.error("Logout error:", error)
+      // Still redirect even if API call fails
+      if (typeof window !== "undefined") {
+        window.location.href = "/"
+      } else {
+        router.push("/")
+      }
     }
   }, [router])
 
