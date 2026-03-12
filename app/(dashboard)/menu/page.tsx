@@ -1133,7 +1133,15 @@ export default function MenuPage() {
       </Dialog>
 
       {/* OCR Extraction Dialog */}
-      <Dialog open={ocrDialogOpen} onOpenChange={setOcrDialogOpen}>
+      <Dialog open={ocrDialogOpen} onOpenChange={(open) => {
+        setOcrDialogOpen(open)
+        if (!open) {
+          // Clean up when dialog closes
+          setExtractedItems([])
+          setImagePreview(null)
+          setIsProcessing(false)
+        }
+      }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Extract Menu from Image</DialogTitle>
@@ -1257,6 +1265,7 @@ export default function MenuPage() {
                 setOcrDialogOpen(false)
                 setExtractedItems([])
                 setImagePreview(null)
+                setIsProcessing(false)
               }}
               className="flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
