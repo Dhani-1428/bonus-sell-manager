@@ -56,11 +56,11 @@ export default function UserDetailsPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    subscription_status: "",
+    subscription_status: "trial",
     subscription_end_date: "",
-    subscription_plan: "",
+    subscription_plan: undefined as string | undefined,
     trial_start_date: "",
-    role: "",
+    role: "user",
   })
 
   useEffect(() => {
@@ -96,17 +96,17 @@ export default function UserDetailsPage() {
 
       setUserData(data)
       setFormData({
-        name: data.user.name,
-        email: data.user.email,
-        subscription_status: data.user.subscription_status,
+        name: data.user.name || "",
+        email: data.user.email || "",
+        subscription_status: data.user.subscription_status || "trial",
         subscription_end_date: data.user.subscription_end_date
           ? new Date(data.user.subscription_end_date).toISOString().slice(0, 16)
           : "",
-        subscription_plan: data.user.subscription_plan || "",
+        subscription_plan: data.user.subscription_plan || undefined,
         trial_start_date: data.user.trial_start_date
           ? new Date(data.user.trial_start_date).toISOString().slice(0, 16)
           : "",
-        role: data.user.role,
+        role: data.user.role || "user",
       })
     } catch (error: any) {
       toast.error(error.message || "Failed to load user data")
@@ -191,7 +191,7 @@ export default function UserDetailsPage() {
               <div className="space-y-2">
                 <Label htmlFor="subscription_status">Subscription Status</Label>
                 <Select
-                  value={formData.subscription_status}
+                  value={formData.subscription_status || "trial"}
                   onValueChange={(value) =>
                     setFormData({ ...formData, subscription_status: value })
                   }
@@ -210,9 +210,9 @@ export default function UserDetailsPage() {
               <div className="space-y-2">
                 <Label htmlFor="subscription_plan">Subscription Plan</Label>
                 <Select
-                  value={formData.subscription_plan}
+                  value={formData.subscription_plan || undefined}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, subscription_plan: value })
+                    setFormData({ ...formData, subscription_plan: value || undefined })
                   }
                 >
                   <SelectTrigger>
@@ -249,7 +249,7 @@ export default function UserDetailsPage() {
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <Select
-                  value={formData.role}
+                  value={formData.role || "user"}
                   onValueChange={(value) => setFormData({ ...formData, role: value })}
                 >
                   <SelectTrigger>
