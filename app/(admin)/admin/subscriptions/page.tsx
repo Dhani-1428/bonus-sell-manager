@@ -89,8 +89,8 @@ export default function SubscriptionsPage() {
 
   const handleEdit = (user: UserSubscription) => {
     setEditingUser(user)
-    setEditStatus(user.subscription_status)
-    setEditPlan(user.subscription_plan || "")
+    setEditStatus(user.subscription_status || "trial")
+    setEditPlan(user.subscription_plan || undefined)
     setEditEndDate(
       user.subscription_end_date
         ? new Date(user.subscription_end_date).toISOString().split("T")[0]
