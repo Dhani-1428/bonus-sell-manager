@@ -19,31 +19,22 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Extract userId from params - handle both sync and async params
-    let userId: string
-    try {
-      // Try direct access first (Next.js 14 and earlier)
-      if (params && typeof params === 'object' && 'userId' in params) {
-        userId = (params as any).userId
-      } else {
-        // Try as Promise (Next.js 15+)
-        const resolvedParams = await (params as any)
-        userId = resolvedParams?.userId
-      }
-    } catch (error) {
-      console.error('[GET /api/admin/users/[userId]] Error accessing params:', error)
-      return NextResponse.json(
-        { error: "Failed to parse route parameters" },
-        { status: 400 }
-      )
-    }
+    // Extract userId - handle both direct access and Promise (Next.js 15+)
+    const userId = params?.userId || (await params)?.userId || (params as any)?.userId
+    
+    console.log('[GET /api/admin/users/[userId]] Raw params:', params)
+    console.log('[GET /api/admin/users/[userId]] Extracted userId:', userId)
+    console.log('[GET /api/admin/users/[userId]] userId type:', typeof userId)
 
-    console.log('[GET /api/admin/users/[userId]] userId:', userId, 'type:', typeof userId)
-
-    if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined' || userId === 'null') {
-      console.error('[GET /api/admin/users/[userId]] Invalid userId:', userId, 'params:', JSON.stringify(params))
+    if (!userId || (typeof userId === 'string' && (userId.trim() === '' || userId === 'undefined' || userId === 'null'))) {
+      console.error('[GET /api/admin/users/[userId]] Invalid userId:', {
+        userId,
+        params,
+        paramsType: typeof params,
+        hasUserId: 'userId' in (params || {}),
+      })
       return NextResponse.json(
-        { error: "Invalid user ID", received: userId, paramsType: typeof params },
+        { error: "Invalid user ID", debug: { received: userId, paramsType: typeof params } },
         { status: 400 }
       )
     }
@@ -201,31 +192,22 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Extract userId from params - handle both sync and async params
-    let userId: string
-    try {
-      // Try direct access first (Next.js 14 and earlier)
-      if (params && typeof params === 'object' && 'userId' in params) {
-        userId = (params as any).userId
-      } else {
-        // Try as Promise (Next.js 15+)
-        const resolvedParams = await (params as any)
-        userId = resolvedParams?.userId
-      }
-    } catch (error) {
-      console.error('[PUT /api/admin/users/[userId]] Error accessing params:', error)
-      return NextResponse.json(
-        { error: "Failed to parse route parameters" },
-        { status: 400 }
-      )
-    }
+    // Extract userId - handle both direct access and Promise (Next.js 15+)
+    const userId = params?.userId || (await params)?.userId || (params as any)?.userId
+    
+    console.log('[PUT /api/admin/users/[userId]] Raw params:', params)
+    console.log('[PUT /api/admin/users/[userId]] Extracted userId:', userId)
+    console.log('[PUT /api/admin/users/[userId]] userId type:', typeof userId)
 
-    console.log('[PUT /api/admin/users/[userId]] userId:', userId, 'type:', typeof userId)
-
-    if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined' || userId === 'null') {
-      console.error('[PUT /api/admin/users/[userId]] Invalid userId:', userId, 'params:', JSON.stringify(params))
+    if (!userId || (typeof userId === 'string' && (userId.trim() === '' || userId === 'undefined' || userId === 'null'))) {
+      console.error('[PUT /api/admin/users/[userId]] Invalid userId:', {
+        userId,
+        params,
+        paramsType: typeof params,
+        hasUserId: 'userId' in (params || {}),
+      })
       return NextResponse.json(
-        { error: "Invalid user ID", received: userId, paramsType: typeof params },
+        { error: "Invalid user ID", debug: { received: userId, paramsType: typeof params } },
         { status: 400 }
       )
     }
