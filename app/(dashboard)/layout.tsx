@@ -93,11 +93,24 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session) {
       // Initialize user data and migrate localStorage to database
-      // Add a small delay to ensure session cookie is fully set
+      // Add a delay and verify session cookie before migration
       const initializeUserData = async () => {
         try {
-          // Wait a bit to ensure session cookie is set
-          await new Promise(resolve => setTimeout(resolve, 500))
+          // Helper function to check if session cookie exists
+          const checkSessionCookie = (): boolean => {
+            if (typeof document === "undefined") return false
+            const cookies = document.cookie.split(";")
+            return cookies.some(cookie => cookie.trim().startsWith("session="))
+          }
+
+          // Wait longer to ensure session cookie is set (2 seconds)
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          
+          // Verify session cookie exists before proceeding
+          if (!checkSessionCookie()) {
+            console.warn("⚠️ Session cookie not found, skipping migration. Will retry on next page load.")
+            return
+          }
           
           const user = getUserById(session.userId)
           if (!user) {
@@ -112,33 +125,44 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           if (hasLocalStorageData(session.userId)) {
             console.log("Found localStorage data, migrating to database...")
             
-            // Retry migration up to 3 times with delays
+            // Retry migration up to 5 times with increasing delays
             let migrationResult = null
-            let retries = 3
+            let retries = 5
+            let attempt = 0
             while (retries > 0 && (!migrationResult || !migrationResult.success)) {
+              attempt++
               try {
+                // Verify session cookie before each attempt
+                if (!checkSessionCookie()) {
+                  console.warn(`⚠️ Session cookie not found on attempt ${attempt}, waiting...`)
+                  await new Promise(resolve => setTimeout(resolve, 2000))
+                  retries--
+                  continue
+                }
+                
                 migrationResult = await migrateLocalStorageToDatabase(session.userId)
                 if (migrationResult.success) {
                   console.log("✅ Migration successful:", migrationResult.migrated)
                   break
                 } else {
-                  console.warn(`⚠️ Migration attempt ${4 - retries} failed:`, migrationResult.errors)
+                  console.warn(`⚠️ Migration attempt ${attempt} failed:`, migrationResult.errors)
                   retries--
                   if (retries > 0) {
-                    await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second before retry
+                    await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds before retry
                   }
                 }
               } catch (err: any) {
-                console.warn(`⚠️ Migration attempt ${4 - retries} error:`, err)
+                console.warn(`⚠️ Migration attempt ${attempt} error:`, err)
                 retries--
                 if (retries > 0) {
-                  await new Promise(resolve => setTimeout(resolve, 1000))
+                  await new Promise(resolve => setTimeout(resolve, 2000))
                 }
               }
             }
             
             if (!migrationResult || !migrationResult.success) {
               console.warn("⚠️ Migration failed after all retries:", migrationResult?.errors || "Unknown error")
+              console.warn("⚠️ Migration will be retried on next page load or refresh")
             }
           }
         } catch (err) {
