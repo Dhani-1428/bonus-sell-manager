@@ -1308,9 +1308,17 @@ export default function MenuPage() {
               {extractedItems.length > 0 && (
               <button
                 onClick={handleAddExtractedItems}
-                className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                disabled={isProcessing}
+                className="flex h-12 items-center justify-center rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Add {extractedItems.length} {extractedItems.length === 1 ? "Item" : "Items"}
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  `Add ${extractedItems.length} ${extractedItems.length === 1 ? "Item" : "Items"}`
+                )}
               </button>
             )}
             {ocrConfidence > 0 && !isProcessing && (
