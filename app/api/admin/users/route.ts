@@ -204,46 +204,91 @@ export async function GET(request: NextRequest) {
       }
 
       // Ensure counts are numbers and handle undefined/null values
-      const usersWithCounts = (users || []).map((u: any) => {
-        // Skip if user is null/undefined
-        if (!u || typeof u !== 'object') {
-          return null
-        }
+      const usersWithCounts: any[] = []
+      try {
+        for (const u of users || []) {
+          // Skip if user is null/undefined
+          if (!u || typeof u !== 'object') {
+            continue
+          }
 
-        // Safely extract all user properties
-        const userData: any = {
-          id: u.id || '',
-          name: u.name || '',
-          email: u.email || '',
-          created_at: u.created_at || new Date().toISOString(),
-          trial_start_date: u.trial_start_date || null,
-          subscription_status: u.subscription_status || 'trial',
-          subscription_end_date: u.subscription_end_date || null,
-          subscription_plan: u.subscription_plan || null,
-          role: u.role || 'user',
-          trial_expiration_email_sent: Boolean(u.trial_expiration_email_sent),
-          menu_items_count: Number(u.menu_items_count) || 0,
-          orders_count: Number(u.orders_count) || 0,
+          // Safely extract all user properties with explicit checks
+          const userData: any = {}
+          
+          if (u.id !== undefined) userData.id = String(u.id)
+          else userData.id = ''
+          
+          if (u.name !== undefined) userData.name = String(u.name)
+          else userData.name = ''
+          
+          if (u.email !== undefined) userData.email = String(u.email)
+          else userData.email = ''
+          
+          if (u.created_at !== undefined) userData.created_at = String(u.created_at)
+          else userData.created_at = new Date().toISOString()
+          
+          userData.trial_start_date = u.trial_start_date || null
+          userData.subscription_status = u.subscription_status || 'trial'
+          userData.subscription_end_date = u.subscription_end_date || null
+          userData.subscription_plan = u.subscription_plan || null
+          userData.role = u.role || 'user'
+          userData.trial_expiration_email_sent = Boolean(u.trial_expiration_email_sent)
+          
+          // Safely convert counts to numbers
+          const menuCount = u.menu_items_count !== undefined && u.menu_items_count !== null 
+            ? Number(u.menu_items_count) 
+            : 0
+          const orderCount = u.orders_count !== undefined && u.orders_count !== null 
+            ? Number(u.orders_count) 
+            : 0
+            
+          userData.menu_items_count = isNaN(menuCount) ? 0 : menuCount
+          userData.orders_count = isNaN(orderCount) ? 0 : orderCount
+          
+          usersWithCounts.push(userData)
         }
-        return userData
-      }).filter((u: any) => u !== null) // Remove any null entries
-
-      // Calculate summary safely
-      const validUsers = Array.isArray(usersWithCounts) ? usersWithCounts : []
-      const summary = {
-        totalUsers: Number(total) || 0,
-        usersWithMenuItems: validUsers.filter((u: any) => u && Number(u.menu_items_count) > 0).length,
-        usersWithOrders: validUsers.filter((u: any) => u && Number(u.orders_count) > 0).length,
-        totalMenuItems: validUsers.reduce((sum: number, u: any) => {
-          return sum + (u ? (Number(u.menu_items_count) || 0) : 0)
-        }, 0),
-        totalOrders: validUsers.reduce((sum: number, u: any) => {
-          return sum + (u ? (Number(u.orders_count) || 0) : 0)
-        }, 0),
+      } catch (mapError: any) {
+        console.error('Error mapping users:', mapError)
+        // Return empty array if mapping fails
       }
 
-      return NextResponse.json({
-        users: validUsers,
+      // Calculate summary safely with explicit checks
+      let totalMenuItems = 0
+      let totalOrders = 0
+      let usersWithMenuItems = 0
+      let usersWithOrders = 0
+      
+      try {
+        for (const u of usersWithCounts) {
+          if (u && typeof u === 'object') {
+            const menuCount = Number(u.menu_items_count) || 0
+            const orderCount = Number(u.orders_count) || 0
+            
+            if (!isNaN(menuCount)) {
+              totalMenuItems += menuCount
+              if (menuCount > 0) usersWithMenuItems++
+            }
+            
+            if (!isNaN(orderCount)) {
+              totalOrders += orderCount
+              if (orderCount > 0) usersWithOrders++
+            }
+          }
+        }
+      } catch (summaryError: any) {
+        console.error('Error calculating summary:', summaryError)
+      }
+
+      const summary = {
+        totalUsers: Number(total) || 0,
+        usersWithMenuItems,
+        usersWithOrders,
+        totalMenuItems,
+        totalOrders,
+      }
+
+      const responseData = {
+        users: usersWithCounts,
         pagination: {
           page: Number(page) || 1,
           limit: Number(limit) || 50,
@@ -251,7 +296,9 @@ export async function GET(request: NextRequest) {
           totalPages: Math.ceil((Number(total) || 0) / (Number(limit) || 50)),
         },
         summary,
-      })
+      }
+
+      return NextResponse.json(responseData)
     } finally {
       connection.release()
     }
