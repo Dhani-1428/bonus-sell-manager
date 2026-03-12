@@ -93,8 +93,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session) {
       // Initialize user data and migrate localStorage to database
+      // Add a small delay to ensure session cookie is fully set
       const initializeUserData = async () => {
         try {
+          // Wait a bit to ensure session cookie is set
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
           const user = getUserById(session.userId)
           if (!user) {
             // User not in localStorage - initialize it client-side
@@ -103,14 +107,38 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           }
 
           // Migrate localStorage data to database if it exists
+          // Add retry logic for migration
           const { hasLocalStorageData, migrateLocalStorageToDatabase } = await import("@/lib/migrate-localStorage-to-db")
           if (hasLocalStorageData(session.userId)) {
             console.log("Found localStorage data, migrating to database...")
-            const migrationResult = await migrateLocalStorageToDatabase(session.userId)
-            if (migrationResult.success) {
-              console.log("✅ Migration successful:", migrationResult.migrated)
-            } else {
-              console.warn("⚠️ Migration had errors:", migrationResult.errors)
+            
+            // Retry migration up to 3 times with delays
+            let migrationResult = null
+            let retries = 3
+            while (retries > 0 && (!migrationResult || !migrationResult.success)) {
+              try {
+                migrationResult = await migrateLocalStorageToDatabase(session.userId)
+                if (migrationResult.success) {
+                  console.log("✅ Migration successful:", migrationResult.migrated)
+                  break
+                } else {
+                  console.warn(`⚠️ Migration attempt ${4 - retries} failed:`, migrationResult.errors)
+                  retries--
+                  if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second before retry
+                  }
+                }
+              } catch (err: any) {
+                console.warn(`⚠️ Migration attempt ${4 - retries} error:`, err)
+                retries--
+                if (retries > 0) {
+                  await new Promise(resolve => setTimeout(resolve, 1000))
+                }
+              }
+            }
+            
+            if (!migrationResult || !migrationResult.success) {
+              console.warn("⚠️ Migration failed after all retries:", migrationResult?.errors || "Unknown error")
             }
           }
         } catch (err) {
