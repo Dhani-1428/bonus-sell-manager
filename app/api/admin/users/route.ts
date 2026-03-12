@@ -126,12 +126,15 @@ export async function GET(request: NextRequest) {
           
           [users] = await connection.execute(fallbackQuery, fallbackParams) as any[]
           // Set default values for missing columns
-          users = users.map((u: any) => {
+          users = (users || []).map((u: any) => {
+            if (!u || typeof u !== 'object') {
+              return null
+            }
             return {
-              id: u.id,
-              name: u.name,
-              email: u.email,
-              created_at: u.created_at,
+              id: u.id || '',
+              name: u.name || '',
+              email: u.email || '',
+              created_at: u.created_at || new Date().toISOString(),
               trial_start_date: u.trial_start_date || null,
               subscription_status: u.subscription_status || 'trial',
               subscription_end_date: u.subscription_end_date || null,
@@ -141,7 +144,7 @@ export async function GET(request: NextRequest) {
               menu_items_count: Number(u.menu_items_count) || 0,
               orders_count: Number(u.orders_count) || 0,
             }
-          })
+          }).filter((u: any) => u !== null)
         } else {
           throw error
         }
@@ -189,41 +192,60 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Ensure users is always an array
+      if (!Array.isArray(users)) {
+        console.error('Users is not an array:', users)
+        users = []
+      }
+
       // Ensure counts are numbers and handle undefined/null values
-      const usersWithCounts = users.map((u: any) => {
+      const usersWithCounts = (users || []).map((u: any) => {
+        // Skip if user is null/undefined
+        if (!u || typeof u !== 'object') {
+          return null
+        }
+
         // Safely extract all user properties
         const userData: any = {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          created_at: u.created_at,
+          id: u.id || '',
+          name: u.name || '',
+          email: u.email || '',
+          created_at: u.created_at || new Date().toISOString(),
           trial_start_date: u.trial_start_date || null,
           subscription_status: u.subscription_status || 'trial',
           subscription_end_date: u.subscription_end_date || null,
           subscription_plan: u.subscription_plan || null,
           role: u.role || 'user',
-          trial_expiration_email_sent: u.trial_expiration_email_sent || false,
+          trial_expiration_email_sent: Boolean(u.trial_expiration_email_sent),
           menu_items_count: Number(u.menu_items_count) || 0,
           orders_count: Number(u.orders_count) || 0,
         }
         return userData
-      })
+      }).filter((u: any) => u !== null) // Remove any null entries
+
+      // Calculate summary safely
+      const validUsers = Array.isArray(usersWithCounts) ? usersWithCounts : []
+      const summary = {
+        totalUsers: Number(total) || 0,
+        usersWithMenuItems: validUsers.filter((u: any) => u && Number(u.menu_items_count) > 0).length,
+        usersWithOrders: validUsers.filter((u: any) => u && Number(u.orders_count) > 0).length,
+        totalMenuItems: validUsers.reduce((sum: number, u: any) => {
+          return sum + (u ? (Number(u.menu_items_count) || 0) : 0)
+        }, 0),
+        totalOrders: validUsers.reduce((sum: number, u: any) => {
+          return sum + (u ? (Number(u.orders_count) || 0) : 0)
+        }, 0),
+      }
 
       return NextResponse.json({
-        users: usersWithCounts,
+        users: validUsers,
         pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit),
+          page: Number(page) || 1,
+          limit: Number(limit) || 50,
+          total: Number(total) || 0,
+          totalPages: Math.ceil((Number(total) || 0) / (Number(limit) || 50)),
         },
-        summary: {
-          totalUsers: total,
-          usersWithMenuItems: usersWithCounts.filter((u: any) => u.menu_items_count > 0).length,
-          usersWithOrders: usersWithCounts.filter((u: any) => u.orders_count > 0).length,
-          totalMenuItems: usersWithCounts.reduce((sum: number, u: any) => sum + u.menu_items_count, 0),
-          totalOrders: usersWithCounts.reduce((sum: number, u: any) => sum + u.orders_count, 0),
-        },
+        summary,
       })
     } finally {
       connection.release()
