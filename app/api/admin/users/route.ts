@@ -82,12 +82,15 @@ export async function GET(request: NextRequest) {
       // Use template literals for LIMIT/OFFSET to avoid parameter issues
       query += ` ORDER BY u.created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
 
-      let users: any[]
+      let users: any[] = []
       try {
         console.log('Executing query:', query)
         console.log('With params:', params)
-        [users] = await connection.execute(query, params) as any[]
+        const result = await connection.execute(query, params) as any[]
+        users = Array.isArray(result[0]) ? result[0] : []
+        console.log('Query result:', users.length, 'users found')
       } catch (error: any) {
+        console.error('Query execution error:', error)
         // If column doesn't exist, retry without it
         if (error.message && (error.message.includes("trial_expiration_email_sent") || error.message.includes("Unknown column 'role'"))) {
           // If role column doesn't exist, get all users (no role filtering)
@@ -124,7 +127,13 @@ export async function GET(request: NextRequest) {
           // Use template literals for LIMIT/OFFSET to avoid parameter issues
           fallbackQuery += ` ORDER BY u.created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
           
-          [users] = await connection.execute(fallbackQuery, fallbackParams) as any[]
+          try {
+            const fallbackResult = await connection.execute(fallbackQuery, fallbackParams) as any[]
+            users = Array.isArray(fallbackResult[0]) ? fallbackResult[0] : []
+          } catch (fallbackError: any) {
+            console.error('Fallback query error:', fallbackError)
+            users = []
+          }
           // Set default values for missing columns
           users = (users || []).map((u: any) => {
             if (!u || typeof u !== 'object') {
