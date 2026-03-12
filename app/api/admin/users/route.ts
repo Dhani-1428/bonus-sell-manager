@@ -70,17 +70,17 @@ export async function GET(request: NextRequest) {
       const params: any[] = []
 
       if (search) {
-        query += ` AND (name LIKE ? OR email LIKE ?)`
+        query += ` AND (u.name LIKE ? OR u.email LIKE ?)`
         params.push(`%${search}%`, `%${search}%`)
       }
 
       if (statusFilter) {
-        query += ` AND subscription_status = ?`
+        query += ` AND u.subscription_status = ?`
         params.push(statusFilter)
       }
 
       // Use template literals for LIMIT/OFFSET to avoid parameter issues
-      query += ` ORDER BY created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
+      query += ` ORDER BY u.created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
 
       let users: any[]
       try {
@@ -112,43 +112,52 @@ export async function GET(request: NextRequest) {
           const fallbackParams: any[] = []
           
           if (search) {
-            fallbackQuery += ` AND (name LIKE ? OR email LIKE ?)`
+            fallbackQuery += ` AND (u.name LIKE ? OR u.email LIKE ?)`
             fallbackParams.push(`%${search}%`, `%${search}%`)
           }
 
           if (statusFilter) {
-            fallbackQuery += ` AND subscription_status = ?`
+            fallbackQuery += ` AND u.subscription_status = ?`
             fallbackParams.push(statusFilter)
           }
 
           // Use template literals for LIMIT/OFFSET to avoid parameter issues
-          fallbackQuery += ` ORDER BY created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
+          fallbackQuery += ` ORDER BY u.created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
           
           [users] = await connection.execute(fallbackQuery, fallbackParams) as any[]
           // Set default values for missing columns
-          users = users.map((u: any) => ({ 
-            ...u, 
-            trial_expiration_email_sent: false,
-            role: 'user',
-            menu_items_count: Number(u.menu_items_count) || 0,
-            orders_count: Number(u.orders_count) || 0
-          }))
+          users = users.map((u: any) => {
+            return {
+              id: u.id,
+              name: u.name,
+              email: u.email,
+              created_at: u.created_at,
+              trial_start_date: u.trial_start_date || null,
+              subscription_status: u.subscription_status || 'trial',
+              subscription_end_date: u.subscription_end_date || null,
+              subscription_plan: u.subscription_plan || null,
+              trial_expiration_email_sent: false,
+              role: 'user',
+              menu_items_count: Number(u.menu_items_count) || 0,
+              orders_count: Number(u.orders_count) || 0,
+            }
+          })
         } else {
           throw error
         }
       }
 
       // Get total count
-      let countQuery = `SELECT COUNT(*) as total FROM users WHERE (role != 'super_admin' OR role IS NULL)`
+      let countQuery = `SELECT COUNT(*) as total FROM users u WHERE (u.role != 'super_admin' OR u.role IS NULL)`
       const countParams: any[] = []
 
       if (search) {
-        countQuery += ` AND (name LIKE ? OR email LIKE ?)`
+        countQuery += ` AND (u.name LIKE ? OR u.email LIKE ?)`
         countParams.push(`%${search}%`, `%${search}%`)
       }
 
       if (statusFilter) {
-        countQuery += ` AND subscription_status = ?`
+        countQuery += ` AND u.subscription_status = ?`
         countParams.push(statusFilter)
       }
 
@@ -160,16 +169,16 @@ export async function GET(request: NextRequest) {
         // If role column doesn't exist, count all users
         if (countError.message && countError.message.includes("Unknown column 'role'")) {
           console.warn('⚠️  Role column not found. Counting all users. Run /api/db/migrate-role to add it.');
-          let fallbackCountQuery = `SELECT COUNT(*) as total FROM users WHERE 1=1`
+          let fallbackCountQuery = `SELECT COUNT(*) as total FROM users u WHERE 1=1`
           const fallbackParams: any[] = []
           
           if (search) {
-            fallbackCountQuery += ` AND (name LIKE ? OR email LIKE ?)`
+            fallbackCountQuery += ` AND (u.name LIKE ? OR u.email LIKE ?)`
             fallbackParams.push(`%${search}%`, `%${search}%`)
           }
 
           if (statusFilter) {
-            fallbackCountQuery += ` AND subscription_status = ?`
+            fallbackCountQuery += ` AND u.subscription_status = ?`
             fallbackParams.push(statusFilter)
           }
 
@@ -180,12 +189,25 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Ensure counts are numbers
-      const usersWithCounts = users.map((u: any) => ({
-        ...u,
-        menu_items_count: Number(u.menu_items_count) || 0,
-        orders_count: Number(u.orders_count) || 0,
-      }))
+      // Ensure counts are numbers and handle undefined/null values
+      const usersWithCounts = users.map((u: any) => {
+        // Safely extract all user properties
+        const userData: any = {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          created_at: u.created_at,
+          trial_start_date: u.trial_start_date || null,
+          subscription_status: u.subscription_status || 'trial',
+          subscription_end_date: u.subscription_end_date || null,
+          subscription_plan: u.subscription_plan || null,
+          role: u.role || 'user',
+          trial_expiration_email_sent: u.trial_expiration_email_sent || false,
+          menu_items_count: Number(u.menu_items_count) || 0,
+          orders_count: Number(u.orders_count) || 0,
+        }
+        return userData
+      })
 
       return NextResponse.json({
         users: usersWithCounts,
