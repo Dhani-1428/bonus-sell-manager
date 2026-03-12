@@ -21,13 +21,17 @@ export async function GET(
     
     // Verify user is authenticated and accessing their own data
     if (!session) {
+      console.log(`[GET /api/users/${params.userId}/menu-items] No session found`)
       return NextResponse.json(
         { error: "Unauthorized - Please sign in" },
         { status: 401 }
       )
     }
     
+    console.log(`[GET /api/users/${params.userId}/menu-items] Session userId: ${session.userId}, Request userId: ${params.userId}`)
+    
     if (session.userId !== params.userId) {
+      console.log(`[GET /api/users/${params.userId}/menu-items] User ID mismatch - Forbidden`)
       return NextResponse.json(
         { error: "Forbidden - Cannot access other user's data" },
         { status: 403 }

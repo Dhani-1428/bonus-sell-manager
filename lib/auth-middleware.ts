@@ -12,22 +12,28 @@ export async function getSession() {
     const sessionId = cookieStore.get("session")?.value
 
     if (!sessionId) {
+      console.log("[getSession] No session cookie found")
       return null
     }
+
+    console.log("[getSession] Session cookie found:", sessionId.substring(0, 20) + "...")
 
     const user = await getUserById(sessionId)
 
     if (!user) {
+      console.log("[getSession] User not found for sessionId:", sessionId.substring(0, 20) + "...")
       return null
     }
 
+    console.log("[getSession] User found:", user.email)
     return {
       userId: user.id,
       email: user.email,
       name: user.name,
     }
-  } catch (error) {
-    console.error("Session error:", error)
+  } catch (error: any) {
+    console.error("[getSession] Session error:", error.message || error)
+    console.error("[getSession] Error stack:", error.stack)
     return null
   }
 }
