@@ -714,8 +714,13 @@ export default function MenuPage() {
   }
 
   const handleImageUpload = async (file: File) => {
-    if (!session) return
+    if (!session) {
+      toast.error("Session expired. Please refresh the page.")
+      return
+    }
 
+    console.log("📸 Image upload started:", file.name, file.size, "bytes")
+    
     setIsProcessing(true)
     setOcrDialogOpen(true)
     setImagePreview(URL.createObjectURL(file))
