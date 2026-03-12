@@ -31,7 +31,8 @@ export default function AdminMenuItemsPage() {
   const router = useRouter()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("")
+  // Use explicit "all" value instead of empty string to avoid Select value errors
+  const [categoryFilter, setCategoryFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
   const [pagination, setPagination] = useState({
     page: 1,
@@ -52,7 +53,9 @@ export default function AdminMenuItemsPage() {
         limit: pagination.limit.toString(),
       })
       if (searchTerm) params.append("search", searchTerm)
-      if (categoryFilter) params.append("category", categoryFilter)
+      if (categoryFilter && categoryFilter !== "all") {
+        params.append("category", categoryFilter)
+      }
 
       const response = await fetch(`/api/admin/menu-items?${params}`)
       const data = await response.json()
@@ -163,7 +166,7 @@ export default function AdminMenuItemsPage() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
