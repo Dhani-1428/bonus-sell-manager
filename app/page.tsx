@@ -148,16 +148,26 @@ export default function LandingPage() {
   }
 
   // If user has session and we're on home page, redirect immediately (fallback)
+  // But check for logout flag first
   if (session && !showAnimation && typeof window !== "undefined" && !hasRedirected) {
-    const currentPath = window.location.pathname
-    // Only redirect from home page
-    if (currentPath === "/") {
-      // Redirect immediately - don't wait
-      setHasRedirected(true)
-      console.log('🔄 Immediate redirect to dashboard (fallback), session:', session);
-      redirectToDashboard(session)
-      // Show loader while redirecting
-      return <CookingLoader text="Opening your dashboard..." />
+    // Check for logout flag - if present, don't auto-redirect
+    const logoutFlag = document.cookie.split('; ').find(row => row.startsWith('logout_flag='))
+    if (logoutFlag) {
+      console.log("🚫 Logout flag detected in fallback - preventing auto-redirect")
+      // Clear the logout flag cookie
+      document.cookie = "logout_flag=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      // Don't redirect - show landing page instead
+    } else {
+      const currentPath = window.location.pathname
+      // Only redirect from home page
+      if (currentPath === "/") {
+        // Redirect immediately - don't wait
+        setHasRedirected(true)
+        console.log('🔄 Immediate redirect to dashboard (fallback), session:', session);
+        redirectToDashboard(session)
+        // Show loader while redirecting
+        return <CookingLoader text="Opening your dashboard..." />
+      }
     }
   }
 
