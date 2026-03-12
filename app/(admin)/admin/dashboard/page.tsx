@@ -133,142 +133,167 @@ export default function AdminDashboardPage() {
 
 
 
+  const statCards = [
+    {
+      title: "Total Users",
+      value: stats.totalUsers,
+      description: "Registered users",
+      icon: Users,
+      gradient: "from-blue-500 to-blue-600",
+      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+      iconColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      title: "Total Menu Items",
+      value: stats.totalMenuItems,
+      description: "Across all users",
+      icon: UtensilsCrossed,
+      gradient: "from-purple-500 to-purple-600",
+      iconBg: "bg-purple-100 dark:bg-purple-900/30",
+      iconColor: "text-purple-600 dark:text-purple-400",
+    },
+    {
+      title: "Total Orders",
+      value: stats.totalOrders,
+      description: "All time orders",
+      icon: ShoppingCart,
+      gradient: "from-green-500 to-green-600",
+      iconBg: "bg-green-100 dark:bg-green-900/30",
+      iconColor: "text-green-600 dark:text-green-400",
+    },
+    {
+      title: "Active Subscriptions",
+      value: stats.activeSubscriptions,
+      description: "Currently active",
+      icon: TrendingUp,
+      gradient: "from-orange-500 to-orange-600",
+      iconBg: "bg-orange-100 dark:bg-orange-900/30",
+      iconColor: "text-orange-600 dark:text-orange-400",
+    },
+    {
+      title: "Total Revenue",
+      value: `€${stats.totalRevenue.toFixed(2)}`,
+      description: "From completed payments",
+      icon: DollarSign,
+      gradient: "from-emerald-500 to-emerald-600",
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      title: "Pending Payments",
+      value: stats.pendingPayments,
+      description: "Awaiting approval",
+      icon: CreditCard,
+      gradient: "from-rose-500 to-rose-600",
+      iconBg: "bg-rose-100 dark:bg-rose-900/30",
+      iconColor: "text-rose-600 dark:text-rose-400",
+    },
+  ]
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Overview of users, subscriptions, and payments</p>
+    <div className="space-y-8 p-1">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground text-lg">Overview of users, subscriptions, and payments</p>
       </div>
       
       {/* Stats Cards */}
       {isLoadingStats ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <Card key={i} className="border-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-sm font-medium">
-                  <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                  <div className="h-4 w-32 bg-muted animate-pulse rounded" />
                 </CardTitle>
+                <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                <div className="h-10 w-24 bg-muted animate-pulse rounded mb-2" />
+                <div className="h-3 w-40 bg-muted animate-pulse rounded" />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Registered users
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Menu Items</CardTitle>
-                <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalMenuItems}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Across all users
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalOrders}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  All time orders
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Currently active
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">€{stats.totalRevenue.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  From completed payments
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
-                <CreditCard className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingPayments}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Awaiting approval
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {statCards.map((stat, index) => {
+              const Icon = stat.icon
+              return (
+                <Card 
+                  key={index} 
+                  className="border-2 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] group relative overflow-hidden"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                    <CardTitle className="text-sm font-semibold text-foreground">{stat.title}</CardTitle>
+                    <div className={`${stat.iconBg} p-2.5 rounded-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold tracking-tight mb-1">{stat.value}</div>
+                    <p className="text-xs text-muted-foreground font-medium">
+                      {stat.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
 
           {/* Quick Actions */}
-          <div className="grid gap-4 md:grid-cols-3 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Users</CardTitle>
-                <CardDescription>Manage all user accounts</CardDescription>
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:border-primary/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                    <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold">Users</CardTitle>
+                </div>
+                <CardDescription className="text-sm">Manage all user accounts and their details</CardDescription>
               </CardHeader>
               <CardContent>
                 <Link href="/admin/users">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-colors">
                     View All Users
                   </Button>
                 </Link>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Menu Items</CardTitle>
-                <CardDescription>View all menu items</CardDescription>
+            <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:border-primary/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
+                    <UtensilsCrossed className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold">Menu Items</CardTitle>
+                </div>
+                <CardDescription className="text-sm">View and manage all menu items from all users</CardDescription>
               </CardHeader>
               <CardContent>
                 <Link href="/admin/menu-items">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-colors">
                     View All Menus
                   </Button>
                 </Link>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-medium">Orders</CardTitle>
-                <CardDescription>View all orders</CardDescription>
+            <Card className="border-2 hover:shadow-lg transition-all duration-300 hover:border-primary/50">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+                    <ShoppingCart className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <CardTitle className="text-lg font-semibold">Orders</CardTitle>
+                </div>
+                <CardDescription className="text-sm">View and manage all orders from all users</CardDescription>
               </CardHeader>
               <CardContent>
                 <Link href="/admin/orders">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-colors">
                     View All Orders
                   </Button>
                 </Link>

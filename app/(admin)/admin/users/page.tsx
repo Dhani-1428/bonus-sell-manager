@@ -53,39 +53,62 @@ export default function UsersPage() {
   }
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
-      trial: { variant: "outline", label: "Trial" },
-      active: { variant: "default", label: "Active" },
-      expired: { variant: "destructive", label: "Expired" },
-      cancelled: { variant: "secondary", label: "Cancelled" },
+    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string, className?: string }> = {
+      trial: { 
+        variant: "outline", 
+        label: "Trial",
+        className: "border-blue-300 text-blue-700 dark:text-blue-400 dark:border-blue-700"
+      },
+      active: { 
+        variant: "default", 
+        label: "Active",
+        className: "bg-green-500 hover:bg-green-600 text-white border-0"
+      },
+      expired: { 
+        variant: "destructive", 
+        label: "Expired",
+        className: "bg-red-500 hover:bg-red-600 text-white border-0"
+      },
+      cancelled: { 
+        variant: "secondary", 
+        label: "Cancelled",
+        className: "bg-gray-500 hover:bg-gray-600 text-white border-0"
+      },
     }
 
-    const config = variants[status] || { variant: "outline" as const, label: status }
-    return <Badge variant={config.variant}>{config.label}</Badge>
+    const config = variants[status] || { variant: "outline" as const, label: status, className: "" }
+    return (
+      <Badge 
+        variant={config.variant} 
+        className={`font-medium ${config.className || ""}`}
+      >
+        {config.label}
+      </Badge>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Users</h1>
-        <p className="text-muted-foreground">Manage all user accounts and subscriptions</p>
+    <div className="space-y-6 p-1">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold tracking-tight">Users</h1>
+        <p className="text-muted-foreground text-lg">Manage all user accounts and subscriptions</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>All Users</CardTitle>
+      <Card className="border-2 shadow-sm">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-semibold">All Users</CardTitle>
               <CardDescription>View and manage user accounts</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 w-64"
+                  className="pl-9 w-full sm:w-64 h-10 border-2 focus:border-primary transition-colors"
                 />
               </div>
             </div>
@@ -93,57 +116,78 @@ export default function UsersPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading users...</div>
+            <div className="text-center py-12">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+              <p className="text-muted-foreground mt-4">Loading users...</p>
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No users found
-                    </TableCell>
+            <div className="rounded-lg border-2 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="font-semibold">Name</TableHead>
+                    <TableHead className="font-semibold">Email</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Plan</TableHead>
+                    <TableHead className="font-semibold">Created</TableHead>
+                    <TableHead className="font-semibold text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{getStatusBadge(user.subscription_status)}</TableCell>
-                      <TableCell>
-                        {user.subscription_plan ? (
-                          <Badge variant="outline">{user.subscription_plan}</Badge>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/admin/users/${user.id}`)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {users.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                        <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p className="text-lg font-medium">No users found</p>
+                        <p className="text-sm mt-1">Try adjusting your search terms</p>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    users.map((user) => (
+                      <TableRow 
+                        key={user.id} 
+                        className="hover:bg-muted/30 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/admin/users/${user.id}`)}
+                      >
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                        <TableCell>
+                          {getStatusBadge(user.subscription_status)}
+                        </TableCell>
+                        <TableCell>
+                          {user.subscription_plan ? (
+                            <Badge variant="outline" className="font-medium">{user.subscription_plan}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {new Date(user.created_at).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/admin/users/${user.id}`)
+                            }}
+                            className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
