@@ -19,11 +19,25 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Validate userId parameter
-    const userId = params?.userId
-    if (!userId || userId === 'undefined' || userId === 'null') {
+    // Validate userId parameter - handle both direct access and Promise
+    let userId: string | undefined
+    if (params && typeof params === 'object' && 'userId' in params) {
+      userId = params.userId
+    } else if (params && typeof params === 'object' && 'then' in params) {
+      // Handle Promise case (Next.js 15+)
+      const resolvedParams = await params as any
+      userId = resolvedParams?.userId
+    } else {
+      userId = undefined
+    }
+
+    console.log('[GET /api/admin/users/[userId]] params:', params)
+    console.log('[GET /api/admin/users/[userId]] userId:', userId)
+
+    if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined' || userId === 'null') {
+      console.error('[GET /api/admin/users/[userId]] Invalid userId:', userId)
       return NextResponse.json(
-        { error: "Invalid user ID" },
+        { error: "Invalid user ID", received: userId },
         { status: 400 }
       )
     }
@@ -181,11 +195,25 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Validate userId parameter
-    const userId = params?.userId
-    if (!userId || userId === 'undefined' || userId === 'null') {
+    // Validate userId parameter - handle both direct access and Promise
+    let userId: string | undefined
+    if (params && typeof params === 'object' && 'userId' in params) {
+      userId = params.userId
+    } else if (params && typeof params === 'object' && 'then' in params) {
+      // Handle Promise case (Next.js 15+)
+      const resolvedParams = await params as any
+      userId = resolvedParams?.userId
+    } else {
+      userId = undefined
+    }
+
+    console.log('[PUT /api/admin/users/[userId]] params:', params)
+    console.log('[PUT /api/admin/users/[userId]] userId:', userId)
+
+    if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined' || userId === 'null') {
+      console.error('[PUT /api/admin/users/[userId]] Invalid userId:', userId)
       return NextResponse.json(
-        { error: "Invalid user ID" },
+        { error: "Invalid user ID", received: userId },
         { status: 400 }
       )
     }
