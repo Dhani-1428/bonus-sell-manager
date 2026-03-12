@@ -884,10 +884,47 @@ export default function MenuPage() {
     }
 
     setIsProcessing(false)
+    setProcessingStep("")
 
     if (addedCount > 0) {
       toast.success(`Successfully added ${addedCount} menu item${addedCount === 1 ? '' : 's'}!`)
-      await refreshItems()
+      
+      // Wait a bit for database to commit, then refresh
+      console.log(`✅ Added ${addedCount} items, refreshing menu...`)
+      await new Promise(resolve => setTimeout(resolve, 500)) // Wait 500ms for DB commit
+      
+      // Refresh items with retry logic
+      let refreshAttempts = 3
+      let refreshed = false
+      while (refreshAttempts > 0 && !refreshed) {
+        try {
+          const fetchedItems = await getMenuItems(session.userId)
+          console.log(`📋 Refreshed menu: Found ${fetchedItems.length} items`)
+          setItems(fetchedItems)
+          
+          if (fetchedItems.length >= addedCount) {
+            refreshed = true
+            console.log(`✅ Menu refreshed successfully with ${fetchedItems.length} items`)
+          } else {
+            console.warn(`⚠️ Expected at least ${addedCount} items, but found ${fetchedItems.length}. Retrying...`)
+            refreshAttempts--
+            if (refreshAttempts > 0) {
+              await new Promise(resolve => setTimeout(resolve, 500))
+            }
+          }
+        } catch (error) {
+          console.error("Error refreshing menu items:", error)
+          refreshAttempts--
+          if (refreshAttempts > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        }
+      }
+      
+      if (!refreshed) {
+        console.error("⚠️ Failed to refresh menu after multiple attempts")
+        toast.warning("Items were added but menu refresh failed. Please refresh the page.")
+      }
       
       // Close dialog after successful addition
       setOcrDialogOpen(false)
