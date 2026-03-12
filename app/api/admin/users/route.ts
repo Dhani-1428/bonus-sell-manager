@@ -10,29 +10,79 @@ import { isSuperAdmin } from "@/lib/admin-auth"
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
-    let sessionId = cookieStore.get("admin_session")?.value
+    const adminSessionCookie = cookieStore.get("admin_session")
+    const regularSessionCookie = cookieStore.get("session")
+    
+    console.log('🔐 Admin Users API - Cookie check:', {
+      hasAdminSession: !!adminSessionCookie?.value,
+      hasRegularSession: !!regularSessionCookie?.value,
+      adminSessionValue: adminSessionCookie?.value?.substring(0, 20) + '...',
+      regularSessionValue: regularSessionCookie?.value?.substring(0, 20) + '...',
+    })
+    
+    let sessionId = adminSessionCookie?.value
 
     // If no admin_session, check regular session cookie
     // This allows super_admins to access admin panel after logging in via Google or email/password
     if (!sessionId) {
-      sessionId = cookieStore.get("session")?.value
+      sessionId = regularSessionCookie?.value
+      console.log('📝 Using regular session cookie instead of admin_session')
     }
 
     if (!sessionId) {
+      console.error('❌ No session cookie found')
       return NextResponse.json(
-        { error: "Not authenticated" },
+        { error: "Not authenticated - No session cookie found. Please log in again." },
         { status: 401 }
       )
     }
 
+    console.log('✅ Session ID found:', sessionId.substring(0, 20) + '...')
+    
     // Verify super admin
+    console.log('🔍 Verifying super admin status...')
     const isAdmin = await isSuperAdmin(sessionId)
+    
     if (!isAdmin) {
-      return NextResponse.json(
-        { error: "Unauthorized - Super admin access required" },
-        { status: 403 }
-      )
+      console.error('❌ User is not a super admin. Session ID:', sessionId.substring(0, 20) + '...')
+      
+      // Check if user exists at all
+      const pool = getPool()
+      const connection = await pool.getConnection()
+      try {
+        const [userRows] = await connection.execute(
+          'SELECT id, email, role FROM users WHERE id = ?',
+          [sessionId]
+        ) as any[]
+        
+        if (userRows.length === 0) {
+          console.error('❌ User not found in database')
+          return NextResponse.json(
+            { error: "User not found. Please log in again." },
+            { status: 401 }
+          )
+        }
+        
+        const user = userRows[0]
+        console.error('❌ User found but not super admin:', {
+          id: user.id,
+          email: user.email,
+          role: user.role || 'NULL',
+        })
+        
+        return NextResponse.json(
+          { 
+            error: `Unauthorized - Super admin access required. Your role is: ${user.role || 'user'}. Please contact an administrator.`,
+            userRole: user.role || 'user'
+          },
+          { status: 403 }
+        )
+      } finally {
+        connection.release()
+      }
     }
+    
+    console.log('✅ Super admin verified successfully')
 
     const pool = getPool()
     const connection = await pool.getConnection()
