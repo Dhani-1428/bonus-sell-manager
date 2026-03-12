@@ -188,37 +188,40 @@ export async function PUT(
     try {
       // Build update query dynamically
       const updates: string[] = []
-      const params: any[] = []
+      const queryParams: any[] = []
 
-      if (name !== undefined) {
+      if (name !== undefined && name !== null) {
         updates.push("name = ?")
-        params.push(name)
+        queryParams.push(name)
       }
-      if (email !== undefined) {
+      if (email !== undefined && email !== null) {
         updates.push("email = ?")
-        params.push(email.toLowerCase())
+        queryParams.push(email.toLowerCase())
       }
-      if (subscription_status !== undefined) {
+      if (subscription_status !== undefined && subscription_status !== null) {
         updates.push("subscription_status = ?")
-        params.push(subscription_status)
+        queryParams.push(subscription_status)
       }
       if (subscription_end_date !== undefined) {
         updates.push("subscription_end_date = ?")
-        params.push(subscription_end_date)
+        // Convert empty string to null for SQL
+        queryParams.push(subscription_end_date === "" ? null : subscription_end_date)
       }
       if (subscription_plan !== undefined) {
         updates.push("subscription_plan = ?")
-        params.push(subscription_plan)
+        // Convert empty string to null for SQL
+        queryParams.push(subscription_plan === "" ? null : subscription_plan)
       }
       if (trial_start_date !== undefined) {
         updates.push("trial_start_date = ?")
-        params.push(trial_start_date)
+        // Convert empty string to null for SQL
+        queryParams.push(trial_start_date === "" ? null : trial_start_date)
       }
-      if (role !== undefined) {
+      if (role !== undefined && role !== null) {
         // Prevent changing super_admin role
         if (role !== 'super_admin') {
           updates.push("role = ?")
-          params.push(role)
+          queryParams.push(role)
         }
       }
 
@@ -229,11 +232,12 @@ export async function PUT(
         )
       }
 
-      params.push(params.userId)
+      // Add userId at the end for WHERE clause
+      queryParams.push(params.userId)
 
       await connection.execute(
         `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
-        params
+        queryParams
       )
 
       // Get updated user
