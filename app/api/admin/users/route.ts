@@ -74,9 +74,8 @@ export async function GET(request: NextRequest) {
         params.push(statusFilter)
       }
 
-      query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
-      // Ensure limit and offset are numbers
-      params.push(Number(limit), Number(offset))
+      // Use template literals for LIMIT/OFFSET to avoid parameter issues
+      query += ` ORDER BY created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
 
       let users: any[]
       try {
@@ -112,9 +111,8 @@ export async function GET(request: NextRequest) {
             fallbackParams.push(statusFilter)
           }
 
-          fallbackQuery += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
-          // Ensure limit and offset are numbers
-          fallbackParams.push(Number(limit), Number(offset))
+          // Use template literals for LIMIT/OFFSET to avoid parameter issues
+          fallbackQuery += ` ORDER BY created_at DESC LIMIT ${Number(limit)} OFFSET ${Number(offset)}`
           
           [users] = await connection.execute(fallbackQuery, fallbackParams) as any[]
           // Set default values for missing columns
