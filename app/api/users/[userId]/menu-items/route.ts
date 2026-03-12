@@ -111,7 +111,18 @@ export async function PUT(
     const session = await getSession()
     
     // Verify user is accessing their own data
-    if (!session || session.userId !== params.userId) {
+    if (!session) {
+      console.log(`[PUT /api/users/${params.userId}/menu-items] No session found`)
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+    
+    console.log(`[PUT /api/users/${params.userId}/menu-items] Session userId: ${session.userId}, Request userId: ${params.userId}`)
+    
+    if (session.userId !== params.userId) {
+      console.log(`[PUT /api/users/${params.userId}/menu-items] User ID mismatch - Forbidden`)
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
