@@ -132,13 +132,26 @@ export async function GET(
         [userId]
       ) as any[]
 
+      // Ensure no undefined values in response
+      const userData = users[0]
+      const safeUser = {
+        ...userData,
+        trial_start_date: userData.trial_start_date || null,
+        subscription_end_date: userData.subscription_end_date || null,
+        subscription_plan: userData.subscription_plan || null,
+        role: userData.role || 'user',
+        trial_expiration_email_sent: userData.trial_expiration_email_sent ?? false,
+        google_id: userData.google_id || null,
+        avatar: userData.avatar || null,
+      }
+
       return NextResponse.json({
-        user: users[0],
+        user: safeUser,
         stats: {
           ordersCount: ordersCount[0]?.count || 0,
           menuItemsCount: menuItemsCount[0]?.count || 0,
         },
-        recentPayments: payments,
+        recentPayments: payments || [],
       })
     } finally {
       connection.release()
