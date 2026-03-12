@@ -9,7 +9,10 @@ import type { MenuItem, Order, RestaurantSettings } from "./types"
 // Menu Items
 export async function getMenuItems(userId: string): Promise<MenuItem[]> {
   try {
-    const response = await fetch(`/api/users/${userId}/menu-items`)
+    const response = await fetch(`/api/users/${userId}/menu-items`, {
+      credentials: 'include',
+      cache: 'no-store'
+    })
     if (!response.ok) {
       console.error("Error fetching menu items:", response.statusText)
       return []
@@ -28,9 +31,11 @@ export async function saveMenuItems(userId: string, items: MenuItem[]): Promise<
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
+      credentials: 'include',
     })
     if (!response.ok) {
-      throw new Error("Failed to save menu items")
+      const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+      throw new Error(errorData.error || "Failed to save menu items")
     }
   } catch (error) {
     console.error("Error saving menu items:", error)
@@ -44,6 +49,7 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, "id" | "c
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item),
+      credentials: 'include',
     })
     
     if (!response.ok) {
@@ -92,6 +98,7 @@ export async function updateMenuItem(userId: string, id: string, data: Partial<M
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      credentials: 'include',
     })
     if (!response.ok) {
       if (response.status === 404) return null
@@ -109,6 +116,7 @@ export async function deleteMenuItem(userId: string, id: string): Promise<boolea
   try {
     const response = await fetch(`/api/users/${userId}/menu-items/${id}`, {
       method: "DELETE",
+      credentials: 'include',
     })
     if (!response.ok) {
       if (response.status === 404) return false
@@ -125,7 +133,10 @@ export async function deleteMenuItem(userId: string, id: string): Promise<boolea
 // Orders
 export async function getOrders(userId: string): Promise<Order[]> {
   try {
-    const response = await fetch(`/api/users/${userId}/orders`)
+    const response = await fetch(`/api/users/${userId}/orders`, {
+      credentials: 'include',
+      cache: 'no-store'
+    })
     if (!response.ok) {
       console.error("Error fetching orders:", response.statusText)
       return []
@@ -144,9 +155,11 @@ export async function saveOrders(userId: string, orders: Order[]): Promise<void>
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orders }),
+      credentials: 'include',
     })
     if (!response.ok) {
-      throw new Error("Failed to save orders")
+      const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+      throw new Error(errorData.error || "Failed to save orders")
     }
   } catch (error) {
     console.error("Error saving orders:", error)
@@ -160,6 +173,7 @@ export async function addOrder(userId: string, order: Omit<Order, "id" | "orderN
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(order),
+      credentials: 'include',
     })
     
     if (!response.ok) {
@@ -208,6 +222,7 @@ export async function updateOrder(userId: string, id: string, data: Partial<Omit
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      credentials: 'include',
     })
     if (!response.ok) {
       if (response.status === 404) return null
@@ -225,6 +240,7 @@ export async function deleteOrder(userId: string, id: string): Promise<boolean> 
   try {
     const response = await fetch(`/api/users/${userId}/orders/${id}`, {
       method: "DELETE",
+      credentials: 'include',
     })
     if (!response.ok) {
       if (response.status === 404) return false
@@ -241,7 +257,10 @@ export async function deleteOrder(userId: string, id: string): Promise<boolean> 
 // Restaurant Settings
 export async function getRestaurantSettings(userId: string): Promise<RestaurantSettings | null> {
   try {
-    const response = await fetch(`/api/users/${userId}/settings`)
+    const response = await fetch(`/api/users/${userId}/settings`, {
+      credentials: 'include',
+      cache: 'no-store'
+    })
     if (!response.ok) {
       if (response.status === 404) return null
       console.error("Error fetching restaurant settings:", response.statusText)
@@ -261,9 +280,11 @@ export async function saveRestaurantSettings(userId: string, settings: Restauran
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(settings),
+      credentials: 'include',
     })
     if (!response.ok) {
-      throw new Error("Failed to save restaurant settings")
+      const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
+      throw new Error(errorData.error || "Failed to save restaurant settings")
     }
   } catch (error) {
     console.error("Error saving restaurant settings:", error)
