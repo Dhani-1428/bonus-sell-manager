@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -86,61 +87,69 @@ export default function AdminMenuItemsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Menu Items</h1>
-        <p className="text-muted-foreground">View all menu items from all users</p>
+    <div className="space-y-6 p-1">
+      <div className="space-y-2">
+        <h1 className="text-4xl font-bold tracking-tight">Menu Items</h1>
+        <p className="text-muted-foreground text-lg">View all menu items from all users</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Menu Items</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="border-2 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-sm font-semibold">Total Menu Items</CardTitle>
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
+              <Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-3xl font-bold tracking-tight">{stats.total}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-2 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-sm font-semibold">Total Users</CardTitle>
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+              <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold tracking-tight">
               {new Set(menuItems.map((item) => item.user_id)).size}
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-2 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-sm font-semibold">Total Value</CardTitle>
+            <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-lg">
+              <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€{stats.totalValue.toFixed(2)}</div>
+            <div className="text-3xl font-bold tracking-tight">€{stats.totalValue.toFixed(2)}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Categories</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-2 hover:shadow-lg transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle className="text-sm font-semibold">Categories</CardTitle>
+            <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg">
+              <Package className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Object.keys(stats.byCategory).length}</div>
+            <div className="text-3xl font-bold tracking-tight">{Object.keys(stats.byCategory).length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
+      <Card className="border-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold">Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -151,7 +160,7 @@ export default function AdminMenuItemsPage() {
                     setSearchTerm(e.target.value)
                     setPagination({ ...pagination, page: 1 })
                   }}
-                  className="pl-10"
+                  className="pl-10 h-10 border-2 focus:border-primary transition-colors"
                 />
               </div>
             </div>
@@ -162,7 +171,7 @@ export default function AdminMenuItemsPage() {
                 setPagination({ ...pagination, page: 1 })
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] h-10 border-2">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -179,83 +188,103 @@ export default function AdminMenuItemsPage() {
       </Card>
 
       {/* Menu Items Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Menu Items</CardTitle>
+      <Card className="border-2">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold">All Menu Items</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading menu items...</div>
+            <div className="text-center py-12">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+              <p className="text-muted-foreground mt-4">Loading menu items...</p>
+            </div>
           ) : menuItems.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No menu items found. Users need to create menu items in their dashboard.
+            <div className="text-center py-12 text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium">No menu items found</p>
+              <p className="text-sm mt-1">Users need to create menu items in their dashboard.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 text-sm font-medium">Item Name</th>
-                    <th className="text-left p-3 text-sm font-medium">Category</th>
-                    <th className="text-right p-3 text-sm font-medium">Price</th>
-                    <th className="text-left p-3 text-sm font-medium">User</th>
-                    <th className="text-left p-3 text-sm font-medium">Email</th>
-                    <th className="text-left p-3 text-sm font-medium">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {menuItems.map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-muted/50">
-                      <td className="p-3">
-                        <div className="font-medium">{item.name}</div>
-                        {item.extras && Array.isArray(item.extras) && item.extras.length > 0 && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {item.extras.length} extra(s)
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3">
-                        <Badge variant="outline">{item.category}</Badge>
-                      </td>
-                      <td className="p-3 text-right font-medium">€{item.price.toFixed(2)}</td>
-                      <td className="p-3">
-                        <button
-                          onClick={() => router.push(`/admin/users/${item.user_id}`)}
-                          className="text-primary hover:underline"
-                        >
-                          {item.user_name || "Unknown"}
-                        </button>
-                      </td>
-                      <td className="p-3 text-sm text-muted-foreground">{item.user_email}</td>
-                      <td className="p-3 text-sm text-muted-foreground">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </td>
+            <div className="rounded-lg border-2 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-muted/50 border-b-2">
+                      <th className="text-left p-4 text-sm font-semibold">Item Name</th>
+                      <th className="text-left p-4 text-sm font-semibold">Category</th>
+                      <th className="text-right p-4 text-sm font-semibold">Price</th>
+                      <th className="text-left p-4 text-sm font-semibold">User</th>
+                      <th className="text-left p-4 text-sm font-semibold">Email</th>
+                      <th className="text-left p-4 text-sm font-semibold">Created</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {menuItems.map((item) => (
+                      <tr 
+                        key={item.id} 
+                        className="border-b hover:bg-muted/30 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/admin/users/${item.user_id}`)}
+                      >
+                        <td className="p-4">
+                          <div className="font-medium">{item.name}</div>
+                          {item.extras && Array.isArray(item.extras) && item.extras.length > 0 && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {item.extras.length} extra(s)
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline" className="font-medium">{item.category}</Badge>
+                        </td>
+                        <td className="p-4 text-right font-semibold">€{item.price.toFixed(2)}</td>
+                        <td className="p-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/admin/users/${item.user_id}`)
+                            }}
+                            className="text-primary hover:underline font-medium"
+                          >
+                            {item.user_name || "Unknown"}
+                          </button>
+                        </td>
+                        <td className="p-4 text-sm text-muted-foreground">{item.user_email}</td>
+                        <td className="p-4 text-sm text-muted-foreground">
+                          {new Date(item.created_at).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t">
+              <div className="text-sm text-muted-foreground font-medium">
                 Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
                 {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
                 {pagination.total} items
               </div>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() =>
                     setPagination({ ...pagination, page: Math.max(1, pagination.page - 1) })
                   }
                   disabled={pagination.page === 1}
-                  className="px-4 py-2 border rounded disabled:opacity-50"
+                  className="disabled:opacity-50"
                 >
                   Previous
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() =>
                     setPagination({
                       ...pagination,
@@ -263,10 +292,10 @@ export default function AdminMenuItemsPage() {
                     })
                   }
                   disabled={pagination.page >= pagination.totalPages}
-                  className="px-4 py-2 border rounded disabled:opacity-50"
+                  className="disabled:opacity-50"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}
