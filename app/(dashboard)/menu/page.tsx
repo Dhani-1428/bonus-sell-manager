@@ -823,30 +823,64 @@ export default function MenuPage() {
   }
 
   const handleAddExtractedItems = async () => {
-    if (!session) return
+    if (!session) {
+      toast.error("Session expired. Please refresh the page.")
+      return
+    }
 
+    if (extractedItems.length === 0) {
+      toast.error("No items to add")
+      return
+    }
+
+    setIsProcessing(true)
     let addedCount = 0
+    const errors: string[] = []
+
     for (const item of extractedItems) {
       try {
+        // Validate item before adding
+        if (!item.name || !item.name.trim()) {
+          errors.push(`Skipped item with empty name`)
+          continue
+        }
+        if (!item.price || item.price <= 0) {
+          errors.push(`Skipped "${item.name}" - invalid price`)
+          continue
+        }
+
         await addMenuItem(session.userId, {
-          name: item.name,
+          name: item.name.trim(),
           price: item.price,
-          category: item.category,
+          category: item.category || "Main",
         })
         addedCount++
-      } catch (error) {
-        console.error("Error adding item:", error)
+      } catch (error: any) {
+        const errorMsg = error.message || "Unknown error"
+        console.error(`Error adding item "${item.name}":`, error)
+        errors.push(`${item.name}: ${errorMsg}`)
       }
     }
 
-    if (addedCount > 0) {
-      toast.success(`Added ${addedCount} menu items!`)
-      await refreshItems()
-    }
+    setIsProcessing(false)
 
-    setOcrDialogOpen(false)
-    setExtractedItems([])
-    setImagePreview(null)
+    if (addedCount > 0) {
+      toast.success(`Successfully added ${addedCount} menu item${addedCount === 1 ? '' : 's'}!`)
+      await refreshItems()
+      
+      // Close dialog after successful addition
+      setOcrDialogOpen(false)
+      setExtractedItems([])
+      setImagePreview(null)
+    } else {
+      // Show error if no items were added
+      const errorMsg = errors.length > 0 
+        ? `Failed to add items:\n${errors.slice(0, 3).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''}`
+        : "Failed to add menu items. Please try again."
+      toast.error(errorMsg, {
+        duration: 5000,
+      })
+    }
   }
 
   const handleEditExtractedItem = (index: number, field: "name" | "price" | "category" | "description", value: string | number) => {
