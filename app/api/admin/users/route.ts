@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
       const statusFilter = searchParams.get("status") || ""
 
       // Try to query with trial_expiration_email_sent, fallback if column doesn't exist
+      // Use subqueries instead of GROUP BY with JOINs to avoid issues
       let query = `
         SELECT 
           u.id, 
@@ -59,13 +60,10 @@ export async function GET(request: NextRequest) {
           u.subscription_plan,
           u.role,
           u.trial_expiration_email_sent,
-          COUNT(DISTINCT mi.id) as menu_items_count,
-          COUNT(DISTINCT o.id) as orders_count
+          COALESCE((SELECT COUNT(*) FROM menu_items mi WHERE mi.user_id = u.id), 0) as menu_items_count,
+          COALESCE((SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id), 0) as orders_count
         FROM users u
-        LEFT JOIN menu_items mi ON mi.user_id = u.id
-        LEFT JOIN orders o ON o.user_id = u.id
         WHERE (u.role != 'super_admin' OR u.role IS NULL)
-        GROUP BY u.id, u.name, u.email, u.created_at, u.trial_start_date, u.subscription_status, u.subscription_end_date, u.subscription_plan, u.role, u.trial_expiration_email_sent
       `
       const params: any[] = []
 
@@ -94,6 +92,7 @@ export async function GET(request: NextRequest) {
         // If column doesn't exist, retry without it
         if (error.message && (error.message.includes("trial_expiration_email_sent") || error.message.includes("Unknown column 'role'"))) {
           // If role column doesn't exist, get all users (no role filtering)
+          // Use subqueries instead of GROUP BY with JOINs to avoid issues
           let fallbackQuery = `
             SELECT 
               u.id, 
@@ -104,13 +103,10 @@ export async function GET(request: NextRequest) {
               u.subscription_status,
               u.subscription_end_date,
               u.subscription_plan,
-              COUNT(DISTINCT mi.id) as menu_items_count,
-              COUNT(DISTINCT o.id) as orders_count
+              COALESCE((SELECT COUNT(*) FROM menu_items mi WHERE mi.user_id = u.id), 0) as menu_items_count,
+              COALESCE((SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id), 0) as orders_count
             FROM users u
-            LEFT JOIN menu_items mi ON mi.user_id = u.id
-            LEFT JOIN orders o ON o.user_id = u.id
             WHERE 1=1
-            GROUP BY u.id, u.name, u.email, u.created_at, u.trial_start_date, u.subscription_status, u.subscription_end_date, u.subscription_plan
           `
           const fallbackParams: any[] = []
           
