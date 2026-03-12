@@ -30,6 +30,7 @@ interface DashboardPanel {
   value: number | string
   prefix?: string
   suffix?: string
+  decimals?: number
   icon: React.ComponentType<{ className?: string }>
   glowColor: string
   description: string
