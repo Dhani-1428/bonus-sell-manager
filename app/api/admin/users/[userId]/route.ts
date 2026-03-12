@@ -4,6 +4,13 @@ import { getPool } from "@/lib/db"
 import { isSuperAdmin } from "@/lib/admin-auth"
 
 /**
+ * Helper function to sanitize SQL parameters - converts undefined to null
+ */
+function sanitizeSqlParams(params: any[]): any[] {
+  return params.map(param => param === undefined ? null : param)
+}
+
+/**
  * GET /api/admin/users/[userId]
  * Get specific user details (super admin only)
  */
@@ -63,7 +70,7 @@ export async function GET(
             avatar
           FROM users 
           WHERE id = ?`,
-          [userId]
+          sanitizeSqlParams([userId])
         ) as any[]
       } catch (error: any) {
         // If column doesn't exist, retry without it
@@ -83,7 +90,7 @@ export async function GET(
               avatar
             FROM users 
             WHERE id = ?`,
-            [userId]
+            sanitizeSqlParams([userId])
           ) as any[]
           // Set default value for missing column
           if (users.length > 0) {
@@ -104,13 +111,13 @@ export async function GET(
       // Get user's orders count
       const [ordersCount] = await connection.execute(
         `SELECT COUNT(*) as count FROM orders WHERE user_id = ?`,
-        [userId]
+        sanitizeSqlParams([userId])
       ) as any[]
 
       // Get user's menu items count
       const [menuItemsCount] = await connection.execute(
         `SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?`,
-        [userId]
+        sanitizeSqlParams([userId])
       ) as any[]
 
       // Get user's payments
@@ -129,7 +136,7 @@ export async function GET(
         WHERE user_id = ? 
         ORDER BY created_at DESC 
         LIMIT 10`,
-        [userId]
+        sanitizeSqlParams([userId])
       ) as any[]
 
       // Ensure no undefined values in response
@@ -268,7 +275,7 @@ export async function PUT(
 
       await connection.execute(
         `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
-        queryParams
+        sanitizeSqlParams(queryParams)
       )
 
       // Get updated user
@@ -285,7 +292,7 @@ export async function PUT(
           role
         FROM users 
         WHERE id = ?`,
-        [userId]
+        sanitizeSqlParams([userId])
       ) as any[]
 
       return NextResponse.json({
