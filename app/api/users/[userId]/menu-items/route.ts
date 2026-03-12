@@ -56,35 +56,53 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> | { userId: string } }
 ) {
   try {
+    // Handle both Next.js 14 and 15+ params format
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    
     const session = await getSession()
     
     // Verify user is accessing their own data
-    if (!session || session.userId !== params.userId) {
+    if (!session) {
+      console.log(`[POST /api/users/${userId}/menu-items] No session found`)
+      console.log(`[POST /api/users/${userId}/menu-items] Request headers:`, Object.fromEntries(request.headers.entries()))
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Please sign in" },
+        { status: 401 }
+      )
+    }
+    
+    console.log(`[POST /api/users/${userId}/menu-items] Session userId: ${session.userId}, Request userId: ${userId}`)
+    
+    if (session.userId !== userId) {
+      console.log(`[POST /api/users/${userId}/menu-items] User ID mismatch - Session: ${session.userId}, Request: ${userId}`)
+      return NextResponse.json(
+        { error: "Unauthorized - Cannot access other user's data" },
         { status: 401 }
       )
     }
 
     const body = await request.json()
-    console.log(`[POST /api/users/${params.userId}/menu-items] Adding menu item:`, body)
-    console.log(`[POST /api/users/${params.userId}/menu-items] Session userId: ${session.userId}, params userId: ${params.userId}`)
+    console.log(`[POST /api/users/${userId}/menu-items] Adding menu item:`, body)
+    console.log(`[POST /api/users/${userId}/menu-items] Session userId: ${session.userId}, params userId: ${userId}`)
     
-    const item = await addMenuItem(params.userId, body)
-    console.log(`[POST /api/users/${params.userId}/menu-items] ✅ Menu item added successfully:`, item.id)
+    const item = await addMenuItem(userId, body)
+    console.log(`[POST /api/users/${userId}/menu-items] ✅ Menu item added successfully:`, item.id)
     
     return NextResponse.json({ item }, { status: 201 })
   } catch (error: any) {
-    console.error(`❌ [POST /api/users/${params.userId}/menu-items] Error adding menu item:`, error)
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    console.error(`❌ [POST /api/users/${userId}/menu-items] Error adding menu item:`, error)
     console.error("Error details:", {
       message: error.message,
       code: error.code,
       sqlState: error.sqlState,
       sqlMessage: error.sqlMessage,
-      userId: params.userId,
+      userId: userId,
     })
     return NextResponse.json(
       { 
