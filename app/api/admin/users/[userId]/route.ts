@@ -12,6 +12,15 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
+    // Validate userId parameter
+    const userId = params?.userId
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      return NextResponse.json(
+        { error: "Invalid user ID" },
+        { status: 400 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionId = cookieStore.get("admin_session")?.value
 
@@ -54,7 +63,7 @@ export async function GET(
             avatar
           FROM users 
           WHERE id = ?`,
-          [params.userId]
+          [userId]
         ) as any[]
       } catch (error: any) {
         // If column doesn't exist, retry without it
@@ -74,7 +83,7 @@ export async function GET(
               avatar
             FROM users 
             WHERE id = ?`,
-            [params.userId]
+            [userId]
           ) as any[]
           // Set default value for missing column
           if (users.length > 0) {
@@ -95,13 +104,13 @@ export async function GET(
       // Get user's orders count
       const [ordersCount] = await connection.execute(
         `SELECT COUNT(*) as count FROM orders WHERE user_id = ?`,
-        [params.userId]
+        [userId]
       ) as any[]
 
       // Get user's menu items count
       const [menuItemsCount] = await connection.execute(
         `SELECT COUNT(*) as count FROM menu_items WHERE user_id = ?`,
-        [params.userId]
+        [userId]
       ) as any[]
 
       // Get user's payments
@@ -120,7 +129,7 @@ export async function GET(
         WHERE user_id = ? 
         ORDER BY created_at DESC 
         LIMIT 10`,
-        [params.userId]
+        [userId]
       ) as any[]
 
       return NextResponse.json({
@@ -152,6 +161,15 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
+    // Validate userId parameter
+    const userId = params?.userId
+    if (!userId || userId === 'undefined' || userId === 'null') {
+      return NextResponse.json(
+        { error: "Invalid user ID" },
+        { status: 400 }
+      )
+    }
+
     const cookieStore = await cookies()
     const sessionId = cookieStore.get("admin_session")?.value
 
@@ -233,7 +251,7 @@ export async function PUT(
       }
 
       // Add userId at the end for WHERE clause
-      queryParams.push(params.userId)
+      queryParams.push(userId)
 
       await connection.execute(
         `UPDATE users SET ${updates.join(", ")} WHERE id = ?`,
@@ -254,7 +272,7 @@ export async function PUT(
           role
         FROM users 
         WHERE id = ?`,
-        [params.userId]
+        [userId]
       ) as any[]
 
       return NextResponse.json({
