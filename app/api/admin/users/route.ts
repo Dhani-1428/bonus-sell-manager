@@ -79,6 +79,8 @@ export async function GET(request: NextRequest) {
 
       let users: any[]
       try {
+        console.log('Executing query:', query)
+        console.log('With params:', params)
         [users] = await connection.execute(query, params) as any[]
       } catch (error: any) {
         // If column doesn't exist, retry without it
