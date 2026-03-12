@@ -17,26 +17,47 @@ export interface SuperAdmin {
  * Check if user is super admin
  */
 export async function isSuperAdmin(userId: string): Promise<boolean> {
+  if (!userId) {
+    console.warn('⚠️  isSuperAdmin called with empty userId');
+    return false;
+  }
+
   const pool = getPool();
   const connection = await pool.getConnection();
   try {
     try {
+      console.log('🔍 isSuperAdmin checking user:', userId.substring(0, 20) + '...');
       const [rows] = await connection.execute(
-        'SELECT role FROM users WHERE id = ?',
+        'SELECT id, email, role FROM users WHERE id = ?',
         [userId]
       ) as any[];
       
-      return rows.length > 0 && rows[0].role === 'super_admin';
+      if (rows.length === 0) {
+        console.warn('⚠️  User not found for isSuperAdmin check:', userId.substring(0, 20) + '...');
+        return false;
+      }
+      
+      const user = rows[0];
+      const isAdmin = user.role === 'super_admin';
+      console.log('✅ isSuperAdmin result:', {
+        userId: userId.substring(0, 20) + '...',
+        email: user.email,
+        role: user.role,
+        isSuperAdmin: isAdmin
+      });
+      
+      return isAdmin;
     } catch (error: any) {
       // If role column doesn't exist, user is not a super admin
       if (error.message && error.message.includes("Unknown column 'role'")) {
         console.warn('⚠️  Role column not found. Run /api/db/migrate-role to add it.');
         return false;
       }
+      console.error('❌ Error in isSuperAdmin query:', error);
       throw error;
     }
   } catch (error: any) {
-    console.error('Error checking super admin status:', error);
+    console.error('❌ Error checking super admin status:', error);
     return false;
   } finally {
     connection.release();
