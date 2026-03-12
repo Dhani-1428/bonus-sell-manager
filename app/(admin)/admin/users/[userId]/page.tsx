@@ -193,7 +193,7 @@ export default function UserDetailsPage() {
                 <Select
                   value={formData.subscription_status || "trial"}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, subscription_status: value })
+                    setFormData({ ...formData, subscription_status: value || "trial" })
                   }
                 >
                   <SelectTrigger>
@@ -250,7 +250,7 @@ export default function UserDetailsPage() {
                 <Label htmlFor="role">Role</Label>
                 <Select
                   value={formData.role || "user"}
-                  onValueChange={(value) => setFormData({ ...formData, role: value })}
+                  onValueChange={(value) => setFormData({ ...formData, role: value || "user" })}
                 >
                   <SelectTrigger>
                     <SelectValue />

@@ -266,7 +266,7 @@ export default function SubscriptionsPage() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">Status</label>
-              <Select value={editStatus} onValueChange={setEditStatus}>
+              <Select value={editStatus || "trial"} onValueChange={(value) => setEditStatus(value || "trial")}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
