@@ -93,6 +93,12 @@ export default function MenuPage() {
   }, [items])
 
   const openAdd = () => {
+    // Close OCR dialog if open to prevent conflicts
+    if (ocrDialogOpen) {
+      setOcrDialogOpen(false)
+      setExtractedItems([])
+      setImagePreview(null)
+    }
     setEditingItem(null)
     setName("")
     setPrice("")
