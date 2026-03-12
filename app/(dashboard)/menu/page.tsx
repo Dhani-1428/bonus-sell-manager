@@ -926,7 +926,13 @@ export default function MenuPage() {
               input.onchange = async (e) => {
                 const file = (e.target as HTMLInputElement).files?.[0]
                 if (file) {
-                  await handleImageUpload(file)
+                  console.log("📤 File selected via button:", file.name)
+                  handleImageUpload(file).catch((error) => {
+                    console.error("❌ Error in handleImageUpload:", error)
+                    toast.error(`Failed to process image: ${error.message || "Unknown error"}`)
+                    setIsProcessing(false)
+                    setOcrDialogOpen(false)
+                  })
                 }
               }
               input.click()
