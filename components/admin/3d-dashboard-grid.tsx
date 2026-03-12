@@ -40,6 +40,10 @@ interface DashboardPanel {
   }
 }
 
+interface Dashboard3DGridProps {
+  stats: DashboardStats
+}
+
 export function Dashboard3DGrid({ stats }: Dashboard3DGridProps) {
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null)
 
