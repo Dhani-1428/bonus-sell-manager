@@ -97,7 +97,7 @@ export default function AdminLayout({
               onLogout={handleLogout}
             />
             <main className="flex-1 overflow-y-auto w-full h-full">
-              <div className="w-full h-full p-4 lg:p-6">
+              <div className="w-full h-full p-0">
                 {children}
               </div>
             </main>

@@ -86,7 +86,7 @@ export default function Dashboard3DPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 -m-4 lg:-m-6">
         <div className="text-white text-xl">Loading dashboard...</div>
       </div>
     )

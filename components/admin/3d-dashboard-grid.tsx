@@ -39,7 +39,7 @@ interface DashboardPanel {
   }
 }
 
-export function Dashboard3DGrid({ stats }: { stats: DashboardStats }) {
+export function Dashboard3DGrid({ stats }: Dashboard3DGridProps) {
   const [expandedPanel, setExpandedPanel] = useState<string | null>(null)
 
   const panels: DashboardPanel[] = [
@@ -97,7 +97,7 @@ export function Dashboard3DGrid({ stats }: { stats: DashboardStats }) {
   ]
 
   return (
-    <div className="relative min-h-screen p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="relative min-h-[calc(100vh-4rem)] p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 -m-4 lg:-m-6">
       {/* Animated background gradient */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
@@ -176,9 +176,9 @@ export function Dashboard3DGrid({ stats }: { stats: DashboardStats }) {
                       {typeof panel.value === "number" ? (
                         <AnimatedNumber
                           value={panel.value}
-                          prefix={panel.prefix}
-                          suffix={panel.suffix}
-                          decimals={panel.decimals || 0}
+                          prefix={panel.prefix || ""}
+                          suffix={panel.suffix || ""}
+                          decimals={panel.decimals ?? 0}
                         />
                       ) : (
                         panel.value
