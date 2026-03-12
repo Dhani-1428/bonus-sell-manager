@@ -14,14 +14,17 @@ export async function getMenuItems(userId: string): Promise<MenuItem[]> {
       cache: 'no-store'
     })
     if (!response.ok) {
-      console.error("Error fetching menu items:", response.statusText)
-      return []
+      const errorData = await response.json().catch(() => ({ error: response.statusText }))
+      console.error(`❌ Error fetching menu items: ${response.status}`, errorData)
+      throw new Error(errorData.error || `Failed to fetch menu items: ${response.statusText}`)
     }
     const data = await response.json()
-    return data.items || []
-  } catch (error) {
-    console.error("Error getting menu items:", error)
-    return []
+    const items = data.items || []
+    console.log(`✅ Fetched ${items.length} menu items from API`)
+    return items
+  } catch (error: any) {
+    console.error("❌ Error getting menu items:", error)
+    throw error // Re-throw to let caller handle it
   }
 }
 

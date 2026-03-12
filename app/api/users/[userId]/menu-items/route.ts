@@ -14,37 +14,43 @@ import {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> | { userId: string } }
 ) {
   try {
+    // Handle both Next.js 14 and 15+ params format
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    
     const session = await getSession()
     
     // Verify user is authenticated and accessing their own data
     if (!session) {
-      console.log(`[GET /api/users/${params.userId}/menu-items] No session found`)
+      console.log(`[GET /api/users/${userId}/menu-items] No session found`)
       return NextResponse.json(
         { error: "Unauthorized - Please sign in" },
         { status: 401 }
       )
     }
     
-    console.log(`[GET /api/users/${params.userId}/menu-items] Session userId: ${session.userId}, Request userId: ${params.userId}`)
+    console.log(`[GET /api/users/${userId}/menu-items] Session userId: ${session.userId}, Request userId: ${userId}`)
     
-    if (session.userId !== params.userId) {
-      console.log(`[GET /api/users/${params.userId}/menu-items] User ID mismatch - Forbidden`)
+    if (session.userId !== userId) {
+      console.log(`[GET /api/users/${userId}/menu-items] User ID mismatch - Forbidden`)
       return NextResponse.json(
         { error: "Forbidden - Cannot access other user's data" },
         { status: 403 }
       )
     }
 
-    const items = await getMenuItems(params.userId)
-    console.log(`[GET /api/users/${params.userId}/menu-items] Found ${items.length} menu items`)
+    const items = await getMenuItems(userId)
+    console.log(`[GET /api/users/${userId}/menu-items] Found ${items.length} menu items`)
     return NextResponse.json({ items })
   } catch (error: any) {
-    console.error("Error getting menu items:", error)
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    console.error(`[GET /api/users/${userId}/menu-items] Error getting menu items:`, error)
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || "Failed to get menu items" },
       { status: 500 }
     )
   }

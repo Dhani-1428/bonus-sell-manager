@@ -843,6 +843,10 @@ export default function MenuPage() {
       return
     }
 
+    // Get initial item count before adding
+    const initialItemCount = items.length
+    console.log(`📊 Initial menu items count: ${initialItemCount}`)
+    
     setIsProcessing(true)
     let addedCount = 0
     const errors: string[] = []
@@ -895,8 +899,8 @@ export default function MenuPage() {
       toast.success(`Successfully added ${addedCount} menu item${addedCount === 1 ? '' : 's'}!`)
       
       // Wait a bit for database to commit, then refresh
-      console.log(`✅ Added ${addedCount} items, refreshing menu...`)
-      await new Promise(resolve => setTimeout(resolve, 500)) // Wait 500ms for DB commit
+      console.log(`✅ Added ${addedCount} items (initial count: ${initialItemCount}), refreshing menu...`)
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second for DB commit
       
       // Refresh items with retry logic
       let refreshAttempts = 3
@@ -904,31 +908,51 @@ export default function MenuPage() {
       while (refreshAttempts > 0 && !refreshed) {
         try {
           const fetchedItems = await getMenuItems(session.userId)
-          console.log(`📋 Refreshed menu: Found ${fetchedItems.length} items`)
+          const newItemCount = fetchedItems.length
+          console.log(`📋 Refreshed menu: Found ${newItemCount} items (expected at least ${initialItemCount + addedCount})`)
           setItems(fetchedItems)
           
-          if (fetchedItems.length >= addedCount) {
+          // Check if we have at least the initial count + added count
+          if (newItemCount >= initialItemCount + addedCount) {
             refreshed = true
-            console.log(`✅ Menu refreshed successfully with ${fetchedItems.length} items`)
+            console.log(`✅ Menu refreshed successfully: ${initialItemCount} → ${newItemCount} items (+${addedCount})`)
           } else {
-            console.warn(`⚠️ Expected at least ${addedCount} items, but found ${fetchedItems.length}. Retrying...`)
+            console.warn(`⚠️ Expected at least ${initialItemCount + addedCount} items, but found ${newItemCount}. Retrying... (attempt ${4 - refreshAttempts}/3)`)
             refreshAttempts--
             if (refreshAttempts > 0) {
-              await new Promise(resolve => setTimeout(resolve, 500))
+              await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second between retries
             }
           }
-        } catch (error) {
-          console.error("Error refreshing menu items:", error)
+        } catch (error: any) {
+          console.error(`❌ Error refreshing menu items (attempt ${4 - refreshAttempts}/3):`, error)
+          console.error("Error details:", {
+            message: error.message,
+            status: error.status,
+            userId: session.userId,
+          })
           refreshAttempts--
           if (refreshAttempts > 0) {
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise(resolve => setTimeout(resolve, 1000))
           }
         }
       }
       
       if (!refreshed) {
         console.error("⚠️ Failed to refresh menu after multiple attempts")
-        toast.warning("Items were added but menu refresh failed. Please refresh the page.")
+        // Still refresh the items even if count doesn't match - items might be there
+        try {
+          const finalItems = await getMenuItems(session.userId)
+          setItems(finalItems)
+          console.log(`📋 Final refresh: Found ${finalItems.length} items`)
+          if (finalItems.length > initialItemCount) {
+            toast.success(`Menu updated! Found ${finalItems.length} items.`)
+          } else {
+            toast.warning("Items were added but menu refresh failed. Please refresh the page manually.")
+          }
+        } catch (finalError) {
+          console.error("Final refresh failed:", finalError)
+          toast.warning("Items were added but menu refresh failed. Please refresh the page manually.")
+        }
       }
       
       // Close dialog after successful addition
