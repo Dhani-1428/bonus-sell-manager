@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, Users, CreditCard, LogOut, Shield, Package, ShoppingCart, BarChart3, Calendar } from "lucide-react"
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
-import { motion } from "motion/react"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 const navItems = [
