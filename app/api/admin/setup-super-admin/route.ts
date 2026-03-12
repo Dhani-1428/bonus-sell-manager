@@ -13,35 +13,47 @@ export async function POST(request: NextRequest) {
     const email = "bonusfoodsellmanager@gmail.com"
     const password = "bonusfoodsellmanager.com"
     const name = "Super Admin"
+    const normalizedEmail = email.toLowerCase()
 
     const pool = getPool()
     const connection = await pool.getConnection()
     
     try {
-      // Check if super admin exists
-      const existingAdmin = await getSuperAdminByEmail(email)
-      
-      if (existingAdmin) {
-        // Update password if admin exists
+      // First, check if ANY user exists with this email (regardless of role)
+      const [existingUsers] = await connection.execute(
+        `SELECT id, name, email, role FROM users WHERE email = ?`,
+        [normalizedEmail]
+      ) as any[]
+
+      if (existingUsers.length > 0) {
+        const existingUser = existingUsers[0]
+
+        // Promote this user to super_admin and update password
         const hashedPassword = hashPassword(password)
         await connection.execute(
-          `UPDATE users SET password = ? WHERE email = ? AND role = ?`,
-          [hashedPassword, email.toLowerCase(), 'super_admin']
+          `UPDATE users 
+             SET password = ?, role = 'super_admin', subscription_status = 'active' 
+           WHERE email = ?`,
+          [hashedPassword, normalizedEmail]
         )
-        
+
         return NextResponse.json({
           success: true,
-          message: "Super admin password updated successfully",
+          message: existingUser.role === 'super_admin'
+            ? "Super admin password updated successfully"
+            : "Existing user promoted to super admin successfully",
           admin: {
-            email: existingAdmin.email,
-            name: existingAdmin.name,
+            email: normalizedEmail,
+            name: existingUser.name || name,
           },
           credentials: {
-            email: email,
-            password: password,
+            email,
+            password,
           },
         })
       }
+
+      // If no user with this email exists at all, create a fresh super admin
 
       // Create super admin
       const admin = await createSuperAdmin(name, email, password)
