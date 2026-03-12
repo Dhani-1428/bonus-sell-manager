@@ -34,7 +34,7 @@ export default function AdminOrdersPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [paymentFilter, setPaymentFilter] = useState("")
+  const [paymentFilter, setPaymentFilter] = useState("all")
   const [isLoading, setIsLoading] = useState(true)
   const [pagination, setPagination] = useState({
     page: 1,
@@ -55,7 +55,7 @@ export default function AdminOrdersPage() {
         limit: pagination.limit.toString(),
       })
       if (searchTerm) params.append("search", searchTerm)
-      if (paymentFilter) params.append("status", paymentFilter)
+      if (paymentFilter && paymentFilter !== "all") params.append("status", paymentFilter)
 
       const response = await fetch(`/api/admin/orders?${params}`)
       const data = await response.json()
@@ -157,9 +157,9 @@ export default function AdminOrdersPage() {
               </div>
             </div>
             <Select
-              value={paymentFilter}
+              value={paymentFilter || "all"}
               onValueChange={(value) => {
-                setPaymentFilter(value)
+                setPaymentFilter(value || "all")
                 setPagination({ ...pagination, page: 1 })
               }}
             >
@@ -167,7 +167,7 @@ export default function AdminOrdersPage() {
                 <SelectValue placeholder="All Payment Methods" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Payment Methods</SelectItem>
+                <SelectItem value="all">All Payment Methods</SelectItem>
                 {paymentMethods.map((method) => (
                   <SelectItem key={method} value={method}>
                     {method.charAt(0).toUpperCase() + method.slice(1)}
