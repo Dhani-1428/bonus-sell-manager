@@ -842,7 +842,9 @@ export default function MenuPage() {
     let addedCount = 0
     const errors: string[] = []
 
-    for (const item of extractedItems) {
+    // Add items one by one with a small delay to avoid overwhelming the server
+    for (let i = 0; i < extractedItems.length; i++) {
+      const item = extractedItems[i]
       try {
         // Validate item before adding
         if (!item.name || !item.name.trim()) {
@@ -854,15 +856,29 @@ export default function MenuPage() {
           continue
         }
 
+        // Add a small delay between requests (except for the first one)
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 100)) // 100ms delay
+        }
+
         await addMenuItem(session.userId, {
           name: item.name.trim(),
           price: item.price,
           category: item.category || "Main",
         })
         addedCount++
+        
+        // Update progress
+        setProcessingStep(`Adding items... ${addedCount}/${extractedItems.length}`)
       } catch (error: any) {
         const errorMsg = error.message || "Unknown error"
         console.error(`Error adding item "${item.name}":`, error)
+        console.error("Error details:", {
+          userId: session.userId,
+          itemName: item.name,
+          errorMessage: errorMsg,
+          errorStatus: error.status,
+        })
         errors.push(`${item.name}: ${errorMsg}`)
       }
     }
