@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
           role,
           trial_expiration_email_sent
         FROM users
-        WHERE role != 'super_admin'
+        WHERE (role != 'super_admin' OR role IS NULL)
       `
       const params: any[] = []
 
@@ -75,7 +75,8 @@ export async function GET(request: NextRequest) {
       }
 
       query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
-      params.push(limit, offset)
+      // Ensure limit and offset are numbers
+      params.push(Number(limit), Number(offset))
 
       let users: any[]
       try {
