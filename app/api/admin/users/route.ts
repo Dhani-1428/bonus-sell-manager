@@ -49,18 +49,23 @@ export async function GET(request: NextRequest) {
       // Try to query with trial_expiration_email_sent, fallback if column doesn't exist
       let query = `
         SELECT 
-          id, 
-          name, 
-          email, 
-          created_at,
-          trial_start_date,
-          subscription_status,
-          subscription_end_date,
-          subscription_plan,
-          role,
-          trial_expiration_email_sent
-        FROM users
-        WHERE (role != 'super_admin' OR role IS NULL)
+          u.id, 
+          u.name, 
+          u.email, 
+          u.created_at,
+          u.trial_start_date,
+          u.subscription_status,
+          u.subscription_end_date,
+          u.subscription_plan,
+          u.role,
+          u.trial_expiration_email_sent,
+          COUNT(DISTINCT mi.id) as menu_items_count,
+          COUNT(DISTINCT o.id) as orders_count
+        FROM users u
+        LEFT JOIN menu_items mi ON mi.user_id = u.id
+        LEFT JOIN orders o ON o.user_id = u.id
+        WHERE (u.role != 'super_admin' OR u.role IS NULL)
+        GROUP BY u.id, u.name, u.email, u.created_at, u.trial_start_date, u.subscription_status, u.subscription_end_date, u.subscription_plan, u.role, u.trial_expiration_email_sent
       `
       const params: any[] = []
 
@@ -88,16 +93,21 @@ export async function GET(request: NextRequest) {
           // If role column doesn't exist, get all users (no role filtering)
           let fallbackQuery = `
             SELECT 
-              id, 
-              name, 
-              email, 
-              created_at,
-              trial_start_date,
-              subscription_status,
-              subscription_end_date,
-              subscription_plan
-            FROM users
+              u.id, 
+              u.name, 
+              u.email, 
+              u.created_at,
+              u.trial_start_date,
+              u.subscription_status,
+              u.subscription_end_date,
+              u.subscription_plan,
+              COUNT(DISTINCT mi.id) as menu_items_count,
+              COUNT(DISTINCT o.id) as orders_count
+            FROM users u
+            LEFT JOIN menu_items mi ON mi.user_id = u.id
+            LEFT JOIN orders o ON o.user_id = u.id
             WHERE 1=1
+            GROUP BY u.id, u.name, u.email, u.created_at, u.trial_start_date, u.subscription_status, u.subscription_end_date, u.subscription_plan
           `
           const fallbackParams: any[] = []
           
@@ -119,7 +129,9 @@ export async function GET(request: NextRequest) {
           users = users.map((u: any) => ({ 
             ...u, 
             trial_expiration_email_sent: false,
-            role: 'user'
+            role: 'user',
+            menu_items_count: Number(u.menu_items_count) || 0,
+            orders_count: Number(u.orders_count) || 0
           }))
         } else {
           throw error
@@ -168,13 +180,27 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Ensure counts are numbers
+      const usersWithCounts = users.map((u: any) => ({
+        ...u,
+        menu_items_count: Number(u.menu_items_count) || 0,
+        orders_count: Number(u.orders_count) || 0,
+      }))
+
       return NextResponse.json({
-        users,
+        users: usersWithCounts,
         pagination: {
           page,
           limit,
           total,
           totalPages: Math.ceil(total / limit),
+        },
+        summary: {
+          totalUsers: total,
+          usersWithMenuItems: usersWithCounts.filter((u: any) => u.menu_items_count > 0).length,
+          usersWithOrders: usersWithCounts.filter((u: any) => u.orders_count > 0).length,
+          totalMenuItems: usersWithCounts.reduce((sum: number, u: any) => sum + u.menu_items_count, 0),
+          totalOrders: usersWithCounts.reduce((sum: number, u: any) => sum + u.orders_count, 0),
         },
       })
     } finally {
