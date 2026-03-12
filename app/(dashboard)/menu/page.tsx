@@ -990,8 +990,17 @@ export default function MenuPage() {
             <div className="border border-dashed bg-card dark:bg-black border-border dark:border-neutral-800 rounded-lg">
               <FileUpload 
                 onChange={(files) => {
-                  if (files.length > 0) {
-                    handleImageUpload(files[0])
+                  console.log("📁 FileUpload onChange called with files:", files)
+                  if (files && files.length > 0) {
+                    console.log("📤 Processing file:", files[0].name)
+                    handleImageUpload(files[0]).catch((error) => {
+                      console.error("❌ Error in handleImageUpload:", error)
+                      toast.error(`Failed to process image: ${error.message || "Unknown error"}`)
+                      setIsProcessing(false)
+                      setOcrDialogOpen(false)
+                    })
+                  } else {
+                    console.warn("⚠️ No files received from FileUpload")
                   }
                 }} 
               />
