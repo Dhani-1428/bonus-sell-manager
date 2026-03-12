@@ -112,7 +112,8 @@ export async function GET(request: NextRequest) {
           }
 
           fallbackQuery += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
-          fallbackParams.push(limit, offset)
+          // Ensure limit and offset are numbers
+          fallbackParams.push(Number(limit), Number(offset))
           
           [users] = await connection.execute(fallbackQuery, fallbackParams) as any[]
           // Set default values for missing columns
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Get total count
-      let countQuery = `SELECT COUNT(*) as total FROM users WHERE role != 'super_admin'`
+      let countQuery = `SELECT COUNT(*) as total FROM users WHERE (role != 'super_admin' OR role IS NULL)`
       const countParams: any[] = []
 
       if (search) {
