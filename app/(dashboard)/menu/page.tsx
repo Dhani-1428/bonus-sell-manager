@@ -74,13 +74,18 @@ export default function MenuPage() {
   const refreshItems = useCallback(async () => {
     if (session) {
       try {
+        console.log(`🔄 Refreshing menu items for user: ${session.userId}`)
         const fetchedItems = await getMenuItems(session.userId)
+        console.log(`📋 Fetched ${fetchedItems.length} menu items`)
         setItems(fetchedItems)
+        return fetchedItems
       } catch (error) {
         console.error("Error refreshing menu items:", error)
         toast.error("Failed to refresh menu items")
+        return []
       }
     }
+    return []
   }, [session])
 
   const groupedItems = useMemo(() => {
