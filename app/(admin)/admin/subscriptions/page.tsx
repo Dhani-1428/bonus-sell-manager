@@ -15,6 +15,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -40,8 +41,8 @@ export default function SubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [editingUser, setEditingUser] = useState<UserSubscription | null>(null)
-  const [editStatus, setEditStatus] = useState<string>("")
-  const [editPlan, setEditPlan] = useState<string>("")
+  const [editStatus, setEditStatus] = useState<string>("trial")
+  const [editPlan, setEditPlan] = useState<string | undefined>(undefined)
   const [editEndDate, setEditEndDate] = useState<string>("")
 
   useEffect(() => {
@@ -258,6 +259,9 @@ export default function SubscriptionsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Subscription</DialogTitle>
+            <DialogDescription>
+              Update the subscription details for this user.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -276,12 +280,11 @@ export default function SubscriptionsPage() {
             </div>
             <div>
               <label className="text-sm font-medium">Plan</label>
-              <Select value={editPlan} onValueChange={setEditPlan}>
+              <Select value={editPlan || undefined} onValueChange={(value) => setEditPlan(value || undefined)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select plan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="yearly">Yearly</SelectItem>
                 </SelectContent>
