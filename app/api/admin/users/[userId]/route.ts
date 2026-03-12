@@ -19,25 +19,31 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Validate userId parameter - handle both direct access and Promise
-    let userId: string | undefined
-    if (params && typeof params === 'object' && 'userId' in params) {
-      userId = params.userId
-    } else if (params && typeof params === 'object' && 'then' in params) {
-      // Handle Promise case (Next.js 15+)
-      const resolvedParams = await params as any
-      userId = resolvedParams?.userId
-    } else {
-      userId = undefined
+    // Extract userId from params - handle both sync and async params
+    let userId: string
+    try {
+      // Try direct access first (Next.js 14 and earlier)
+      if (params && typeof params === 'object' && 'userId' in params) {
+        userId = (params as any).userId
+      } else {
+        // Try as Promise (Next.js 15+)
+        const resolvedParams = await (params as any)
+        userId = resolvedParams?.userId
+      }
+    } catch (error) {
+      console.error('[GET /api/admin/users/[userId]] Error accessing params:', error)
+      return NextResponse.json(
+        { error: "Failed to parse route parameters" },
+        { status: 400 }
+      )
     }
 
-    console.log('[GET /api/admin/users/[userId]] params:', params)
-    console.log('[GET /api/admin/users/[userId]] userId:', userId)
+    console.log('[GET /api/admin/users/[userId]] userId:', userId, 'type:', typeof userId)
 
     if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined' || userId === 'null') {
-      console.error('[GET /api/admin/users/[userId]] Invalid userId:', userId)
+      console.error('[GET /api/admin/users/[userId]] Invalid userId:', userId, 'params:', JSON.stringify(params))
       return NextResponse.json(
-        { error: "Invalid user ID", received: userId },
+        { error: "Invalid user ID", received: userId, paramsType: typeof params },
         { status: 400 }
       )
     }
@@ -195,25 +201,31 @@ export async function PUT(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Validate userId parameter - handle both direct access and Promise
-    let userId: string | undefined
-    if (params && typeof params === 'object' && 'userId' in params) {
-      userId = params.userId
-    } else if (params && typeof params === 'object' && 'then' in params) {
-      // Handle Promise case (Next.js 15+)
-      const resolvedParams = await params as any
-      userId = resolvedParams?.userId
-    } else {
-      userId = undefined
+    // Extract userId from params - handle both sync and async params
+    let userId: string
+    try {
+      // Try direct access first (Next.js 14 and earlier)
+      if (params && typeof params === 'object' && 'userId' in params) {
+        userId = (params as any).userId
+      } else {
+        // Try as Promise (Next.js 15+)
+        const resolvedParams = await (params as any)
+        userId = resolvedParams?.userId
+      }
+    } catch (error) {
+      console.error('[PUT /api/admin/users/[userId]] Error accessing params:', error)
+      return NextResponse.json(
+        { error: "Failed to parse route parameters" },
+        { status: 400 }
+      )
     }
 
-    console.log('[PUT /api/admin/users/[userId]] params:', params)
-    console.log('[PUT /api/admin/users/[userId]] userId:', userId)
+    console.log('[PUT /api/admin/users/[userId]] userId:', userId, 'type:', typeof userId)
 
     if (!userId || typeof userId !== 'string' || userId.trim() === '' || userId === 'undefined' || userId === 'null') {
-      console.error('[PUT /api/admin/users/[userId]] Invalid userId:', userId)
+      console.error('[PUT /api/admin/users/[userId]] Invalid userId:', userId, 'params:', JSON.stringify(params))
       return NextResponse.json(
-        { error: "Invalid user ID", received: userId },
+        { error: "Invalid user ID", received: userId, paramsType: typeof params },
         { status: 400 }
       )
     }
