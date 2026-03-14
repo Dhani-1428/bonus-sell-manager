@@ -11,25 +11,42 @@ import {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> | { userId: string } }
 ) {
   try {
+    // Handle both Next.js 14 and 15+ params format
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    
     const session = await getSession()
     
     // Verify user is accessing their own data
-    if (!session || session.userId !== params.userId) {
+    if (!session) {
+      console.log(`[GET /api/users/${userId}/settings] No session found`)
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Please sign in" },
         { status: 401 }
       )
     }
+    
+    console.log(`[GET /api/users/${userId}/settings] Session userId: ${session.userId}, Request userId: ${userId}`)
+    
+    if (session.userId !== userId) {
+      console.log(`[GET /api/users/${userId}/settings] User ID mismatch - Forbidden`)
+      return NextResponse.json(
+        { error: "Forbidden - Cannot access other user's data" },
+        { status: 403 }
+      )
+    }
 
-    const settings = await getRestaurantSettings(params.userId)
+    const settings = await getRestaurantSettings(userId)
     return NextResponse.json({ settings })
   } catch (error: any) {
-    console.error("Error getting restaurant settings:", error)
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    console.error(`[GET /api/users/${userId}/settings] Error getting restaurant settings:`, error)
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || "Failed to get restaurant settings" },
       { status: 500 }
     )
   }
@@ -41,27 +58,44 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> | { userId: string } }
 ) {
   try {
+    // Handle both Next.js 14 and 15+ params format
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    
     const session = await getSession()
     
     // Verify user is accessing their own data
-    if (!session || session.userId !== params.userId) {
+    if (!session) {
+      console.log(`[PUT /api/users/${userId}/settings] No session found`)
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Please sign in" },
+        { status: 401 }
+      )
+    }
+    
+    console.log(`[PUT /api/users/${userId}/settings] Session userId: ${session.userId}, Request userId: ${userId}`)
+    
+    if (session.userId !== userId) {
+      console.log(`[PUT /api/users/${userId}/settings] User ID mismatch - Forbidden`)
+      return NextResponse.json(
+        { error: "Unauthorized - Cannot access other user's data" },
         { status: 401 }
       )
     }
 
     const body = await request.json()
-    await saveRestaurantSettings(params.userId, body)
+    await saveRestaurantSettings(userId, body)
     
     return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error("Error saving restaurant settings:", error)
+    const resolvedParams = await Promise.resolve(params)
+    const userId = resolvedParams.userId
+    console.error(`[PUT /api/users/${userId}/settings] Error saving restaurant settings:`, error)
     return NextResponse.json(
-      { error: error.message },
+      { error: error.message || "Failed to save restaurant settings" },
       { status: 500 }
     )
   }
