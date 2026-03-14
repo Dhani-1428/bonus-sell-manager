@@ -314,7 +314,7 @@ export default function NewOrderPage() {
 
             {/* Discount */}
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-medium text-white">Discount ($)</Label>
+              <Label className="text-sm font-medium text-red-600">Discount ($)</Label>
               <Input
                 type="number"
                 min="0"
@@ -322,7 +322,7 @@ export default function NewOrderPage() {
                 placeholder="0.00"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
-                className="h-12 text-base bg-sidebar-accent border-white/30 text-white placeholder:text-white/50"
+                className="h-12 text-base bg-white border-sidebar text-red-600 placeholder:text-gray-400"
               />
             </div>
 
