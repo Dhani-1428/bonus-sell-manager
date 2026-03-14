@@ -65,8 +65,17 @@ export async function POST(request: NextRequest) {
     const appUrl = getAppUrl()
     console.log("Creating Stripe checkout session:", { plan, userId, price, appUrl })
 
+    // Validate appUrl
+    if (!appUrl || appUrl.includes("undefined")) {
+      console.error("Invalid app URL:", appUrl)
+      return NextResponse.json(
+        { error: "Invalid application configuration. Please contact support." },
+        { status: 500 }
+      )
+    }
+
     // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
+    const session = await stripe!.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
