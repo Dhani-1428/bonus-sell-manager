@@ -37,7 +37,7 @@ export function DashboardSidebar({
     label: item.label,
     href: item.href,
     icon: (
-      <item.icon className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+      <item.icon className="h-5 w-5 shrink-0 text-white" />
     ),
   }))
 
@@ -78,7 +78,7 @@ export function DashboardSidebar({
             onClick={handleLogout}
             className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
-            <LogOut className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            <LogOut className="h-5 w-5 shrink-0 text-white" />
             {!isCollapsed && <span>Logout</span>}
           </button>
         </div>
@@ -91,13 +91,13 @@ export const Logo = () => {
   return (
     <Link
       href="/dashboard"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-white"
     >
-      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-white" />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="font-medium whitespace-pre text-black dark:text-white"
+        className="font-medium whitespace-pre text-white"
       >
         Bonus Food Sell Manager
       </motion.span>
@@ -109,9 +109,9 @@ export const LogoIcon = () => {
   return (
     <Link
       href="/dashboard"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black dark:text-white"
+      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-white"
     >
-      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-black dark:bg-white" />
+      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-white" />
     </Link>
   )
 }

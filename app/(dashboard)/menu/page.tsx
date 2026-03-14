@@ -1032,8 +1032,8 @@ export default function MenuPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Menu</h2>
-          <p className="text-sm text-muted-foreground">{items.length} items in your menu</p>
+          <h2 className="text-2xl font-bold text-white">Menu</h2>
+          <p className="text-sm text-gray-300">{items.length} items in your menu</p>
         </div>
         <div className="flex items-center gap-2">
           {items.length > 0 && (
@@ -1072,7 +1072,7 @@ export default function MenuPage() {
           </button>
         <button
           onClick={openAdd}
-          className="flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          className="flex h-12 items-center gap-2 rounded-lg bg-blue-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
         >
           <Plus className="h-4 w-4" />
           Add Item
@@ -1112,16 +1112,16 @@ export default function MenuPage() {
               onClick={() => setSelectedCategory(cat)}
               className={`flex-shrink-0 flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
                 isSelected
-                  ? "bg-green-100 dark:bg-green-900/30 border-2 border-green-500"
-                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+                  ? "bg-white border-2 border-white"
+                  : "bg-[#2d6b4f] border border-[#3a7a5f] hover:border-white/50"
               }`}
             >
-              <Icon className={`h-5 w-5 ${isSelected ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-400"}`} />
+              <Icon className={`h-5 w-5 ${isSelected ? "text-[#1a4d3a]" : "text-white"}`} />
               <div className="text-left">
-                <p className={`font-semibold ${isSelected ? "text-green-700 dark:text-green-300" : "text-gray-900 dark:text-gray-100"}`}>
+                <p className={`font-semibold ${isSelected ? "text-[#1a4d3a]" : "text-white"}`}>
                   {cat}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className={`text-xs ${isSelected ? "text-gray-600" : "text-gray-300"}`}>
                   {categoryCounts[cat] || 0} Items
                 </p>
               </div>
@@ -1133,28 +1133,28 @@ export default function MenuPage() {
       {/* Menu Items by Category */}
       {Object.entries(selectedCategory === "All" ? groupedItems : filteredGroupedItems).map(([cat, catItems]) => (
         <div key={cat}>
-          <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{cat}</h3>
+          <h3 className="mb-3 text-sm font-semibold text-gray-300 uppercase tracking-wider">{cat}</h3>
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
               return (
-                <Card key={item.id} className="py-0">
+                <Card key={item.id} className="py-0 bg-[#2d6b4f] border-[#3a7a5f]">
                   <CardContent className="flex flex-col gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{item.name}</p>
-                        <p className="text-lg font-bold text-primary">{formatter.format(item.price)}</p>
+                        <p className="font-medium text-white truncate">{item.name}</p>
+                        <p className="text-lg font-bold text-blue-400">{formatter.format(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEdit(item)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-300 hover:bg-[#3a7a5f] hover:text-white transition-colors"
                           aria-label={`Edit ${item.name}`}
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(item.id)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-300 hover:bg-red-500/20 hover:text-red-400 transition-colors"
                           aria-label={`Delete ${item.name}`}
                         >
                           <Trash2 className="h-4 w-4" />
