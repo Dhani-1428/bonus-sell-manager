@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Payment system initialization failed. Please contact support." },
         { status: 500 }
+      )
     }
 
     // Validate Stripe key format
