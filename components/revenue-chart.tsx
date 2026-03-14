@@ -6,21 +6,21 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 export function RevenueChart({ data }: { data: { name: string; quantity: number }[] }) {
   if (data.length === 0) {
     return (
-      <Card className="bg-white border-sidebar">
+      <Card className="bg-sidebar border-sidebar">
         <CardHeader>
-          <CardTitle className="text-base text-black">Top Items Sold</CardTitle>
+          <CardTitle className="text-base text-white">Top Items Sold</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600">No order data yet. Create your first order!</p>
+          <p className="text-sm text-white/80">No order data yet. Create your first order!</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="bg-white border-sidebar">
+    <Card className="bg-sidebar border-sidebar">
       <CardHeader>
-        <CardTitle className="text-base text-black">Top Items Sold</CardTitle>
+        <CardTitle className="text-base text-white">Top Items Sold</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={280}>

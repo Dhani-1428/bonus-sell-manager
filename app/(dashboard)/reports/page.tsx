@@ -198,10 +198,10 @@ export default function ReportsPage() {
           { label: "Discounts", value: formatter.format(summary.discounts) },
           { label: "Net Revenue", value: formatter.format(summary.net) },
         ].map((stat) => (
-          <Card key={stat.label} className="py-4 bg-white border-sidebar">
+          <Card key={stat.label} className="py-4 bg-sidebar border-sidebar">
             <CardContent className="px-4">
-              <p className="text-lg font-bold text-black">{stat.value}</p>
-              <p className="text-xs text-gray-600">{stat.label}</p>
+              <p className="text-lg font-bold text-white">{stat.value}</p>
+              <p className="text-xs text-white/80">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -209,11 +209,11 @@ export default function ReportsPage() {
 
       {/* Best Seller */}
       {summary.bestSeller !== "-" && (
-        <Card className="border-sidebar bg-sidebar/5 py-4">
+        <Card className="border-sidebar bg-sidebar py-4">
           <CardContent className="px-4">
-            <p className="text-xs font-medium text-sidebar uppercase tracking-wider">Best Seller</p>
-            <p className="text-lg font-bold text-black">
-              {summary.bestSeller} <span className="text-sm font-normal text-gray-600">({summary.bestCount} sold)</span>
+            <p className="text-xs font-medium text-white/80 uppercase tracking-wider">Best Seller</p>
+            <p className="text-lg font-bold text-white">
+              {summary.bestSeller} <span className="text-sm font-normal text-white/80">({summary.bestCount} sold)</span>
             </p>
           </CardContent>
         </Card>
@@ -221,9 +221,9 @@ export default function ReportsPage() {
 
       {/* Revenue Chart */}
       {dailyRevenue.length > 0 && (
-        <Card className="bg-white border-sidebar">
+        <Card className="bg-sidebar border-sidebar">
           <CardHeader>
-            <CardTitle className="text-base text-black">Daily Revenue</CardTitle>
+            <CardTitle className="text-base text-white">Daily Revenue</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
@@ -261,13 +261,13 @@ export default function ReportsPage() {
       )}
 
       {/* Orders Table */}
-      <Card className="bg-white border-sidebar">
+      <Card className="bg-sidebar border-sidebar">
         <CardHeader>
-          <CardTitle className="text-base text-black">Order History ({filteredOrders.length})</CardTitle>
+          <CardTitle className="text-base text-white">Order History ({filteredOrders.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredOrders.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-600">No orders for this period.</p>
+            <p className="py-8 text-center text-sm text-white/80">No orders for this period.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>

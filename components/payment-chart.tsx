@@ -11,21 +11,21 @@ const formatter = new Intl.NumberFormat("en-US", {
 export function PaymentChart({ data }: { data: { name: string; value: number; fill: string }[] }) {
   if (data.length === 0) {
     return (
-      <Card className="bg-white border-sidebar">
+      <Card className="bg-sidebar border-sidebar">
         <CardHeader>
-          <CardTitle className="text-base text-black">Payment Methods</CardTitle>
+          <CardTitle className="text-base text-white">Payment Methods</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-600">No payment data yet.</p>
+          <p className="text-sm text-white/80">No payment data yet.</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="bg-white border-sidebar">
+    <Card className="bg-sidebar border-sidebar">
       <CardHeader>
-        <CardTitle className="text-base text-black">Payment Methods</CardTitle>
+        <CardTitle className="text-base text-white">Payment Methods</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={280}>
