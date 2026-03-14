@@ -1032,8 +1032,8 @@ export default function MenuPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Menu</h2>
-          <p className="text-sm text-gray-300">{items.length} items in your menu</p>
+          <h2 className="text-2xl font-bold text-black">Menu</h2>
+          <p className="text-sm text-gray-600">{items.length} items in your menu</p>
         </div>
         <div className="flex items-center gap-2">
           {items.length > 0 && (
@@ -1133,7 +1133,7 @@ export default function MenuPage() {
       {/* Menu Items by Category */}
       {Object.entries(selectedCategory === "All" ? groupedItems : filteredGroupedItems).map(([cat, catItems]) => (
         <div key={cat}>
-          <h3 className="mb-3 text-sm font-semibold text-white uppercase tracking-wider">{cat}</h3>
+          <h3 className="mb-3 text-sm font-semibold text-black uppercase tracking-wider">{cat}</h3>
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
               return (
