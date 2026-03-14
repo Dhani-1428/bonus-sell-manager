@@ -237,11 +237,11 @@ export default function NewOrderPage() {
                   const hasExtras = menuItem?.extras && menuItem.extras.length > 0
                   
                   return (
-                    <div key={`${item.menuItemId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-sidebar p-3 bg-white">
+                    <div key={`${item.menuItemId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-sidebar p-3 bg-sidebar">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-black truncate">{item.menuItemName}</p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-sm font-medium text-white truncate">{item.menuItemName}</p>
+                          <p className="text-xs text-white/80">
                             {formatter.format(item.price)} each
                           </p>
                         </div>
@@ -249,21 +249,21 @@ export default function NewOrderPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => updateQuantity(item.menuItemId, -1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar text-gray-600 hover:bg-sidebar hover:text-white"
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-white/30 text-white hover:bg-white/20"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="h-4 w-4" />
                           </button>
-                          <span className="w-8 text-center text-sm font-semibold text-black">{item.quantity}</span>
+                          <span className="w-8 text-center text-sm font-semibold text-white">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.menuItemId, 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar text-gray-600 hover:bg-sidebar hover:text-white"
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-white/30 text-white hover:bg-white/20"
                             aria-label="Increase quantity"
                           >
                             <Plus className="h-4 w-4" />
                           </button>
                         </div>
-                        <p className="w-20 text-right text-sm font-semibold text-black">
+                        <p className="w-20 text-right text-sm font-semibold text-white">
                           {formatter.format(item.price * item.quantity)}
                         </p>
                         <button
@@ -277,8 +277,8 @@ export default function NewOrderPage() {
                       
                       {/* Extras Selection - Only show for items with extras */}
                       {menuItem?.extras && menuItem.extras.length > 0 && (
-                        <div className="pt-2 border-t border-sidebar">
-                          <Label className="text-xs font-medium text-gray-600 mb-2 block">Extras:</Label>
+                        <div className="pt-2 border-t border-white/30">
+                          <Label className="text-xs font-medium text-white/80 mb-2 block">Extras:</Label>
                           <div className="flex flex-wrap gap-2">
                             {menuItem.extras.map((extra, extraIdx) => {
                               const isSelected = item.selectedExtras?.includes(extra.name) || false
@@ -288,19 +288,19 @@ export default function NewOrderPage() {
                                   onClick={() => toggleExtra(idx, extra.name)}
                                   className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                                     isSelected
-                                      ? "border-sidebar bg-sidebar text-white"
-                                      : "border-sidebar bg-white text-black hover:bg-sidebar hover:text-white"
+                                      ? "border-white bg-white/20 text-white"
+                                      : "border-white/30 bg-sidebar-accent text-white hover:bg-white/20"
                                   }`}
                                 >
                                   <span>{extra.name}</span>
-                                  <span className="text-gray-600">+{formatter.format(extra.price)}</span>
+                                  <span className="text-white/80">+{formatter.format(extra.price)}</span>
                                   {isSelected && <X className="h-3 w-3" />}
                                 </button>
                               )
                             })}
                           </div>
                           {item.selectedExtras && item.selectedExtras.length > 0 && (
-                            <p className="mt-2 text-xs text-gray-600">
+                            <p className="mt-2 text-xs text-white/80">
                               Selected: {item.selectedExtras.join(", ")}
                             </p>
                           )}
@@ -314,7 +314,7 @@ export default function NewOrderPage() {
 
             {/* Discount */}
             <div className="flex flex-col gap-2">
-              <Label className="text-sm font-medium text-black">Discount ($)</Label>
+              <Label className="text-sm font-medium text-white">Discount ($)</Label>
               <Input
                 type="number"
                 min="0"
@@ -322,7 +322,7 @@ export default function NewOrderPage() {
                 placeholder="0.00"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
-                className="h-12 text-base bg-white border-sidebar text-black"
+                className="h-12 text-base bg-sidebar-accent border-white/30 text-white placeholder:text-white/50"
               />
             </div>
 
@@ -347,18 +347,18 @@ export default function NewOrderPage() {
             </div>
 
             {/* Totals */}
-            <div className="rounded-lg border border-sidebar bg-sidebar/5 p-4">
+            <div className="rounded-lg border border-sidebar bg-sidebar-accent p-4">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Gross Total</span>
-                <span className="text-black">{formatter.format(grossTotal)}</span>
+                <span className="text-white/80">Gross Total</span>
+                <span className="text-white">{formatter.format(grossTotal)}</span>
               </div>
               <div className="mt-1 flex justify-between text-sm">
-                <span className="text-gray-600">Discount</span>
-                <span className="text-red-600">-{formatter.format(discountAmount)}</span>
+                <span className="text-white/80">Discount</span>
+                <span className="text-red-300">-{formatter.format(discountAmount)}</span>
               </div>
-              <div className="mt-2 flex justify-between border-t border-sidebar pt-2 text-lg font-bold">
-                <span className="text-black">Net Total</span>
-                <span className="text-black">{formatter.format(netTotal)}</span>
+              <div className="mt-2 flex justify-between border-t border-white/30 pt-2 text-lg font-bold">
+                <span className="text-white">Net Total</span>
+                <span className="text-white">{formatter.format(netTotal)}</span>
               </div>
             </div>
 
