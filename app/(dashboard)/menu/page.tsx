@@ -1039,7 +1039,7 @@ export default function MenuPage() {
           {items.length > 0 && (
             <button
               onClick={() => setDeleteAllConfirm(true)}
-              className="flex h-10 items-center gap-2 rounded-lg border border-[#1a4d3a] bg-white px-4 text-sm font-medium text-red-600 transition-colors hover:bg-[#1a4d3a] hover:text-white"
+              className="flex h-10 items-center gap-2 rounded-lg border border-sidebar bg-white px-4 text-sm font-medium text-red-600 transition-colors hover:bg-sidebar hover:text-white"
               title="Delete all menu items"
             >
               <Trash className="h-4 w-4" />
@@ -1065,14 +1065,14 @@ export default function MenuPage() {
               }
               input.click()
             }}
-            className="flex h-12 items-center gap-2 rounded-lg border border-[#1a4d3a] bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-[#1a4d3a] hover:text-white"
+            className="flex h-12 items-center gap-2 rounded-lg border border-sidebar bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-sidebar hover:text-white"
           >
             <Upload className="h-4 w-4" />
             Extract Menu with AI
           </button>
         <button
           onClick={openAdd}
-          className="flex h-12 items-center gap-2 rounded-lg border border-[#1a4d3a] bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-[#1a4d3a] hover:text-white"
+          className="flex h-12 items-center gap-2 rounded-lg border border-sidebar bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-sidebar hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Add Item
@@ -1087,13 +1087,13 @@ export default function MenuPage() {
           onClick={() => setSelectedCategory("All")}
           className={`flex-shrink-0 flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
             selectedCategory === "All"
-              ? "bg-white border-2 border-[#1a4d3a] hover:bg-[#1a4d3a] hover:text-white"
-              : "bg-[#2d6b4f] border border-[#1a4d3a] hover:bg-[#1a4d3a]"
+              ? "bg-white border-2 border-sidebar hover:bg-sidebar hover:text-white"
+              : "bg-sidebar-accent border border-sidebar hover:bg-sidebar"
           }`}
         >
-          <Grid3x3 className={`h-5 w-5 transition-colors ${selectedCategory === "All" ? "text-black group-hover:text-white" : "text-white"}`} />
+          <Grid3x3 className={`h-5 w-5 transition-colors ${selectedCategory === "All" ? "text-sidebar group-hover:text-white" : "text-white"}`} />
           <div className="text-left">
-            <p className={`font-semibold transition-colors ${selectedCategory === "All" ? "text-black group-hover:text-white" : "text-white"}`}>
+            <p className={`font-semibold transition-colors ${selectedCategory === "All" ? "text-sidebar group-hover:text-white" : "text-white"}`}>
               All
             </p>
             <p className={`text-xs transition-colors ${selectedCategory === "All" ? "text-gray-600 group-hover:text-gray-200" : "text-gray-300"}`}>
@@ -1112,13 +1112,13 @@ export default function MenuPage() {
               onClick={() => setSelectedCategory(cat)}
               className={`group flex-shrink-0 flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
                 isSelected
-                  ? "bg-white border-2 border-[#1a4d3a] hover:bg-[#1a4d3a] hover:text-white"
-                  : "bg-[#2d6b4f] border border-[#1a4d3a] hover:bg-[#1a4d3a]"
+                  ? "bg-white border-2 border-sidebar hover:bg-sidebar hover:text-white"
+                  : "bg-sidebar-accent border border-sidebar hover:bg-sidebar"
               }`}
             >
-              <Icon className={`h-5 w-5 transition-colors ${isSelected ? "text-black group-hover:text-white" : "text-white"}`} />
+              <Icon className={`h-5 w-5 transition-colors ${isSelected ? "text-sidebar group-hover:text-white" : "text-white"}`} />
               <div className="text-left">
-                <p className={`font-semibold transition-colors ${isSelected ? "text-black group-hover:text-white" : "text-white"}`}>
+                <p className={`font-semibold transition-colors ${isSelected ? "text-sidebar group-hover:text-white" : "text-white"}`}>
                   {cat}
                 </p>
                 <p className={`text-xs transition-colors ${isSelected ? "text-gray-600 group-hover:text-gray-200" : "text-gray-300"}`}>
@@ -1137,17 +1137,17 @@ export default function MenuPage() {
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
               return (
-                <Card key={item.id} className="py-0 bg-white border-[#1a4d3a] hover:border-[#1a4d3a] hover:shadow-lg transition-all">
+                <Card key={item.id} className="py-0 bg-white border-sidebar hover:border-sidebar hover:shadow-lg transition-all">
                   <CardContent className="flex flex-col gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-black truncate">{item.name}</p>
-                        <p className="text-lg font-bold text-[#1a4d3a]">{formatter.format(item.price)}</p>
+                        <p className="text-lg font-bold text-sidebar">{formatter.format(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEdit(item)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-[#1a4d3a] hover:text-white transition-colors"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-sidebar hover:text-white transition-colors"
                           aria-label={`Edit ${item.name}`}
                         >
                           <Pencil className="h-4 w-4" />

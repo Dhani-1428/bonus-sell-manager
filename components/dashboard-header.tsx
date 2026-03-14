@@ -16,7 +16,7 @@ export function DashboardHeader({
   const { theme, setTheme } = useTheme()
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#1a4d3a] bg-[#1a4d3a] px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar bg-sidebar px-4">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-white hover:bg-white/10" />
         <div className="hidden lg:block">
