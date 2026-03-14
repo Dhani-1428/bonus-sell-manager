@@ -268,7 +268,7 @@ export default function NewOrderPage() {
                         </p>
                         <button
                           onClick={() => removeItem(item.menuItemId)}
-                          className="flex h-9 w-9 items-center justify-center rounded-md text-destructive hover:bg-destructive/10"
+                          className="flex h-9 w-9 items-center justify-center rounded-md text-white hover:bg-red-500/20 hover:text-red-300"
                           aria-label="Remove item"
                         >
                           <Trash2 className="h-4 w-4" />
