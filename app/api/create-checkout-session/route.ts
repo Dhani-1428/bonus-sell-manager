@@ -8,9 +8,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Stripe secret key is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("STRIPE_SECRET_KEY is not configured")
+      return NextResponse.json(
+        { error: "Payment system not configured. Please contact support." },
+        { status: 500 }
+      )
+    }
+
     const { plan, userId } = await request.json()
 
     if (!plan || !userId) {
+      console.error("Missing required parameters:", { plan, userId })
       return NextResponse.json({ error: "Missing plan or userId" }, { status: 400 })
     }
 
@@ -22,8 +32,12 @@ export async function POST(request: NextRequest) {
 
     const price = prices[plan as keyof typeof prices]
     if (!price) {
+      console.error("Invalid plan:", plan)
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
+
+    const appUrl = getAppUrl()
+    console.log("Creating Stripe checkout session:", { plan, userId, price, appUrl })
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -43,8 +57,8 @@ export async function POST(request: NextRequest) {
       ],
       // Treat both as one‑time payments that unlock access for a fixed duration
       mode: "payment",
-      success_url: `${getAppUrl()}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${getAppUrl()}/subscription?canceled=true`,
+      success_url: `${appUrl}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/subscription?canceled=true`,
       client_reference_id: userId,
       metadata: {
         userId,
@@ -52,11 +66,28 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    console.log("Stripe checkout session created:", session.id)
     return NextResponse.json({ sessionId: session.id, url: session.url })
   } catch (error: any) {
-    console.error("Stripe checkout error:", error)
+    console.error("Stripe checkout error:", {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      stack: error.stack,
+    })
+    
+    // Provide more helpful error messages
+    let errorMessage = "Failed to create checkout session"
+    if (error.type === "StripeInvalidRequestError") {
+      errorMessage = "Invalid payment configuration. Please contact support."
+    } else if (error.message?.includes("No such API key")) {
+      errorMessage = "Payment system not configured. Please contact support."
+    } else if (error.message) {
+      errorMessage = error.message
+    }
+
     return NextResponse.json(
-      { error: "Failed to create checkout session", details: error.message },
+      { error: errorMessage, details: process.env.NODE_ENV === "development" ? error.message : undefined },
       { status: 500 }
     )
   }
