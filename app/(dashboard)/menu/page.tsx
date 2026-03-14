@@ -1065,14 +1065,14 @@ export default function MenuPage() {
               }
               input.click()
             }}
-            className="flex h-12 items-center gap-2 rounded-lg border border-border bg-card px-5 text-sm font-semibold text-foreground transition-colors hover:bg-accent"
+            className="flex h-12 items-center gap-2 rounded-lg border border-[#1a4d3a] bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-[#1a4d3a] hover:text-white"
           >
             <Upload className="h-4 w-4" />
             Extract Menu with AI
           </button>
         <button
           onClick={openAdd}
-          className="flex h-12 items-center gap-2 rounded-lg bg-blue-500 px-5 text-sm font-semibold text-white transition-colors hover:bg-blue-600"
+          className="flex h-12 items-center gap-2 rounded-lg border border-[#1a4d3a] bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-[#1a4d3a] hover:text-white"
         >
           <Plus className="h-4 w-4" />
           Add Item
