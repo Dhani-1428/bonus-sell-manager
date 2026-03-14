@@ -1137,7 +1137,7 @@ export default function MenuPage() {
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
               return (
-                <Card key={item.id} className="py-0 bg-white border-sidebar hover:bg-sidebar hover:border-sidebar-primary hover:shadow-lg transition-all">
+                <Card key={item.id} className="group py-0 bg-white border-sidebar hover:bg-sidebar hover:border-sidebar-primary hover:shadow-lg transition-all">
                   <CardContent className="flex flex-col gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
@@ -1147,14 +1147,14 @@ export default function MenuPage() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEdit(item)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-sidebar hover:text-white transition-colors"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-sidebar hover:text-white group-hover:text-white group-hover:bg-white/20 transition-colors"
                           aria-label={`Edit ${item.name}`}
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(item.id)}
-                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-red-500/20 hover:text-red-600 transition-colors"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 hover:bg-red-500/20 hover:text-red-600 group-hover:text-white group-hover:bg-white/20 transition-colors"
                           aria-label={`Delete ${item.name}`}
                         >
                           <Trash2 className="h-4 w-4" />
