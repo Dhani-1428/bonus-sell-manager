@@ -155,21 +155,21 @@ export default function SubscriptionPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Current Status (3D card) */}
         <CardContainer className="inter-var">
-          <ThreeDCardBody className="bg-sidebar border border-white rounded-xl">
+          <ThreeDCardBody className="bg-white border border-sidebar rounded-xl h-full">
           <CardItem translateZ="40">
-            <CardHeader>
-              <CardTitle>Current Status</CardTitle>
-              <CardDescription>Your subscription and trial information</CardDescription>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-black">Current Status</CardTitle>
+              <CardDescription className="text-gray-600">Your subscription and trial information</CardDescription>
             </CardHeader>
           </CardItem>
           <CardItem translateZ="80">
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="flex items-center gap-4">
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                  className={`flex h-12 w-12 items-center justify-center rounded-full shrink-0 ${
                     subscriptionStatus.hasAccess
-                      ? "bg-white/20 text-white"
-                      : "bg-red-500/20 text-red-300"
+                      ? "bg-sidebar/10 text-sidebar"
+                      : "bg-red-500/10 text-red-500"
                   }`}
                 >
                   {subscriptionStatus.hasAccess ? (
@@ -178,9 +178,9 @@ export default function SubscriptionPage() {
                     <X className="h-6 w-6" />
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-white">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-black">
                       {subscriptionStatus.status === "trial" && "Free Trial"}
                       {subscriptionStatus.status === "active" && "Active Subscription"}
                       {subscriptionStatus.status === "expired" && "Subscription Expired"}
@@ -197,11 +197,11 @@ export default function SubscriptionPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-white/80 mt-1">{subscriptionStatus.message}</p>
+                  <p className="text-sm text-gray-600 mt-1">{subscriptionStatus.message}</p>
                   {subscriptionStatus.daysRemaining > 0 && (
                     <div className="flex items-center gap-2 mt-2">
-                      <Clock className="h-4 w-4 text-white/80" />
-                      <span className="text-sm text-white/80">
+                      <Clock className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-600">
                         {subscriptionStatus.daysRemaining} day{subscriptionStatus.daysRemaining !== 1 ? "s" : ""} remaining
                       </span>
                     </div>
@@ -215,14 +215,20 @@ export default function SubscriptionPage() {
 
       {/* Secure Payment (3D card) */}
       <CardContainer className="inter-var">
-        <ThreeDCardBody className="bg-sidebar rounded-xl border border-white">
+        <ThreeDCardBody className="bg-white rounded-xl border border-sidebar h-full">
           <CardItem translateZ="40">
-            <CardContent className="pt-6">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-black">Secure Payment</CardTitle>
+              <CardDescription className="text-gray-600">Payment processing information</CardDescription>
+            </CardHeader>
+          </CardItem>
+          <CardItem translateZ="80">
+            <CardContent className="pt-0">
               <div className="flex items-start gap-3">
-                <CreditCard className="h-5 w-5 text-white/80 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-white mb-1">Secure Payment</p>
-                  <p className="text-xs text-white/80">
+                <CreditCard className="h-5 w-5 text-sidebar shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-black mb-2">Stripe Payment Processing</p>
+                  <p className="text-xs text-gray-600 leading-relaxed">
                     Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
                   </p>
                 </div>
