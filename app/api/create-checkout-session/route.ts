@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { getAppUrl } from "@/lib/redirect"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-12-18.acacia",
-})
+// Initialize Stripe with error handling
+let stripe: Stripe | null = null
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-12-18.acacia",
+    })
+  }
+} catch (error) {
+  console.error("Failed to initialize Stripe:", error)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +21,24 @@ export async function POST(request: NextRequest) {
       console.error("STRIPE_SECRET_KEY is not configured")
       return NextResponse.json(
         { error: "Payment system not configured. Please contact support." },
+        { status: 500 }
+      )
+    }
+
+    // Check if Stripe was initialized
+    if (!stripe) {
+      console.error("Stripe initialization failed")
+      return NextResponse.json(
+        { error: "Payment system initialization failed. Please contact support." },
+        { status: 500 }
+    }
+
+    // Validate Stripe key format
+    const secretKey = process.env.STRIPE_SECRET_KEY
+    if (!secretKey.startsWith("sk_") && !secretKey.startsWith("sk_test_") && !secretKey.startsWith("sk_live_")) {
+      console.error("Invalid Stripe secret key format")
+      return NextResponse.json(
+        { error: "Invalid payment configuration. Please contact support." },
         { status: 500 }
       )
     }
@@ -78,16 +104,32 @@ export async function POST(request: NextRequest) {
     
     // Provide more helpful error messages
     let errorMessage = "Failed to create checkout session"
+    let errorDetails: string | undefined = undefined
+
     if (error.type === "StripeInvalidRequestError") {
-      errorMessage = "Invalid payment configuration. Please contact support."
-    } else if (error.message?.includes("No such API key")) {
-      errorMessage = "Payment system not configured. Please contact support."
+      errorMessage = "Invalid payment configuration. Please check your Stripe API keys."
+      errorDetails = error.message
+    } else if (error.message?.includes("No such API key") || error.message?.includes("Invalid API Key")) {
+      errorMessage = "Invalid Stripe API key. Please check your environment variables."
+      errorDetails = "The Stripe secret key is invalid or expired."
+    } else if (error.message?.includes("You must provide")) {
+      errorMessage = "Missing required payment information."
+      errorDetails = error.message
     } else if (error.message) {
       errorMessage = error.message
+      errorDetails = error.stack
     }
 
+    // In development, show more details
+    const isDevelopment = process.env.NODE_ENV === "development"
+    
     return NextResponse.json(
-      { error: errorMessage, details: process.env.NODE_ENV === "development" ? error.message : undefined },
+      { 
+        error: errorMessage, 
+        details: isDevelopment ? errorDetails : undefined,
+        type: error.type,
+        code: error.code,
+      },
       { status: 500 }
     )
   }
