@@ -159,12 +159,12 @@ export default function ReportsPage() {
     <div className="flex flex-col gap-6 w-full h-full">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Reports</h2>
-          <p className="text-sm text-muted-foreground">Analyze your sales performance</p>
+          <h2 className="text-2xl font-bold text-black">Reports</h2>
+          <p className="text-sm text-gray-600">Analyze your sales performance</p>
         </div>
         <button
           onClick={exportCSV}
-          className="flex h-12 items-center gap-2 rounded-lg border border-border bg-card px-5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          className="flex h-12 items-center gap-2 rounded-lg border border-sidebar bg-white px-5 text-sm font-semibold text-black transition-colors hover:bg-sidebar hover:text-white"
         >
           <Download className="h-4 w-4" />
           Export CSV
@@ -173,15 +173,15 @@ export default function ReportsPage() {
 
       {/* Period Filter */}
       <div className="flex items-center gap-2 overflow-x-auto">
-        <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <Calendar className="h-4 w-4 shrink-0 text-gray-600" />
         {periods.map((p) => (
           <button
             key={p.key}
             onClick={() => setPeriod(p.key)}
             className={`flex h-10 shrink-0 items-center rounded-lg px-4 text-sm font-medium transition-colors ${
               period === p.key
-                ? "bg-primary text-primary-foreground"
-                : "border border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                ? "bg-sidebar text-white"
+                : "border border-sidebar bg-white text-black hover:bg-sidebar hover:text-white"
             }`}
           >
             {p.label}
@@ -198,10 +198,10 @@ export default function ReportsPage() {
           { label: "Discounts", value: formatter.format(summary.discounts) },
           { label: "Net Revenue", value: formatter.format(summary.net) },
         ].map((stat) => (
-          <Card key={stat.label} className="py-4">
+          <Card key={stat.label} className="py-4 bg-white border-sidebar">
             <CardContent className="px-4">
-              <p className="text-lg font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-lg font-bold text-black">{stat.value}</p>
+              <p className="text-xs text-gray-600">{stat.label}</p>
             </CardContent>
           </Card>
         ))}
@@ -209,11 +209,11 @@ export default function ReportsPage() {
 
       {/* Best Seller */}
       {summary.bestSeller !== "-" && (
-        <Card className="border-primary/30 bg-primary/5 py-4">
+        <Card className="border-sidebar bg-sidebar/5 py-4">
           <CardContent className="px-4">
-            <p className="text-xs font-medium text-primary uppercase tracking-wider">Best Seller</p>
-            <p className="text-lg font-bold text-foreground">
-              {summary.bestSeller} <span className="text-sm font-normal text-muted-foreground">({summary.bestCount} sold)</span>
+            <p className="text-xs font-medium text-sidebar uppercase tracking-wider">Best Seller</p>
+            <p className="text-lg font-bold text-black">
+              {summary.bestSeller} <span className="text-sm font-normal text-gray-600">({summary.bestCount} sold)</span>
             </p>
           </CardContent>
         </Card>
@@ -221,9 +221,9 @@ export default function ReportsPage() {
 
       {/* Revenue Chart */}
       {dailyRevenue.length > 0 && (
-        <Card>
+        <Card className="bg-white border-sidebar">
           <CardHeader>
-            <CardTitle className="text-base">Daily Revenue</CardTitle>
+            <CardTitle className="text-base text-black">Daily Revenue</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
@@ -261,13 +261,13 @@ export default function ReportsPage() {
       )}
 
       {/* Orders Table */}
-      <Card>
+      <Card className="bg-white border-sidebar">
         <CardHeader>
-          <CardTitle className="text-base">Order History ({filteredOrders.length})</CardTitle>
+          <CardTitle className="text-base text-black">Order History ({filteredOrders.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredOrders.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No orders for this period.</p>
+            <p className="py-8 text-center text-sm text-gray-600">No orders for this period.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -299,7 +299,7 @@ export default function ReportsPage() {
                         </TableCell>
                         <TableCell className="text-right text-sm font-medium">{formatter.format(order.finalAmount)}</TableCell>
                         <TableCell>
-                          <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize text-muted-foreground">
+                          <span className="inline-flex rounded-md bg-sidebar/10 px-2 py-1 text-xs font-medium capitalize text-sidebar">
                             {order.paymentMethod}
                           </span>
                         </TableCell>

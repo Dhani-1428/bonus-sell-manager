@@ -147,8 +147,8 @@ export default function SubscriptionPage() {
   return (
     <div className="flex flex-col gap-6 w-full h-full">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Subscription</h2>
-        <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>
+        <h2 className="text-2xl font-bold text-black">Subscription</h2>
+        <p className="text-sm text-gray-600">Manage your subscription and billing</p>
       </div>
 
       {/* Current Status (3D card) */}
@@ -178,7 +178,7 @@ export default function SubscriptionPage() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-foreground">
+                    <p className="font-semibold text-black">
                       {subscriptionStatus.status === "trial" && "Free Trial"}
                       {subscriptionStatus.status === "active" && "Active Subscription"}
                       {subscriptionStatus.status === "expired" && "Subscription Expired"}
@@ -195,11 +195,11 @@ export default function SubscriptionPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{subscriptionStatus.message}</p>
+                  <p className="text-sm text-gray-600 mt-1">{subscriptionStatus.message}</p>
                   {subscriptionStatus.daysRemaining > 0 && (
                     <div className="flex items-center gap-2 mt-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4 text-gray-600" />
+                      <span className="text-sm text-gray-600">
                         {subscriptionStatus.daysRemaining} day{subscriptionStatus.daysRemaining !== 1 ? "s" : ""} remaining
                       </span>
                     </div>
@@ -213,13 +213,13 @@ export default function SubscriptionPage() {
 
       {/* Subscription Plans - always visible so user can easily subscribe/upgrade */}
       <div id="subscription-plans">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Choose a Plan</h3>
+        <h3 className="text-lg font-semibold text-black mb-4">Choose a Plan</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {plans.map((plan) => (
             <CardContainer key={plan.name} className="inter-var">
               <ThreeDCardBody
                 className={`rounded-xl border p-4 ${
-                  plan.popular ? "border-primary ring-1 ring-primary/40" : "border-border bg-background"
+                  plan.popular ? "border-sidebar ring-1 ring-sidebar/40 bg-white" : "border-sidebar bg-white"
                 }`}
               >
                 <CardItem translateZ="40">
@@ -229,18 +229,18 @@ export default function SubscriptionPage() {
                         <CardTitle className="flex items-center gap-2">
                           {plan.name}
                           {plan.popular && (
-                            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary">
+                            <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-sidebar/10 text-sidebar">
                               Best Value
                             </span>
                           )}
                         </CardTitle>
                         <CardDescription className="mt-2">
-                          <span className="text-2xl font-bold text-foreground">{plan.price}</span>
-                          <span className="text-muted-foreground"> {plan.period}</span>
+                          <span className="text-2xl font-bold text-black">{plan.price}</span>
+                          <span className="text-gray-600"> {plan.period}</span>
                         </CardDescription>
                       </div>
-                      {plan.name === "6 Months" && <Zap className="h-8 w-8 text-muted-foreground" />}
-                      {plan.name === "12 Months" && <Crown className="h-8 w-8 text-primary" />}
+                      {plan.name === "6 Months" && <Zap className="h-8 w-8 text-gray-600" />}
+                      {plan.name === "12 Months" && <Crown className="h-8 w-8 text-sidebar" />}
                     </div>
                   </CardHeader>
                 </CardItem>
@@ -250,15 +250,18 @@ export default function SubscriptionPage() {
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <Check className="h-5 w-5 text-sidebar shrink-0 mt-0.5" />
-                          <span className="text-sm text-foreground">{feature}</span>
+                          <span className="text-sm text-black">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     <Button
                       onClick={() => handleSubscribe(plan.plan)}
                       disabled={isProcessing}
-                      className="w-full"
-                      variant={plan.popular ? "default" : "outline"}
+                      className={`w-full ${
+                        plan.popular 
+                          ? "bg-sidebar text-white hover:bg-sidebar/90" 
+                          : "bg-white border border-sidebar text-black hover:bg-sidebar hover:text-white"
+                      }`}
                     >
                       {isProcessing
                         ? "Processing..."
@@ -277,7 +280,7 @@ export default function SubscriptionPage() {
       {/* Active Subscription Info (3D card) */}
       {subscriptionStatus.hasAccess && subscriptionStatus.status === "active" && (
         <CardContainer className="inter-var">
-          <ThreeDCardBody className="bg-background border border-border rounded-xl">
+          <ThreeDCardBody className="bg-white border border-sidebar rounded-xl">
             <CardItem translateZ="40">
               <CardHeader>
                 <CardTitle>Subscription Details</CardTitle>
@@ -288,21 +291,21 @@ export default function SubscriptionPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Plan</span>
-                    <span className="font-medium text-foreground capitalize">
+                    <span className="text-sm text-gray-600">Plan</span>
+                    <span className="font-medium text-black capitalize">
                       {subscriptionStatus.plan || "Monthly"}
                     </span>
                   </div>
                   {subscriptionStatus.subscriptionEndDate && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Renews on</span>
-                      <span className="font-medium text-foreground">
+                      <span className="text-sm text-gray-600">Renews on</span>
+                      <span className="font-medium text-black">
                         {new Date(subscriptionStatus.subscriptionEndDate).toLocaleDateString()}
                       </span>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Status</span>
+                    <span className="text-sm text-gray-600">Status</span>
                     <span className="px-2 py-1 text-xs font-medium rounded-full bg-sidebar/10 text-sidebar">
                       Active
                     </span>
@@ -316,14 +319,14 @@ export default function SubscriptionPage() {
 
       {/* Payment Info (3D card) */}
       <CardContainer className="inter-var">
-        <ThreeDCardBody className="bg-muted/50 rounded-xl border border-border/40">
+        <ThreeDCardBody className="bg-white rounded-xl border border-sidebar">
           <CardItem translateZ="40">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
-                <CreditCard className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+                <CreditCard className="h-5 w-5 text-gray-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground mb-1">Secure Payment</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium text-black mb-1">Secure Payment</p>
+                  <p className="text-xs text-gray-600">
                     Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
                   </p>
                 </div>
