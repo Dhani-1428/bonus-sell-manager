@@ -207,10 +207,10 @@ export default function NewOrderPage() {
                           return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
                         })
                       }}
-                      className="flex flex-col items-center gap-1 rounded-lg border border-sidebar bg-white p-3 text-center transition-colors hover:bg-sidebar hover:text-white active:scale-95"
+                      className="group flex flex-col items-center gap-1 rounded-lg border border-sidebar bg-white p-3 text-center transition-colors hover:bg-sidebar hover:text-white active:scale-95"
                     >
-                      <span className="text-sm font-medium text-black truncate w-full group-hover:text-white">{item.name}</span>
-                      <span className="text-xs text-gray-600 group-hover:text-white/80">{formatter.format(item.price)}</span>
+                      <span className="text-sm font-medium text-black truncate w-full group-hover:text-white transition-colors">{item.name}</span>
+                      <span className="text-xs text-gray-600 group-hover:text-white/80 transition-colors">{formatter.format(item.price)}</span>
                     </button>
                   )
                 })}
