@@ -166,8 +166,8 @@ export default function SubscriptionPage() {
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-full ${
                     subscriptionStatus.hasAccess
-                      ? "bg-sidebar/10 text-sidebar"
-                      : "bg-red-500/10 text-red-500"
+                      ? "bg-white/20 text-white"
+                      : "bg-red-500/20 text-red-300"
                   }`}
                 >
                   {subscriptionStatus.hasAccess ? (
