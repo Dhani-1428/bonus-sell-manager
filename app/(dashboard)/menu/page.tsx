@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2, Trash } from "lucide-react"
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2, Trash, Grid3x3, Coffee, Soup, UtensilsCrossed, ChefHat, Burger } from "lucide-react"
 import { HoverEffect } from "@/components/ui/card-hover-effect"
 import { toast } from "sonner"
 import { createWorker } from "tesseract.js"
@@ -29,6 +29,18 @@ import { FileUpload } from "@/components/ui/file-upload"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 const categories = ["Main", "Starter", "Dessert", "Beverage"]
+
+// Category icons mapping
+const categoryIcons: Record<string, any> = {
+  "All": Grid3x3,
+  "Main": ChefHat,
+  "Starter": Soup,
+  "Breakfast": Coffee,
+  "Pasta": UtensilsCrossed,
+  "Burgers": Burger,
+  "Dessert": Coffee,
+  "Beverage": Coffee,
+}
 
 export default function MenuPage() {
   const { session } = useAuth()
@@ -88,6 +100,8 @@ export default function MenuPage() {
     return []
   }, [session])
 
+  const [selectedCategory, setSelectedCategory] = useState<string>("All")
+
   const groupedItems = useMemo(() => {
     const groups: Record<string, MenuItem[]> = {}
     items.forEach((item) => {
@@ -96,6 +110,38 @@ export default function MenuPage() {
     })
     return groups
   }, [items])
+
+  // Get all unique categories from items
+  const allCategories = useMemo(() => {
+    const cats = new Set<string>()
+    items.forEach((item) => cats.add(item.category))
+    return Array.from(cats).sort()
+  }, [items])
+
+  // Get category counts
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { "All": items.length }
+    items.forEach((item) => {
+      counts[item.category] = (counts[item.category] || 0) + 1
+    })
+    return counts
+  }, [items])
+
+  // Filter items by selected category
+  const filteredItems = useMemo(() => {
+    if (selectedCategory === "All") return items
+    return items.filter((item) => item.category === selectedCategory)
+  }, [items, selectedCategory])
+
+  // Group filtered items
+  const filteredGroupedItems = useMemo(() => {
+    const groups: Record<string, MenuItem[]> = {}
+    filteredItems.forEach((item) => {
+      if (!groups[item.category]) groups[item.category] = []
+      groups[item.category].push(item)
+    })
+    return groups
+  }, [filteredItems])
 
   const openAdd = () => {
     // Close OCR dialog if open to prevent conflicts
@@ -1034,7 +1080,58 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {Object.entries(groupedItems).map(([cat, catItems]) => (
+      {/* Category Cards */}
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+        {/* All Category Card */}
+        <button
+          onClick={() => setSelectedCategory("All")}
+          className={`flex-shrink-0 flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
+            selectedCategory === "All"
+              ? "bg-green-100 dark:bg-green-900/30 border-2 border-green-500"
+              : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+          }`}
+        >
+          <Grid3x3 className={`h-5 w-5 ${selectedCategory === "All" ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-400"}`} />
+          <div className="text-left">
+            <p className={`font-semibold ${selectedCategory === "All" ? "text-green-700 dark:text-green-300" : "text-gray-900 dark:text-gray-100"}`}>
+              All
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {categoryCounts["All"] || 0} Items
+            </p>
+          </div>
+        </button>
+
+        {/* Category Cards */}
+        {allCategories.map((cat) => {
+          const Icon = categoryIcons[cat] || ChefHat
+          const isSelected = selectedCategory === cat
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`flex-shrink-0 flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
+                isSelected
+                  ? "bg-green-100 dark:bg-green-900/30 border-2 border-green-500"
+                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+              }`}
+            >
+              <Icon className={`h-5 w-5 ${isSelected ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-400"}`} />
+              <div className="text-left">
+                <p className={`font-semibold ${isSelected ? "text-green-700 dark:text-green-300" : "text-gray-900 dark:text-gray-100"}`}>
+                  {cat}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {categoryCounts[cat] || 0} Items
+                </p>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Menu Items by Category */}
+      {Object.entries(selectedCategory === "All" ? groupedItems : filteredGroupedItems).map(([cat, catItems]) => (
         <div key={cat}>
           <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">{cat}</h3>
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">

@@ -88,15 +88,15 @@ export default function AdminLayout({
   if (admin) {
     return (
       <SidebarProvider>
-        <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
+        <div className={cn("flex h-svh w-full overflow-hidden bg-white dark:bg-gray-900")}>
           <AdminSidebar userName={admin.name || admin.email} />
-          <SidebarInset className="w-full flex-1 min-w-0">
+          <SidebarInset className="w-full flex-1 min-w-0 bg-white dark:bg-gray-900">
             <DashboardHeader
               userName={admin.name || admin.email}
               onMenuToggle={() => {}}
               onLogout={handleLogout}
             />
-            <main className="flex-1 overflow-y-auto w-full h-full">
+            <main className="flex-1 overflow-y-auto w-full h-full bg-white dark:bg-gray-900">
               <div className="w-full h-full p-0">
                 {children}
               </div>
