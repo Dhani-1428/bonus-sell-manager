@@ -153,7 +153,7 @@ export default function SubscriptionPage() {
 
       {/* Current Status (3D card) */}
       <CardContainer className="inter-var">
-        <ThreeDCardBody className="bg-background border border-border rounded-xl">
+        <ThreeDCardBody className="bg-white border border-sidebar rounded-xl">
           <CardItem translateZ="40">
             <CardHeader>
               <CardTitle>Current Status</CardTitle>
