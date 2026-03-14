@@ -151,9 +151,11 @@ export default function SubscriptionPage() {
         <p className="text-sm text-gray-600">Manage your subscription and billing</p>
       </div>
 
-      {/* Current Status (3D card) */}
-      <CardContainer className="inter-var">
-        <ThreeDCardBody className="bg-sidebar border border-sidebar rounded-xl">
+      {/* Current Status and Secure Payment - Two small cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Current Status (3D card) */}
+        <CardContainer className="inter-var">
+          <ThreeDCardBody className="bg-sidebar border border-white rounded-xl">
           <CardItem translateZ="40">
             <CardHeader>
               <CardTitle>Current Status</CardTitle>
@@ -211,6 +213,26 @@ export default function SubscriptionPage() {
         </ThreeDCardBody>
       </CardContainer>
 
+      {/* Secure Payment (3D card) */}
+      <CardContainer className="inter-var">
+        <ThreeDCardBody className="bg-sidebar rounded-xl border border-white">
+          <CardItem translateZ="40">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <CreditCard className="h-5 w-5 text-white/80 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-white mb-1">Secure Payment</p>
+                  <p className="text-xs text-white/80">
+                    Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </CardItem>
+        </ThreeDCardBody>
+      </CardContainer>
+      </div>
+
       {/* Subscription Plans - always visible so user can easily subscribe/upgrade */}
       <div id="subscription-plans">
         <h3 className="text-lg font-semibold text-black mb-4">Choose a Plan</h3>
@@ -219,7 +241,7 @@ export default function SubscriptionPage() {
             <CardContainer key={plan.name} className="inter-var">
               <ThreeDCardBody
                 className={`rounded-xl border p-4 ${
-                  plan.popular ? "border-sidebar ring-1 ring-sidebar/40 bg-sidebar" : "border-sidebar bg-sidebar"
+                  plan.popular ? "border-white ring-1 ring-white/40 bg-sidebar" : "border-white bg-sidebar"
                 }`}
               >
                 <CardItem translateZ="40">
@@ -280,7 +302,7 @@ export default function SubscriptionPage() {
       {/* Active Subscription Info (3D card) */}
       {subscriptionStatus.hasAccess && subscriptionStatus.status === "active" && (
         <CardContainer className="inter-var">
-          <ThreeDCardBody className="bg-sidebar border border-sidebar rounded-xl">
+          <ThreeDCardBody className="bg-sidebar border border-white rounded-xl">
             <CardItem translateZ="40">
               <CardHeader>
                 <CardTitle>Subscription Details</CardTitle>
@@ -317,24 +339,6 @@ export default function SubscriptionPage() {
         </CardContainer>
       )}
 
-      {/* Payment Info (3D card) */}
-      <CardContainer className="inter-var">
-        <ThreeDCardBody className="bg-sidebar rounded-xl border border-sidebar">
-          <CardItem translateZ="40">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <CreditCard className="h-5 w-5 text-white/80 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-white mb-1">Secure Payment</p>
-                  <p className="text-xs text-white/80">
-                    Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </CardItem>
-        </ThreeDCardBody>
-      </CardContainer>
     </div>
   )
 }
