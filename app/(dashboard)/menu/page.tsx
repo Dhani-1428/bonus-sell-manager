@@ -1039,7 +1039,7 @@ export default function MenuPage() {
           {items.length > 0 && (
             <button
               onClick={() => setDeleteAllConfirm(true)}
-              className="flex h-10 items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 px-4 text-sm font-medium text-destructive transition-colors hover:bg-destructive/20"
+              className="flex h-10 items-center gap-2 rounded-lg border border-[#1a4d3a] bg-white px-4 text-sm font-medium text-red-600 transition-colors hover:bg-[#1a4d3a] hover:text-white"
               title="Delete all menu items"
             >
               <Trash className="h-4 w-4" />
