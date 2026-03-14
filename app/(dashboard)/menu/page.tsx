@@ -1137,12 +1137,12 @@ export default function MenuPage() {
           <HoverEffect className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 py-0">
             {catItems.map((item) => {
               return (
-                <Card key={item.id} className="py-0 bg-sidebar border-sidebar hover:border-sidebar-primary hover:shadow-lg transition-all">
+                <Card key={item.id} className="py-0 bg-white border-sidebar hover:bg-sidebar hover:border-sidebar-primary hover:shadow-lg transition-all">
                   <CardContent className="flex flex-col gap-3 p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">{item.name}</p>
-                        <p className="text-lg font-bold text-white">{formatter.format(item.price)}</p>
+                        <p className="font-medium text-black truncate group-hover:text-white transition-colors">{item.name}</p>
+                        <p className="text-lg font-bold text-sidebar group-hover:text-white transition-colors">{formatter.format(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
