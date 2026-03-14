@@ -1087,16 +1087,16 @@ export default function MenuPage() {
           onClick={() => setSelectedCategory("All")}
           className={`flex-shrink-0 flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
             selectedCategory === "All"
-              ? "bg-green-100 dark:bg-green-900/30 border-2 border-green-500"
-              : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+              ? "bg-white border-2 border-white"
+              : "bg-[#2d6b4f] border border-[#3a7a5f] hover:border-white/50"
           }`}
         >
-          <Grid3x3 className={`h-5 w-5 ${selectedCategory === "All" ? "text-green-600 dark:text-green-400" : "text-gray-600 dark:text-gray-400"}`} />
+          <Grid3x3 className={`h-5 w-5 ${selectedCategory === "All" ? "text-[#1a4d3a]" : "text-white"}`} />
           <div className="text-left">
-            <p className={`font-semibold ${selectedCategory === "All" ? "text-green-700 dark:text-green-300" : "text-gray-900 dark:text-gray-100"}`}>
+            <p className={`font-semibold ${selectedCategory === "All" ? "text-[#1a4d3a]" : "text-white"}`}>
               All
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className={`text-xs ${selectedCategory === "All" ? "text-gray-600" : "text-gray-300"}`}>
               {categoryCounts["All"] || 0} Items
             </p>
           </div>
