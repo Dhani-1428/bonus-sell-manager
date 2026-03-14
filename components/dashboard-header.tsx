@@ -16,9 +16,9 @@ export function DashboardHeader({
   const { theme, setTheme } = useTheme()
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#2d6b4f] bg-[#1a4d3a] px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#1a4d3a] bg-[#1a4d3a] px-4">
       <div className="flex items-center gap-3">
-        <SidebarTrigger className="text-white" />
+        <SidebarTrigger className="text-white hover:bg-white/10" />
         <div className="hidden lg:block">
           <p className="text-sm font-medium text-white">{userName}</p>
         </div>
@@ -27,14 +27,14 @@ export function DashboardHeader({
       <div className="flex items-center gap-2">
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-[#2d6b4f] transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors"
           aria-label="Toggle theme"
         >
           {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
         <button
           onClick={onLogout}
-          className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-white hover:bg-[#2d6b4f] transition-colors"
+          className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-white hover:bg-white/10 transition-colors"
           aria-label="Log out"
         >
           <LogOut className="h-4 w-4" />
