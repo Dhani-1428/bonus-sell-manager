@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2, Trash, Grid3x3, Coffee, Soup, UtensilsCrossed, ChefHat, Burger } from "lucide-react"
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon, Loader2, Trash, Grid3x3, Coffee, Soup, UtensilsCrossed, ChefHat, Sandwich } from "lucide-react"
 import { HoverEffect } from "@/components/ui/card-hover-effect"
 import { toast } from "sonner"
 import { createWorker } from "tesseract.js"
@@ -37,7 +37,7 @@ const categoryIcons: Record<string, any> = {
   "Starter": Soup,
   "Breakfast": Coffee,
   "Pasta": UtensilsCrossed,
-  "Burgers": Burger,
+  "Burgers": Sandwich,
   "Dessert": Coffee,
   "Beverage": Coffee,
 }
