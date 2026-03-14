@@ -15,7 +15,7 @@ interface StatsData {
 
 const formatter = new Intl.NumberFormat("en-US", {
   style: "currency",
-  currency: "USD",
+  currency: "EUR",
 })
 
 export function StatsCards({ stats }: { stats: StatsData }) {
