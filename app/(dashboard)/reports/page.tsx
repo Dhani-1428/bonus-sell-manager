@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { getOrders } from "@/lib/api-store"
 import type { Order } from "@/lib/types"
