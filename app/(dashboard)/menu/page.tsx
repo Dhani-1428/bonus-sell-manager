@@ -27,7 +27,7 @@ import { toast } from "sonner"
 import { createWorker } from "tesseract.js"
 import { FileUpload } from "@/components/ui/file-upload"
 
-const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
+const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" })
 const categories = ["Main", "Starter", "Dessert", "Beverage"]
 
 // Category icons mapping

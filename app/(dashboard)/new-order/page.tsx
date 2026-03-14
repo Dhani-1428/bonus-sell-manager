@@ -12,7 +12,7 @@ import { Plus, Minus, Trash2, ShoppingCart, X } from "lucide-react"
 import { toast } from "sonner"
 import { HoverEffect } from "@/components/ui/card-hover-effect"
 
-const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
+const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" })
 
 export default function NewOrderPage() {
   const { session } = useAuth()

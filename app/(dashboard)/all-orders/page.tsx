@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 
-const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
+const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" })
 
 function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; index: number; onEdit: (order: Order) => void; onPrint: (order: Order) => void }) {
   const [hovered, setHovered] = useState(false)

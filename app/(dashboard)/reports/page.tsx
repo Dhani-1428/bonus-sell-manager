@@ -17,7 +17,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Download, Calendar } from "lucide-react"
 import { toast } from "sonner"
 
-const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
+const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" })
 
 type FilterPeriod = "today" | "week" | "month" | "all"
 
