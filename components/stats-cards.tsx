@@ -60,7 +60,7 @@ export function StatsCards({ stats }: { stats: StatsData }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map((card) => (
-        <Card key={card.label} className="py-4">
+        <Card key={card.label} className="py-4 bg-white border-sidebar">
           <CardContent className="flex flex-col gap-2 px-4">
             <div className="flex items-center gap-2">
               <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${card.bg}`}>
@@ -68,8 +68,8 @@ export function StatsCards({ stats }: { stats: StatsData }) {
               </div>
             </div>
             <div>
-              <p className="text-lg font-bold text-foreground leading-tight">{card.value}</p>
-              <p className="text-xs text-muted-foreground">{card.label}</p>
+              <p className="text-lg font-bold text-black leading-tight">{card.value}</p>
+              <p className="text-xs text-gray-600">{card.label}</p>
             </div>
           </CardContent>
         </Card>

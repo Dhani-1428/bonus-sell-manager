@@ -94,8 +94,8 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6 w-full h-full">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="text-2xl font-bold text-black">Dashboard</h2>
+        <p className="text-sm text-gray-600">
           {menuItems.length} menu items, {stats.totalOrders} total orders
         </p>
       </div>

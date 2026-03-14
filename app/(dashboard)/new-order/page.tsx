@@ -151,15 +151,15 @@ export default function NewOrderPage() {
   return (
     <div className="flex flex-col gap-6 w-full h-full">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">New Order</h2>
-        <p className="text-sm text-muted-foreground">Create a new order by adding items</p>
+        <h2 className="text-2xl font-bold text-black">New Order</h2>
+        <p className="text-sm text-gray-600">Create a new order by adding items</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Add Items */}
-        <Card>
+        <Card className="bg-white border-sidebar">
           <CardHeader>
-            <CardTitle className="text-base">Add Items</CardTitle>
+            <CardTitle className="text-base text-black">Add Items</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex gap-2">
@@ -180,7 +180,7 @@ export default function NewOrderPage() {
               <button
                 onClick={addItem}
                 disabled={!selectedItem}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 transition-colors hover:bg-primary/90"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-sidebar text-white disabled:opacity-50 transition-colors hover:bg-sidebar/90"
                 aria-label="Add item"
               >
                 <Plus className="h-5 w-5" />
@@ -189,7 +189,7 @@ export default function NewOrderPage() {
 
             {/* Quick add grid */}
             <div>
-              <p className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Quick Add</p>
+              <p className="mb-2 text-xs font-medium text-gray-600 uppercase tracking-wider">Quick Add</p>
               <HoverEffect className="grid grid-cols-2 gap-2 sm:grid-cols-3 py-0">
                 {menuItems.slice(0, 6).map((item) => {
                   return (
@@ -207,10 +207,10 @@ export default function NewOrderPage() {
                           return [...prev, { menuItemId: item.id, menuItemName: item.name, quantity: 1, price: item.price }]
                         })
                       }}
-                      className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card p-3 text-center transition-colors hover:bg-accent active:scale-95"
+                      className="flex flex-col items-center gap-1 rounded-lg border border-sidebar bg-white p-3 text-center transition-colors hover:bg-sidebar hover:text-white active:scale-95"
                     >
-                      <span className="text-sm font-medium text-foreground truncate w-full">{item.name}</span>
-                      <span className="text-xs text-muted-foreground">{formatter.format(item.price)}</span>
+                      <span className="text-sm font-medium text-black truncate w-full group-hover:text-white">{item.name}</span>
+                      <span className="text-xs text-gray-600 group-hover:text-white/80">{formatter.format(item.price)}</span>
                     </button>
                   )
                 })}
@@ -220,16 +220,16 @@ export default function NewOrderPage() {
         </Card>
 
         {/* Order Summary */}
-        <Card>
+        <Card className="bg-white border-sidebar">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex items-center gap-2 text-base text-black">
               <ShoppingCart className="h-4 w-4" />
               Order Summary ({orderItems.length} items)
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {orderItems.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No items added yet. Select items from the left.</p>
+              <p className="py-8 text-center text-sm text-gray-600">No items added yet. Select items from the left.</p>
             ) : (
               <HoverEffect className="flex flex-col gap-2 py-0">
                 {orderItems.map((item, idx) => {
@@ -237,11 +237,11 @@ export default function NewOrderPage() {
                   const hasExtras = menuItem?.extras && menuItem.extras.length > 0
                   
                   return (
-                    <div key={`${item.menuItemId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-border p-3">
+                    <div key={`${item.menuItemId}-${idx}`} className="flex flex-col gap-3 rounded-lg border border-sidebar p-3 bg-white">
                       <div className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{item.menuItemName}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm font-medium text-black truncate">{item.menuItemName}</p>
+                          <p className="text-xs text-gray-600">
                             {formatter.format(item.price)} each
                           </p>
                         </div>
@@ -249,21 +249,21 @@ export default function NewOrderPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => updateQuantity(item.menuItemId, -1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar text-gray-600 hover:bg-sidebar hover:text-white"
                             aria-label="Decrease quantity"
                           >
                             <Minus className="h-4 w-4" />
                           </button>
-                          <span className="w-8 text-center text-sm font-semibold text-foreground">{item.quantity}</span>
+                          <span className="w-8 text-center text-sm font-semibold text-black">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.menuItemId, 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent"
+                            className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar text-gray-600 hover:bg-sidebar hover:text-white"
                             aria-label="Increase quantity"
                           >
                             <Plus className="h-4 w-4" />
                           </button>
                         </div>
-                        <p className="w-20 text-right text-sm font-semibold text-foreground">
+                        <p className="w-20 text-right text-sm font-semibold text-black">
                           {formatter.format(item.price * item.quantity)}
                         </p>
                         <button
@@ -277,8 +277,8 @@ export default function NewOrderPage() {
                       
                       {/* Extras Selection - Only show for items with extras */}
                       {menuItem?.extras && menuItem.extras.length > 0 && (
-                        <div className="pt-2 border-t border-border">
-                          <Label className="text-xs font-medium text-muted-foreground mb-2 block">Extras:</Label>
+                        <div className="pt-2 border-t border-sidebar">
+                          <Label className="text-xs font-medium text-gray-600 mb-2 block">Extras:</Label>
                           <div className="flex flex-wrap gap-2">
                             {menuItem.extras.map((extra, extraIdx) => {
                               const isSelected = item.selectedExtras?.includes(extra.name) || false
@@ -288,19 +288,19 @@ export default function NewOrderPage() {
                                   onClick={() => toggleExtra(idx, extra.name)}
                                   className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                                     isSelected
-                                      ? "border-primary bg-primary/10 text-primary"
-                                      : "border-border bg-card text-foreground hover:bg-accent"
+                                      ? "border-sidebar bg-sidebar/10 text-sidebar"
+                                      : "border-sidebar bg-white text-black hover:bg-sidebar hover:text-white"
                                   }`}
                                 >
                                   <span>{extra.name}</span>
-                                  <span className="text-muted-foreground">+{formatter.format(extra.price)}</span>
+                                  <span className="text-gray-600">+{formatter.format(extra.price)}</span>
                                   {isSelected && <X className="h-3 w-3" />}
                                 </button>
                               )
                             })}
                           </div>
                           {item.selectedExtras && item.selectedExtras.length > 0 && (
-                            <p className="mt-2 text-xs text-muted-foreground">
+                            <p className="mt-2 text-xs text-gray-600">
                               Selected: {item.selectedExtras.join(", ")}
                             </p>
                           )}
@@ -347,18 +347,18 @@ export default function NewOrderPage() {
             </div>
 
             {/* Totals */}
-            <div className="rounded-lg border border-border bg-muted/50 p-4">
+            <div className="rounded-lg border border-sidebar bg-sidebar/5 p-4">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Gross Total</span>
-                <span className="text-foreground">{formatter.format(grossTotal)}</span>
+                <span className="text-gray-600">Gross Total</span>
+                <span className="text-black">{formatter.format(grossTotal)}</span>
               </div>
               <div className="mt-1 flex justify-between text-sm">
-                <span className="text-muted-foreground">Discount</span>
-                <span className="text-destructive">-{formatter.format(discountAmount)}</span>
+                <span className="text-gray-600">Discount</span>
+                <span className="text-red-600">-{formatter.format(discountAmount)}</span>
               </div>
-              <div className="mt-2 flex justify-between border-t border-border pt-2 text-lg font-bold">
-                <span className="text-foreground">Net Total</span>
-                <span className="text-foreground">{formatter.format(netTotal)}</span>
+              <div className="mt-2 flex justify-between border-t border-sidebar pt-2 text-lg font-bold">
+                <span className="text-black">Net Total</span>
+                <span className="text-black">{formatter.format(netTotal)}</span>
               </div>
             </div>
 
@@ -366,7 +366,7 @@ export default function NewOrderPage() {
             <button
               onClick={handleSaveOrder}
               disabled={orderItems.length === 0}
-              className="flex h-14 w-full items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 active:scale-[0.98]"
+              className="flex h-14 w-full items-center justify-center rounded-lg bg-sidebar text-base font-bold text-white transition-colors hover:bg-sidebar/90 disabled:opacity-50 active:scale-[0.98]"
             >
               Save Order
             </button>

@@ -32,8 +32,8 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
 
   return (
     <tr
-      className={`border-b border-border transition-colors hover:bg-muted/30 relative group ${
-        index % 2 === 0 ? "bg-card" : "bg-muted/10"
+      className={`border-b border-sidebar transition-colors hover:bg-sidebar/5 relative group ${
+        index % 2 === 0 ? "bg-white" : "bg-sidebar/5"
       }`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -55,17 +55,17 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
           />
         )}
       </AnimatePresence>
-      <td className="border-r border-border px-4 py-3 text-sm font-semibold text-foreground relative z-10">
+      <td className="border-r border-sidebar px-4 py-3 text-sm font-semibold text-black relative z-10">
         {order.orderNumber || "N/A"}
       </td>
-      <td className="border-r border-border px-4 py-3 text-sm text-foreground relative z-10">
+      <td className="border-r border-sidebar px-4 py-3 text-sm text-black relative z-10">
         {new Date(order.date).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         })}
       </td>
-      <td className="border-r border-border px-4 py-3 text-sm text-foreground relative z-10">
+      <td className="border-r border-sidebar px-4 py-3 text-sm text-black relative z-10">
         <div className="max-w-xs">
           {order.items.map((item, idx) => (
             <div key={idx} className="truncate">
@@ -76,17 +76,17 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
           ))}
         </div>
       </td>
-      <td className="border-r border-border px-4 py-3 text-right text-sm text-foreground relative z-10">
+      <td className="border-r border-sidebar px-4 py-3 text-right text-sm text-black relative z-10">
         {formatter.format(order.totalAmount)}
       </td>
-      <td className="border-r border-border px-4 py-3 text-right text-sm text-destructive relative z-10">
+      <td className="border-r border-sidebar px-4 py-3 text-right text-sm text-red-600 relative z-10">
         {order.discountAmount > 0 ? `-${formatter.format(order.discountAmount)}` : "-"}
       </td>
-      <td className="border-r border-border px-4 py-3 text-right text-sm font-semibold text-foreground relative z-10">
+      <td className="border-r border-sidebar px-4 py-3 text-right text-sm font-semibold text-black relative z-10">
         {formatter.format(order.finalAmount)}
       </td>
-      <td className="border-r border-border px-4 py-3 text-sm text-foreground relative z-10">
-        <span className="inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium capitalize text-muted-foreground">
+      <td className="border-r border-sidebar px-4 py-3 text-sm text-black relative z-10">
+        <span className="inline-flex rounded-md bg-sidebar/10 px-2 py-1 text-xs font-medium capitalize text-sidebar">
           {order.paymentMethod}
         </span>
       </td>
@@ -94,7 +94,7 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => onEdit(order)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-sidebar text-gray-600 transition-colors hover:bg-sidebar hover:text-white"
             aria-label={`Edit order ${order.orderNumber}`}
             title="Edit Order"
           >
@@ -102,7 +102,7 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
           </button>
           <button
             onClick={() => onPrint(order)}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-8 w-8 items-center justify-center rounded-md border border-sidebar text-gray-600 transition-colors hover:bg-sidebar hover:text-white"
             aria-label={`Print order ${order.orderNumber}`}
             title="Print Order"
           >
@@ -604,25 +604,25 @@ export default function AllOrdersPage() {
     <div className="flex flex-col gap-6 w-full h-full">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">All Orders</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-2xl font-bold text-black">All Orders</h2>
+          <p className="text-sm text-gray-600">
             {filteredOrders.length} {filteredOrders.length === 1 ? "order" : "orders"} total
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:flex-initial">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-600" />
             <Input
               type="text"
               placeholder="Search orders..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 pl-9 sm:w-64"
+              className="h-10 pl-9 sm:w-64 bg-white border-sidebar"
             />
           </div>
           <button
             onClick={exportCSV}
-            className="flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="flex h-10 items-center gap-2 rounded-lg border border-sidebar bg-white px-4 text-sm font-semibold text-black transition-colors hover:bg-sidebar hover:text-white"
           >
             <Download className="h-4 w-4" />
             Export CSV
@@ -631,33 +631,33 @@ export default function AllOrdersPage() {
       </div>
 
       {/* Excel-like Table */}
-      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+      <div className="overflow-x-auto rounded-lg border border-sidebar bg-white">
         <div className="min-w-full">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="border-r border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <tr className="border-b border-sidebar bg-sidebar/10">
+                <th className="border-r border-sidebar px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-black">
                   Order #
                 </th>
-                <th className="border-r border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="border-r border-sidebar px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-black">
                   Date
                 </th>
-                <th className="border-r border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="border-r border-sidebar px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-black">
                   Items
                 </th>
-                <th className="border-r border-border px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="border-r border-sidebar px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-black">
                   Gross
                 </th>
-                <th className="border-r border-border px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="border-r border-sidebar px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-black">
                   Discount
                 </th>
-                <th className="border-r border-border px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="border-r border-sidebar px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-black">
                   Net
                 </th>
-                <th className="border-r border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="border-r border-sidebar px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-black">
                   Payment
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-black">
                   Actions
                 </th>
               </tr>
@@ -665,7 +665,7 @@ export default function AllOrdersPage() {
             <tbody>
               {filteredOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-600">
                     {searchTerm ? "No orders found matching your search." : "No orders yet. Create your first order!"}
                   </td>
                 </tr>
