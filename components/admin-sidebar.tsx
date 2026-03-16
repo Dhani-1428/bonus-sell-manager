@@ -82,7 +82,7 @@ export function AdminSidebar({
           />
           <button
             onClick={handleLogout}
-            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-white/10 text-white transition-colors hover:bg-green-500 hover:text-white"
           >
             <LogOut className="h-5 w-5 shrink-0 text-white" />
             {!isCollapsed && <span>Logout</span>}

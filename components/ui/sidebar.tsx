@@ -724,7 +724,7 @@ function SidebarLink({
     <div
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer',
-        'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+        'bg-white/10 text-white hover:bg-green-500 hover:text-white',
         state === 'collapsed' && 'justify-center',
         className
       )}
