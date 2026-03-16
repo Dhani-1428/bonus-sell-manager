@@ -127,7 +127,7 @@ export default function SubscriptionPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
         {/* Current Status (3D card) */}
         <CardContainer className="inter-var h-full">
-          <ThreeDCardBody className="bg-white border border-sidebar rounded-xl h-full">
+          <ThreeDCardBody className="bg-white border border-sidebar rounded-xl h-full p-4 md:p-6">
           <CardItem translateZ="40">
             <CardHeader className="pb-4">
               <CardTitle className="text-black">Current Status</CardTitle>
@@ -187,7 +187,7 @@ export default function SubscriptionPage() {
 
       {/* Secure Payment (3D card) */}
       <CardContainer className="inter-var h-full">
-        <ThreeDCardBody className="bg-white rounded-xl border border-sidebar h-full">
+        <ThreeDCardBody className="bg-white rounded-xl border border-sidebar h-full p-4 md:p-6">
           <CardItem translateZ="40">
             <CardHeader className="pb-4">
               <CardTitle className="text-black">Payment via MB WAY</CardTitle>
