@@ -9,9 +9,20 @@ import { isSuperAdmin } from "@/lib/admin-auth"
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { paymentId: string } }
+  { params }: { params: Promise<{ paymentId: string }> | { paymentId: string } }
 ) {
   try {
+    // Handle both Next.js 14 and 15+ params format
+    const resolvedParams = await Promise.resolve(params)
+    const paymentId = resolvedParams.paymentId
+
+    if (!paymentId) {
+      return NextResponse.json(
+        { error: "Payment ID is required" },
+        { status: 400 }
+      )
+    }
+
     const cookieStore = await cookies()
     let sessionId = cookieStore.get("admin_session")?.value
 
@@ -43,15 +54,6 @@ export async function PUT(
     if (!status || !['approved', 'rejected', 'pending', 'completed'].includes(status)) {
       return NextResponse.json(
         { error: "Invalid status. Must be: pending, approved, rejected, or completed" },
-        { status: 400 }
-      )
-    }
-
-    // Ensure paymentId is provided
-    const paymentId = params?.paymentId
-    if (!paymentId) {
-      return NextResponse.json(
-        { error: "Payment ID is required" },
         { status: 400 }
       )
     }
