@@ -6,9 +6,7 @@ import { getAppUrl } from "@/lib/redirect"
 let stripe: Stripe | null = null
 try {
   if (process.env.STRIPE_SECRET_KEY) {
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-12-18.acacia",
-    })
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   }
 } catch (error) {
   console.error("Failed to initialize Stripe:", error)

@@ -97,17 +97,50 @@ export async function PUT(
           ) as any[]
 
           if (users.length > 0) {
-            const { sendSubscriptionConfirmationEmail } = await import('@/lib/email')
+            const { sendSubscriptionConfirmationEmail, sendMbwayDecisionEmail } = await import('@/lib/email')
+
+            // Subscription confirmation (existing behaviour)
             await sendSubscriptionConfirmationEmail(
               users[0].email,
               users[0].name,
               payment.plan,
               endDate.toISOString()
             )
+
+            // MB WAY specific decision email (approved)
+            await sendMbwayDecisionEmail(
+              users[0].email,
+              users[0].name,
+              payment.plan,
+              payment.amount,
+              'approved'
+            )
           }
         } catch (emailError: any) {
           console.error('Failed to send subscription confirmation email:', emailError)
           // Don't fail the payment approval if email fails
+        }
+      } else if (status === 'rejected') {
+        // Send MB WAY rejection email (does not change subscription)
+        try {
+          const [users] = await connection.execute(
+            `SELECT name, email FROM users WHERE id = ?`,
+            [payment.user_id]
+          ) as any[]
+
+          if (users.length > 0) {
+            const { sendMbwayDecisionEmail } = await import('@/lib/email')
+            await sendMbwayDecisionEmail(
+              users[0].email,
+              users[0].name,
+              payment.plan,
+              payment.amount,
+              'rejected'
+            )
+          }
+        } catch (emailError: any) {
+          console.error('Failed to send MB WAY rejection email:', emailError)
+          // Don't fail the payment update if email fails
         }
       }
 

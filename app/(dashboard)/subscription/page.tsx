@@ -74,8 +74,8 @@ export default function SubscriptionPage() {
 
     setIsProcessing(true)
     try {
-      // Create Stripe checkout session
-      const response = await fetch("/api/create-checkout-session", {
+      // Create MB WAY payment request (no external redirect)
+      const response = await fetch("/api/create-mbway-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -87,18 +87,17 @@ export default function SubscriptionPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create checkout session")
+        throw new Error(data.error || "Failed to create MB WAY payment request")
       }
 
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url
-      } else {
-        throw new Error("No checkout URL received")
-      }
+      toast.success(
+        "MB WAY payment request created. Please check your email for payment instructions."
+      )
+      setIsProcessing(false)
+      await refreshStatus()
     } catch (error: any) {
       console.error("Subscription error:", error)
-      toast.error(error.message || "Failed to start checkout. Please try again.")
+      toast.error(error.message || "Failed to start MB WAY payment. Please try again.")
       setIsProcessing(false)
     }
   }
@@ -218,8 +217,8 @@ export default function SubscriptionPage() {
         <ThreeDCardBody className="bg-white rounded-xl border border-sidebar h-full">
           <CardItem translateZ="40">
             <CardHeader className="pb-4">
-              <CardTitle className="text-black">Secure Payment</CardTitle>
-              <CardDescription className="text-gray-600">Payment processing information</CardDescription>
+              <CardTitle className="text-black">Payment via MB WAY</CardTitle>
+              <CardDescription className="text-gray-600">Manual payment and approval information</CardDescription>
             </CardHeader>
           </CardItem>
           <CardItem translateZ="80">
@@ -227,9 +226,12 @@ export default function SubscriptionPage() {
               <div className="flex items-start gap-3">
                 <CreditCard className="h-5 w-5 text-sidebar shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-black mb-2">Stripe Payment Processing</p>
+                  <p className="text-sm font-medium text-black mb-2">MB WAY Payment Details</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Payments are securely processed by Stripe. Your subscription will be activated immediately after successful payment.
+                    You can pay your subscription using <strong>MB WAY</strong>. After you choose a plan, you will receive an email
+                    with instructions to send the payment to the MB WAY number <strong>+351920306889</strong>. Your payment will be
+                    reviewed by our super admin. Once it is <strong>approved</strong>, you will receive another email and your admin
+                    panel access will be unlocked (or extended) after your free trial or current subscription ends.
                   </p>
                 </div>
               </div>

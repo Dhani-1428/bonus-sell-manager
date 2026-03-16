@@ -546,3 +546,274 @@ Please do not reply to this email.
     });
   }
 }
+
+/**
+ * Send MB WAY pending payment email
+ */
+export async function sendMbwayPendingEmail(
+  userEmail: string,
+  userName: string,
+  plan: "monthly" | "yearly",
+  amount: number,
+  mbwayPhone: string
+): Promise<void> {
+  if (!userEmail || !userName) {
+    console.error("❌ Cannot send MB WAY pending email: missing email or name", {
+      userEmail,
+      userName,
+    })
+    return
+  }
+
+  const emailUser = process.env.EMAIL_USER || "bonusfoodsellmanager@gmail.com"
+  const planName = plan === "monthly" ? "6 Months" : "12 Months"
+
+  try {
+    const transporter = createTransporter()
+    const fromEmail = emailUser
+
+    const mailOptions = {
+      from: `"Bonus Food Sell Manager" <${fromEmail}>`,
+      to: userEmail,
+      subject: `📱 MB WAY Payment Instructions - ${planName} Plan`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>MB WAY Payment Instructions</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">MB WAY Payment Instructions</h1>
+          </div>
+
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              Hi ${userName},
+            </p>
+
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              Thank you for choosing the <strong>${planName} (${amount.toFixed(
+                2
+              )} EUR)</strong> subscription plan for <strong>Bonus Food Sell Manager</strong>.
+            </p>
+
+            <div style="background: #e0f2fe; border-left: 4px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 14px; color: #075985;">
+                <strong>To complete your payment via MB WAY:</strong><br><br>
+                1. Open your MB WAY app.<br>
+                2. Start a new payment.<br>
+                3. Send <strong>${amount.toFixed(
+                  2
+                )} EUR</strong> to the following MB WAY number:<br>
+                <span style="font-size: 18px; font-weight: bold; display: inline-block; margin-top: 8px;">
+                  ${mbwayPhone}
+                </span><br><br>
+                4. Confirm the transaction in your MB WAY app.<br><br>
+                After we receive your payment, our super admin will review and approve it.
+              </p>
+            </div>
+
+            <p style="font-size: 15px; margin-bottom: 20px;">
+              Once your payment is <strong>approved</strong>, your subscription will be activated and you will receive another email confirming that your admin panel access is unlocked.
+            </p>
+
+            <p style="font-size: 14px; color: #666; margin-top: 20px;">
+              If you have already sent the MB WAY payment, please wait a few minutes for manual approval.
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+
+            <p style="font-size: 12px; color: #999; text-align: center; margin: 0;">
+              This is an automated email from Bonus Food Sell Manager.<br>
+              Please do not reply to this email.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+MB WAY Payment Instructions
+
+Hi ${userName},
+
+Thank you for choosing the ${planName} (${amount.toFixed(
+        2
+      )} EUR) subscription plan for Bonus Food Sell Manager.
+
+To complete your payment via MB WAY:
+1. Open your MB WAY app.
+2. Start a new payment.
+3. Send ${amount.toFixed(2)} EUR to the following MB WAY number:
+   ${mbwayPhone}
+4. Confirm the transaction in your MB WAY app.
+
+After we receive your payment, our super admin will review and approve it.
+
+Once your payment is approved, your subscription will be activated and you will receive another email confirming that your admin panel access is unlocked.
+
+If you have already sent the MB WAY payment, please wait a few minutes for manual approval.
+
+---
+This is an automated email from Bonus Food Sell Manager.
+Please do not reply to this email.
+      `.trim(),
+    }
+
+    await transporter.sendMail(mailOptions)
+  } catch (error: any) {
+    console.error("❌ Failed to send MB WAY pending email:", {
+      error: error.message,
+      code: error.code,
+      to: userEmail,
+    })
+  }
+}
+
+/**
+ * Send MB WAY payment decision email (approved / rejected)
+ */
+export async function sendMbwayDecisionEmail(
+  userEmail: string,
+  userName: string,
+  plan: "monthly" | "yearly",
+  amount: number,
+  status: "approved" | "rejected"
+): Promise<void> {
+  if (!userEmail || !userName) {
+    console.error("❌ Cannot send MB WAY decision email: missing email or name", {
+      userEmail,
+      userName,
+    })
+    return
+  }
+
+  const emailUser = process.env.EMAIL_USER || "bonusfoodsellmanager@gmail.com"
+  const planName = plan === "monthly" ? "6 Months" : "12 Months"
+  const isApproved = status === "approved"
+
+  try {
+    const transporter = createTransporter()
+    const fromEmail = emailUser
+
+    const subject = isApproved
+      ? "✅ MB WAY Payment Approved - Subscription Activated"
+      : "❌ MB WAY Payment Not Approved"
+
+    const decisionText = isApproved
+      ? "Your MB WAY payment has been approved and your subscription is now active."
+      : "Unfortunately, your MB WAY payment could not be approved."
+
+    const nextStepText = isApproved
+      ? "You now have full access to your admin panel."
+      : "If you believe this is a mistake, please contact support or try sending the MB WAY payment again."
+
+    const mailOptions = {
+      from: `"Bonus Food Sell Manager" <${fromEmail}>`,
+      to: userEmail,
+      subject,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>MB WAY Payment ${isApproved ? "Approved" : "Not Approved"}</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, ${
+            isApproved ? "#10b981 0%, #059669" : "#f97316 0%, #ea580c"
+          } 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">
+              ${isApproved ? "✅ Payment Approved" : "❌ Payment Not Approved"}
+            </h1>
+          </div>
+
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              Hi ${userName},
+            </p>
+
+            <p style="font-size: 16px; margin-bottom: 20px;">
+              ${decisionText}
+            </p>
+
+            <div style="background: #f9fafb; border-left: 4px solid ${
+              isApproved ? "#10b981" : "#f97316"
+            }; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 14px; color: #374151;">
+                <strong>Payment Details:</strong><br>
+                Plan: ${planName}<br>
+                Amount: ${amount.toFixed(2)} EUR<br>
+                Status: ${isApproved ? "Approved" : "Not Approved"}
+              </p>
+            </div>
+
+            <p style="font-size: 15px; margin-bottom: 20px;">
+              ${nextStepText}
+            </p>
+
+            ${
+              isApproved
+                ? `<div style="text-align: center; margin: 30px 0;">
+              <a href="${
+                process.env.NEXT_PUBLIC_APP_URL ||
+                "https://bonusfoodsellmanager.com"
+              }/dashboard" 
+                 style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Open Admin Panel
+              </a>
+            </div>`
+                : ""
+            }
+
+            <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+
+            <p style="font-size: 12px; color: #999; text-align: center; margin: 0;">
+              This is an automated email from Bonus Food Sell Manager.<br>
+              Please do not reply to this email.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+MB WAY Payment ${isApproved ? "Approved" : "Not Approved"}
+
+Hi ${userName},
+
+${decisionText}
+
+Payment Details:
+Plan: ${planName}
+Amount: ${amount.toFixed(2)} EUR
+Status: ${isApproved ? "Approved" : "Not Approved"}
+
+${nextStepText}
+${
+  isApproved
+    ? `
+Open Admin Panel: ${
+        process.env.NEXT_PUBLIC_APP_URL || "https://bonusfoodsellmanager.com"
+      }/dashboard
+`
+    : ""
+}
+---
+This is an automated email from Bonus Food Sell Manager.
+Please do not reply to this email.
+      `.trim(),
+    }
+
+    await transporter.sendMail(mailOptions)
+  } catch (error: any) {
+    console.error("❌ Failed to send MB WAY decision email:", {
+      error: error.message,
+      code: error.code,
+      to: userEmail,
+      status,
+    })
+  }
+}
