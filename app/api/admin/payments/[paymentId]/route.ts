@@ -47,6 +47,15 @@ export async function PUT(
       )
     }
 
+    // Ensure paymentId is provided
+    const paymentId = params?.paymentId
+    if (!paymentId) {
+      return NextResponse.json(
+        { error: "Payment ID is required" },
+        { status: 400 }
+      )
+    }
+
     const pool = getPool()
     const connection = await pool.getConnection()
     
@@ -56,7 +65,7 @@ export async function PUT(
       // Get payment details
       const [payments] = await connection.execute(
         `SELECT user_id, plan, amount FROM payments WHERE id = ?`,
-        [params.paymentId]
+        [paymentId]
       ) as any[]
 
       if (payments.length === 0) {
@@ -69,7 +78,17 @@ export async function PUT(
 
       const payment = payments[0]
 
-      // Update payment status
+      // Ensure all required fields exist
+      if (!payment.user_id || !payment.plan) {
+        await connection.rollback()
+        return NextResponse.json(
+          { error: "Invalid payment data" },
+          { status: 400 }
+        )
+      }
+
+      // Update payment status - ensure notes is null if undefined
+      const notesValue = notes !== undefined ? (notes || null) : null
       await connection.execute(
         `UPDATE payments 
          SET status = ?, 
@@ -77,7 +96,7 @@ export async function PUT(
              notes = ?,
              updated_at = NOW()
          WHERE id = ?`,
-        [status, sessionId, notes || null, params.paymentId]
+        [status, sessionId, notesValue, paymentId]
       )
 
       // If payment is approved, activate subscription
@@ -118,7 +137,7 @@ export async function PUT(
               users[0].email,
               users[0].name,
               payment.plan,
-              payment.amount,
+              Number(payment.amount) || 0,
               'approved'
             )
           }
@@ -140,7 +159,7 @@ export async function PUT(
               users[0].email,
               users[0].name,
               payment.plan,
-              payment.amount,
+              Number(payment.amount) || 0,
               'rejected'
             )
           }
@@ -170,7 +189,7 @@ export async function PUT(
         FROM payments p
         LEFT JOIN users u ON p.user_id = u.id
         WHERE p.id = ?`,
-        [params.paymentId]
+        [paymentId]
       ) as any[]
 
       return NextResponse.json({
