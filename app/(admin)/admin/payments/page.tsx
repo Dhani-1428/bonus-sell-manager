@@ -170,7 +170,7 @@ export default function PaymentsPage() {
                           <div className="text-sm text-muted-foreground">{payment.user_email}</div>
                         </div>
                       </TableCell>
-                      <TableCell>€{payment.amount.toFixed(2)}</TableCell>
+                      <TableCell>€{Number(payment.amount).toFixed(2)}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{payment.plan}</Badge>
                       </TableCell>

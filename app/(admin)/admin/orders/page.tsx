@@ -78,8 +78,8 @@ export default function AdminOrdersPage() {
 
   const stats = {
     total: pagination.total,
-    totalRevenue: orders.reduce((sum, order) => sum + order.final_amount, 0),
-    totalDiscounts: orders.reduce((sum, order) => sum + order.discount_amount, 0),
+    totalRevenue: orders.reduce((sum, order) => sum + Number(order.final_amount || 0), 0),
+    totalDiscounts: orders.reduce((sum, order) => sum + Number(order.discount_amount || 0), 0),
     byPaymentMethod: orders.reduce((acc, order) => {
       acc[order.payment_method] = (acc[order.payment_method] || 0) + 1
       return acc
@@ -228,11 +228,11 @@ export default function AdminOrdersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-right">€{order.total_amount.toFixed(2)}</td>
+                      <td className="p-3 text-right">€{Number(order.total_amount).toFixed(2)}</td>
                       <td className="p-3 text-right text-destructive">
-                        {order.discount_amount > 0 ? `-€${order.discount_amount.toFixed(2)}` : "-"}
+                        {order.discount_amount > 0 ? `-€${Number(order.discount_amount).toFixed(2)}` : "-"}
                       </td>
-                      <td className="p-3 text-right font-medium">€{order.final_amount.toFixed(2)}</td>
+                      <td className="p-3 text-right font-medium">€{Number(order.final_amount).toFixed(2)}</td>
                       <td className="p-3">
                         <Badge variant="outline" className="capitalize">
                           {order.payment_method}
