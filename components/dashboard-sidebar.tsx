@@ -37,7 +37,7 @@ export function DashboardSidebar({
     label: item.label,
     href: item.href,
     icon: (
-      <item.icon className="h-5 w-5 shrink-0 text-white" />
+      <item.icon className="h-5 w-5 shrink-0 text-green-800" />
     ),
   }))
 
@@ -76,9 +76,9 @@ export function DashboardSidebar({
           />
           <button
             onClick={handleLogout}
-            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-white/10 text-white transition-colors hover:bg-green-500 hover:text-white"
+            className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-white text-black transition-colors hover:bg-green-800 hover:text-white"
           >
-            <LogOut className="h-5 w-5 shrink-0 text-white" />
+            <LogOut className="h-5 w-5 shrink-0 text-green-800 group-hover:text-white" />
             {!isCollapsed && <span>Logout</span>}
           </button>
         </div>
