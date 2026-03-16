@@ -13,7 +13,13 @@ export async function PUT(
 ) {
   try {
     const cookieStore = await cookies()
-    const sessionId = cookieStore.get("admin_session")?.value
+    let sessionId = cookieStore.get("admin_session")?.value
+
+    // If no admin_session, check regular session cookie
+    // This allows super_admins to access admin panel after logging in via Google or email/password
+    if (!sessionId) {
+      sessionId = cookieStore.get("session")?.value
+    }
 
     if (!sessionId) {
       return NextResponse.json(

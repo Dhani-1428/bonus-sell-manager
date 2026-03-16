@@ -70,12 +70,14 @@ export default function PaymentsPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to approve payment")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to approve payment: ${response.status}`)
       }
 
       toast.success("Payment approved successfully!")
       loadPayments()
     } catch (error: any) {
+      console.error("Error approving payment:", error)
       toast.error(error.message || "Failed to approve payment")
     }
   }
@@ -89,12 +91,14 @@ export default function PaymentsPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to reject payment")
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to reject payment: ${response.status}`)
       }
 
       toast.success("Payment rejected")
       loadPayments()
     } catch (error: any) {
+      console.error("Error rejecting payment:", error)
       toast.error(error.message || "Failed to reject payment")
     }
   }
