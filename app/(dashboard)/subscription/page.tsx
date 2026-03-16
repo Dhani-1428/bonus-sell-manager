@@ -69,37 +69,10 @@ export default function SubscriptionPage() {
     }
   }, [searchParams, router, refreshStatus])
 
-  const handleSubscribe = async (plan: "monthly" | "yearly") => {
+  const handleSubscribe = (plan: "monthly" | "yearly") => {
     if (!session) return
-
-    setIsProcessing(true)
-    try {
-      // Create MB WAY payment request (no external redirect)
-      const response = await fetch("/api/create-mbway-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          plan,
-          userId: session.userId,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to create MB WAY payment request")
-      }
-
-      toast.success(
-        "MB WAY payment request created. Please check your email for payment instructions."
-      )
-      setIsProcessing(false)
-      await refreshStatus()
-    } catch (error: any) {
-      console.error("Subscription error:", error)
-      toast.error(error.message || "Failed to start MB WAY payment. Please try again.")
-      setIsProcessing(false)
-    }
+    // Go to MB WAY checkout page where user will see number and confirm payment
+    router.push(`/subscription/checkout?plan=${plan}`)
   }
 
   if (!subscriptionStatus) {
@@ -150,10 +123,10 @@ export default function SubscriptionPage() {
         <p className="text-sm text-gray-600">Manage your subscription and billing</p>
       </div>
 
-      {/* Current Status and Secure Payment - Two small cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Current Status and Payment Info - Two equal cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
         {/* Current Status (3D card) */}
-        <CardContainer className="inter-var">
+        <CardContainer className="inter-var h-full">
           <ThreeDCardBody className="bg-white border border-sidebar rounded-xl h-full">
           <CardItem translateZ="40">
             <CardHeader className="pb-4">
@@ -213,7 +186,7 @@ export default function SubscriptionPage() {
       </CardContainer>
 
       {/* Secure Payment (3D card) */}
-      <CardContainer className="inter-var">
+      <CardContainer className="inter-var h-full">
         <ThreeDCardBody className="bg-white rounded-xl border border-sidebar h-full">
           <CardItem translateZ="40">
             <CardHeader className="pb-4">
@@ -226,12 +199,12 @@ export default function SubscriptionPage() {
               <div className="flex items-start gap-3">
                 <CreditCard className="h-5 w-5 text-sidebar shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-black mb-2">MB WAY Payment Details</p>
+                  <p className="text-sm font-medium text-black mb-2">MB WAY Payment</p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    You can pay your subscription using <strong>MB WAY</strong>. After you choose a plan, you will receive an email
-                    with instructions to send the payment to the MB WAY number <strong>+351920306889</strong>. Your payment will be
-                    reviewed by our super admin. Once it is <strong>approved</strong>, you will receive another email and your admin
-                    panel access will be unlocked (or extended) after your free trial or current subscription ends.
+                    You can pay your subscription using <strong>MB WAY</strong>. After you choose a plan, you will be guided
+                    through a short checkout step to see the MB WAY details and confirm your payment. Your payment will then be
+                    reviewed by our super admin, and once it is <strong>approved</strong> your admin panel access will be unlocked
+                    or extended.
                   </p>
                 </div>
               </div>

@@ -575,7 +575,7 @@ export async function sendMbwayPendingEmail(
     const mailOptions = {
       from: `"Bonus Food Sell Manager" <${fromEmail}>`,
       to: userEmail,
-      subject: `📱 MB WAY Payment Instructions - ${planName} Plan`,
+      subject: `📱 MB WAY payment pending - ${planName} plan`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -594,30 +594,19 @@ export async function sendMbwayPendingEmail(
               Hi ${userName},
             </p>
 
-            <p style="font-size: 16px; margin-bottom: 20px;">
-              Thank you for choosing the <strong>${planName} (${amount.toFixed(
-                2
-              )} EUR)</strong> subscription plan for <strong>Bonus Food Sell Manager</strong>.
-            </p>
-
             <div style="background: #e0f2fe; border-left: 4px solid #0ea5e9; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0; font-size: 14px; color: #075985;">
-                <strong>To complete your payment via MB WAY:</strong><br><br>
-                1. Open your MB WAY app.<br>
-                2. Start a new payment.<br>
-                3. Send <strong>${amount.toFixed(
-                  2
-                )} EUR</strong> to the following MB WAY number:<br>
-                <span style="font-size: 18px; font-weight: bold; display: inline-block; margin-top: 8px;">
-                  ${mbwayPhone}
-                </span><br><br>
-                4. Confirm the transaction in your MB WAY app.<br><br>
-                After we receive your payment, our super admin will review and approve it.
+                <strong>Your MB WAY payment request is pending.</strong><br><br>
+                Plan: ${planName}<br>
+                Amount: ${amount.toFixed(2)} EUR<br><br>
+                If you haven&apos;t already paid, please send the amount via MB WAY using the payment details shown on the checkout
+                page inside the app.
               </p>
             </div>
 
             <p style="font-size: 15px; margin-bottom: 20px;">
-              Once your payment is <strong>approved</strong>, your subscription will be activated and you will receive another email confirming that your admin panel access is unlocked.
+              Once your payment is <strong>approved</strong> by our super admin, your subscription will be activated and you will receive another
+              email confirming that your admin panel access is unlocked.
             </p>
 
             <p style="font-size: 14px; color: #666; margin-top: 20px;">
@@ -639,22 +628,14 @@ MB WAY Payment Instructions
 
 Hi ${userName},
 
-Thank you for choosing the ${planName} (${amount.toFixed(
-        2
-      )} EUR) subscription plan for Bonus Food Sell Manager.
+Your MB WAY payment request is pending.
 
-To complete your payment via MB WAY:
-1. Open your MB WAY app.
-2. Start a new payment.
-3. Send ${amount.toFixed(2)} EUR to the following MB WAY number:
-   ${mbwayPhone}
-4. Confirm the transaction in your MB WAY app.
+Plan: ${planName}
+Amount: ${amount.toFixed(2)} EUR
 
-After we receive your payment, our super admin will review and approve it.
+If you haven&apos;t already paid, please send the amount via MB WAY using the payment details shown on the checkout page inside the app.
 
-Once your payment is approved, your subscription will be activated and you will receive another email confirming that your admin panel access is unlocked.
-
-If you have already sent the MB WAY payment, please wait a few minutes for manual approval.
+Once your payment is approved by our super admin, your subscription will be activated and you will receive another email confirming that your admin panel access is unlocked.
 
 ---
 This is an automated email from Bonus Food Sell Manager.
@@ -699,7 +680,7 @@ export async function sendMbwayDecisionEmail(
     const fromEmail = emailUser
 
     const subject = isApproved
-      ? "✅ MB WAY Payment Approved - Subscription Activated"
+      ? "✅ MB WAY payment approved - you can use your admin panel"
       : "❌ MB WAY Payment Not Approved"
 
     const decisionText = isApproved
@@ -707,7 +688,7 @@ export async function sendMbwayDecisionEmail(
       : "Unfortunately, your MB WAY payment could not be approved."
 
     const nextStepText = isApproved
-      ? "You now have full access to your admin panel."
+      ? "You can now log in and use your admin panel normally."
       : "If you believe this is a mistake, please contact support or try sending the MB WAY payment again."
 
     const mailOptions = {
