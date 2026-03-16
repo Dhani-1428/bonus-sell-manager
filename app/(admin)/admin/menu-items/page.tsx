@@ -83,7 +83,7 @@ export default function AdminMenuItemsPage() {
       acc[item.category] = (acc[item.category] || 0) + 1
       return acc
     }, {} as Record<string, number>),
-    totalValue: menuItems.reduce((sum, item) => sum + item.price, 0),
+    totalValue: menuItems.reduce((sum, item) => sum + Number(item.price || 0), 0),
   }
 
   return (
@@ -236,7 +236,7 @@ export default function AdminMenuItemsPage() {
                         <td className="p-4">
                           <Badge variant="outline" className="font-medium">{item.category}</Badge>
                         </td>
-                        <td className="p-4 text-right font-semibold">€{item.price.toFixed(2)}</td>
+                        <td className="p-4 text-right font-semibold">€{Number(item.price).toFixed(2)}</td>
                         <td className="p-4">
                           <button
                             onClick={(e) => {
