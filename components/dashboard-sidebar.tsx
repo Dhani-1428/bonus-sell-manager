@@ -2,11 +2,13 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, CreditCard, LogOut } from "lucide-react"
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/components/auth-provider"
+import { getRestaurantSettings } from "@/lib/api-store"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -24,9 +26,26 @@ export function DashboardSidebar({
 }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { logout } = useAuth()
+  const { logout, session } = useAuth()
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
+  const [restaurantName, setRestaurantName] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadRestaurantName = async () => {
+      if (session?.userId) {
+        try {
+          const settings = await getRestaurantSettings(session.userId)
+          if (settings?.name) {
+            setRestaurantName(settings.name)
+          }
+        } catch (error) {
+          console.error("Failed to load restaurant name:", error)
+        }
+      }
+    }
+    loadRestaurantName()
+  }, [session?.userId])
 
   const handleLogout = () => {
     logout()
@@ -46,6 +65,11 @@ export function DashboardSidebar({
       <SidebarBody className="justify-between gap-10">
         <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
           {isCollapsed ? <LogoIcon /> : <Logo />}
+          {restaurantName && !isCollapsed && (
+            <div className="mt-6 px-3">
+              <p className="text-sm font-semibold text-black truncate">{restaurantName}</p>
+            </div>
+          )}
           <div className="mt-8 flex flex-col gap-2">
             {links.map((link, idx) => {
               const isActive = pathname === link.href
