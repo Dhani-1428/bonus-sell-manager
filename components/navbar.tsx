@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 
@@ -39,12 +40,15 @@ export function Navbar({
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6">
         {/* Logo */}
         <a href="#" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground">
-              <path d="M3 11h18v6a4 4 0 01-4 4H7a4 4 0 01-4-4v-6z" />
-              <path d="M2 11h20" />
-              <path d="M8 7c0-2 1-3 4-3s4 1 4 3" />
-            </svg>
+          <div className="relative h-9 w-9 overflow-hidden rounded-lg bg-transparent">
+            <Image
+              src="/placeholder-logo.png"
+              alt="Bonus Food Sell Manager logo"
+              fill
+              sizes="36px"
+              className="object-contain"
+              priority
+            />
           </div>
           <span className="text-lg font-bold text-foreground">Bonus Food Sell Manager</span>
         </a>
