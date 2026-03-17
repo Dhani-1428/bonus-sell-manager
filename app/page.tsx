@@ -199,6 +199,26 @@ export default function LandingPage() {
     <div className="min-h-svh bg-background">
       <Navbar onLogin={() => setView("login")} onSignup={() => setView("signup")} />
       <main>
+        {/* SEO structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "Bonus Food Sell Manager",
+              applicationCategory: "BusinessApplication",
+              operatingSystem: "Web",
+              description:
+                "Food sell manager for restaurants: manage menu, take orders, track sales, and view reports in one dashboard.",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "EUR",
+              },
+            }),
+          }}
+        />
         <HeroSection onGetStarted={() => setView("signup")} />
         <AboutSection />
         <FeaturesSection />

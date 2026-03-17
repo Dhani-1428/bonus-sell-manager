@@ -10,13 +10,54 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Bonus Food Sell Manager - Restaurant Sales Manager',
-  description: 'Easy-to-use restaurant sales management dashboard. Track orders, manage your menu, and view reports.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://bonus-sell-manager.vercel.app"),
+  applicationName: "Bonus Food Sell Manager",
+  title: {
+    default: "Bonus Food Sell Manager",
+    template: "%s | Bonus Food Sell Manager",
+  },
+  description:
+    "Food sell manager for restaurants: manage menu, take orders, track sales, and view reports in one dashboard.",
+  keywords: [
+    "food sell manager",
+    "food sales manager",
+    "restaurant sales manager",
+    "restaurant management software",
+    "restaurant dashboard",
+    "order management",
+    "menu management",
+    "sales reports",
+    "admin panel",
+    "MB WAY payments",
+  ],
   generator: 'v0.app',
   icons: {
     icon: '/placeholder-logo.png',
     shortcut: '/placeholder-logo.png',
     apple: '/placeholder-logo.png',
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: "Bonus Food Sell Manager",
+    description:
+      "Food sell manager for restaurants: manage menu, take orders, track sales, and view reports in one dashboard.",
+    siteName: "Bonus Food Sell Manager",
+    images: [
+      {
+        url: "/placeholder-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Bonus Food Sell Manager",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bonus Food Sell Manager",
+    description:
+      "Food sell manager for restaurants: manage menu, take orders, track sales, and view reports in one dashboard.",
+    images: ["/placeholder-logo.png"],
   },
 }
 
