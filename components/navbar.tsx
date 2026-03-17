@@ -40,19 +40,16 @@ export function Navbar({
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6">
         {/* Logo */}
         <a href="#" className="flex items-center gap-3">
-          <div className="relative h-10 w-44 overflow-hidden rounded-lg bg-transparent">
+          <div className="relative h-12 w-52 overflow-hidden rounded-lg bg-transparent">
             <Image
               src="/placeholder-logo.png"
               alt="Bonus Food Sell Manager logo"
               fill
-              sizes="176px"
+              sizes="208px"
               className="object-contain"
               priority
             />
           </div>
-          <span className="hidden text-lg font-bold text-foreground sm:inline">
-            Bonus Food Sell Manager
-          </span>
         </a>
 
         {/* Desktop Nav */}
