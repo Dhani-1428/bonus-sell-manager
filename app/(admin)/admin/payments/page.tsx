@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, XCircle } from "lucide-react"
 import { toast } from "sonner"
+import { useI18n } from "@/lib/i18n/context"
 import {
   Table,
   TableBody,
@@ -36,6 +37,7 @@ interface Payment {
 }
 
 export default function PaymentsPage() {
+  const { t } = useI18n()
   const [payments, setPayments] = useState<Payment[]>([])
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(true)
@@ -55,7 +57,7 @@ export default function PaymentsPage() {
       setPayments(data.payments || [])
     } catch (error) {
       console.error("Error loading payments:", error)
-      toast.error("Failed to load payments")
+      toast.error(t.loading || "Failed to load payments")
     } finally {
       setIsLoading(false)
     }
@@ -74,11 +76,11 @@ export default function PaymentsPage() {
         throw new Error(errorData.error || `Failed to approve payment: ${response.status}`)
       }
 
-      toast.success("Payment approved successfully!")
+      toast.success(t.approvePayment + " " + (t.completed || "successfully"))
       loadPayments()
     } catch (error: any) {
       console.error("Error approving payment:", error)
-      toast.error(error.message || "Failed to approve payment")
+      toast.error(error.message || t.approvePayment + " " + (t.failed || "failed"))
     }
   }
 
@@ -95,20 +97,20 @@ export default function PaymentsPage() {
         throw new Error(errorData.error || `Failed to reject payment: ${response.status}`)
       }
 
-      toast.success("Payment rejected")
+      toast.success(t.rejectPayment + " " + (t.completed || "successfully"))
       loadPayments()
     } catch (error: any) {
       console.error("Error rejecting payment:", error)
-      toast.error(error.message || "Failed to reject payment")
+      toast.error(error.message || t.rejectPayment + " " + (t.failed || "failed"))
     }
   }
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
-      pending: { variant: "outline", label: "Pending" },
-      approved: { variant: "default", label: "Approved" },
-      rejected: { variant: "destructive", label: "Rejected" },
-      completed: { variant: "default", label: "Completed" },
+      pending: { variant: "outline", label: t.pending },
+      approved: { variant: "default", label: t.approved },
+      rejected: { variant: "destructive", label: t.rejected },
+      completed: { variant: "default", label: t.completed },
     }
 
     const config = variants[status] || { variant: "outline" as const, label: status }
@@ -118,51 +120,51 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Payments</h1>
-        <p className="text-muted-foreground">Review and approve pending payments</p>
+        <h1 className="text-3xl font-bold">{t.payments}</h1>
+        <p className="text-muted-foreground">{t.pendingPayments}</p>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Payment Approvals</CardTitle>
-              <CardDescription>Review and manage payment requests</CardDescription>
+              <CardTitle>{t.payments}</CardTitle>
+              <CardDescription>{t.pendingPayments}</CardDescription>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t.filter + " " + t.status} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="all">{t.status}</SelectItem>
+                <SelectItem value="pending">{t.pending}</SelectItem>
+                <SelectItem value="approved">{t.approved}</SelectItem>
+                <SelectItem value="rejected">{t.rejected}</SelectItem>
+                <SelectItem value="completed">{t.completed}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading payments...</div>
+            <div className="text-center py-8 text-muted-foreground">{t.loading}</div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t.userName}</TableHead>
+                  <TableHead>{t.amount}</TableHead>
+                  <TableHead>{t.plan}</TableHead>
+                  <TableHead>{t.status}</TableHead>
+                  <TableHead>{t.date}</TableHead>
+                  <TableHead>{t.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {payments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      No payments found
+                      {t.loading}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -191,7 +193,7 @@ export default function PaymentsPage() {
                               onClick={() => handleApprovePayment(payment.id)}
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
-                              Approve
+                              {t.approve}
                             </Button>
                             <Button
                               variant="destructive"
@@ -199,15 +201,15 @@ export default function PaymentsPage() {
                               onClick={() => handleRejectPayment(payment.id)}
                             >
                               <XCircle className="h-4 w-4 mr-1" />
-                              Reject
+                              {t.reject}
                             </Button>
                           </div>
                         )}
                         {payment.status === "approved" && (
-                          <Badge variant="default">Approved</Badge>
+                          <Badge variant="default">{t.approved}</Badge>
                         )}
                         {payment.status === "rejected" && (
-                          <Badge variant="destructive">Rejected</Badge>
+                          <Badge variant="destructive">{t.rejected}</Badge>
                         )}
                       </TableCell>
                     </TableRow>

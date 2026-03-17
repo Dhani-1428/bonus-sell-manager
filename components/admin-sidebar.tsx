@@ -6,15 +6,17 @@ import { LayoutDashboard, Users, CreditCard, LogOut, Shield, Package, ShoppingCa
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/lib/i18n/context"
+import { LanguageSwitcher } from "@/components/admin/language-switcher"
 
 const navItems = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/subscriptions", label: "Subscriptions", icon: Calendar },
-  { href: "/admin/payments", label: "Payments", icon: CreditCard },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin/menu-items", label: "Menus Of All Users", icon: Package },
-  { href: "/admin/orders", label: "All Orders", icon: ShoppingCart },
+  { href: "/admin/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/admin/users", key: "users", icon: Users },
+  { href: "/admin/subscriptions", key: "subscriptions", icon: Calendar },
+  { href: "/admin/payments", key: "payments", icon: CreditCard },
+  { href: "/admin/analytics", key: "analytics", icon: BarChart3 },
+  { href: "/admin/menu-items", key: "menuItems", icon: Package },
+  { href: "/admin/orders", key: "orders", icon: ShoppingCart },
 ]
 
 export function AdminSidebar({
@@ -26,6 +28,7 @@ export function AdminSidebar({
   const router = useRouter()
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
+  const { t } = useI18n()
 
   const handleLogout = async () => {
     try {
@@ -40,7 +43,7 @@ export function AdminSidebar({
   }
 
   const links = navItems.map((item) => ({
-    label: item.label,
+    label: t[item.key as keyof typeof t] || item.key,
     href: item.href,
     icon: (
       <item.icon className="h-5 w-5 shrink-0 text-green-800" />
@@ -69,6 +72,11 @@ export function AdminSidebar({
           </div>
         </div>
         <div>
+          {!isCollapsed && (
+            <div className="mb-4 px-3">
+              <LanguageSwitcher />
+            </div>
+          )}
           <SidebarLink
             link={{
               label: userName,
@@ -85,7 +93,7 @@ export function AdminSidebar({
             className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-white text-black transition-colors hover:bg-green-800 hover:text-white"
           >
             <LogOut className="h-5 w-5 shrink-0 text-green-800 group-hover:text-white" />
-            {!isCollapsed && <span>Logout</span>}
+            {!isCollapsed && <span>{t.logout}</span>}
           </button>
         </div>
       </SidebarBody>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Search, Package, User, DollarSign } from "lucide-react"
 import { toast } from "sonner"
+import { useI18n } from "@/lib/i18n/context"
 
 interface MenuItem {
   id: string
@@ -29,6 +30,7 @@ interface MenuItem {
 }
 
 export default function AdminMenuItemsPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -89,15 +91,15 @@ export default function AdminMenuItemsPage() {
   return (
     <div className="space-y-6 p-1">
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight">Menu Items</h1>
-        <p className="text-muted-foreground text-lg">View all menu items from all users</p>
+        <h1 className="text-4xl font-bold tracking-tight">{t.menuItems}</h1>
+        <p className="text-muted-foreground text-lg">{t.menuItems}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-4">
         <Card className="border-2 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-sm font-semibold">Total Menu Items</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t.totalMenuItems}</CardTitle>
             <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-lg">
               <Package className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             </div>
@@ -108,7 +110,7 @@ export default function AdminMenuItemsPage() {
         </Card>
         <Card className="border-2 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-sm font-semibold">Total Users</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t.totalUsers}</CardTitle>
             <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
               <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
@@ -121,7 +123,7 @@ export default function AdminMenuItemsPage() {
         </Card>
         <Card className="border-2 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-sm font-semibold">Total Value</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t.totalValue}</CardTitle>
             <div className="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-lg">
               <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
             </div>
@@ -132,7 +134,7 @@ export default function AdminMenuItemsPage() {
         </Card>
         <Card className="border-2 hover:shadow-lg transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-sm font-semibold">Categories</CardTitle>
+            <CardTitle className="text-sm font-semibold">{t.categories}</CardTitle>
             <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg">
               <Package className="h-5 w-5 text-orange-600 dark:text-orange-400" />
             </div>
@@ -146,7 +148,7 @@ export default function AdminMenuItemsPage() {
       {/* Filters */}
       <Card className="border-2">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">Filters</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t.filter}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -154,7 +156,7 @@ export default function AdminMenuItemsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, user name, or email..."
+                  placeholder={t.search}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
@@ -172,10 +174,10 @@ export default function AdminMenuItemsPage() {
               }}
             >
               <SelectTrigger className="w-full sm:w-[180px] h-10 border-2">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder={t.categories} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t.categories}</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat}
@@ -190,19 +192,19 @@ export default function AdminMenuItemsPage() {
       {/* Menu Items Table */}
       <Card className="border-2">
         <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">All Menu Items</CardTitle>
+          <CardTitle className="text-xl font-semibold">{t.menuItems}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="text-center py-12">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-              <p className="text-muted-foreground mt-4">Loading menu items...</p>
+              <p className="text-muted-foreground mt-4">{t.loading}</p>
             </div>
           ) : menuItems.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">No menu items found</p>
-              <p className="text-sm mt-1">Users need to create menu items in their dashboard.</p>
+              <p className="text-lg font-medium">{t.loading}</p>
+              <p className="text-sm mt-1">{t.loading}</p>
             </div>
           ) : (
             <div className="rounded-lg border-2 overflow-hidden">
@@ -210,12 +212,12 @@ export default function AdminMenuItemsPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-muted/50 border-b-2">
-                      <th className="text-left p-4 text-sm font-semibold">Item Name</th>
-                      <th className="text-left p-4 text-sm font-semibold">Category</th>
-                      <th className="text-right p-4 text-sm font-semibold">Price</th>
-                      <th className="text-left p-4 text-sm font-semibold">User</th>
-                      <th className="text-left p-4 text-sm font-semibold">Email</th>
-                      <th className="text-left p-4 text-sm font-semibold">Created</th>
+                      <th className="text-left p-4 text-sm font-semibold">{t.itemName}</th>
+                      <th className="text-left p-4 text-sm font-semibold">{t.itemCategory}</th>
+                      <th className="text-right p-4 text-sm font-semibold">{t.itemPrice}</th>
+                      <th className="text-left p-4 text-sm font-semibold">{t.userName}</th>
+                      <th className="text-left p-4 text-sm font-semibold">{t.userEmail}</th>
+                      <th className="text-left p-4 text-sm font-semibold">{t.date}</th>
                     </tr>
                   </thead>
                   <tbody>

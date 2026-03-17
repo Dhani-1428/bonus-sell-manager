@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select"
 import { Search, ShoppingCart, User, DollarSign, TrendingUp } from "lucide-react"
 import { toast } from "sonner"
+import { useI18n } from "@/lib/i18n/context"
 
 interface Order {
   id: string
@@ -31,6 +32,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
+  const { t } = useI18n()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -68,7 +70,7 @@ export default function AdminOrdersPage() {
       setPagination(data.pagination || pagination)
     } catch (error: any) {
       console.error("Error loading orders:", error)
-      toast.error("Failed to load orders")
+      toast.error(t.loading || "Failed to load orders")
     } finally {
       setIsLoading(false)
     }
@@ -89,15 +91,15 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Orders</h1>
-        <p className="text-muted-foreground">View all orders from all users</p>
+        <h1 className="text-3xl font-bold">{t.orders}</h1>
+        <p className="text-muted-foreground">{t.orders}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.totalOrders}</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -106,7 +108,7 @@ export default function AdminOrdersPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.totalRevenue}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -115,7 +117,7 @@ export default function AdminOrdersPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Discounts</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.discounts}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -124,7 +126,7 @@ export default function AdminOrdersPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t.totalUsers}</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -138,7 +140,7 @@ export default function AdminOrdersPage() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>{t.filter}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -146,7 +148,7 @@ export default function AdminOrdersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by order number, user name, or email..."
+                  placeholder={t.search}
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value)
@@ -164,10 +166,10 @@ export default function AdminOrdersPage() {
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Payment Methods" />
+                <SelectValue placeholder={t.paymentMethod} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Payment Methods</SelectItem>
+                <SelectItem value="all">{t.paymentMethod}</SelectItem>
                 {paymentMethods.map((method) => (
                   <SelectItem key={method} value={method}>
                     {method.charAt(0).toUpperCase() + method.slice(1)}
@@ -182,28 +184,28 @@ export default function AdminOrdersPage() {
       {/* Orders Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Orders</CardTitle>
+          <CardTitle>{t.orders}</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
+            <div className="text-center py-8 text-muted-foreground">{t.loading}</div>
           ) : orders.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No orders found. Users need to create orders in their dashboard.
+              {t.loading}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-3 text-sm font-medium">Order #</th>
-                    <th className="text-left p-3 text-sm font-medium">Date</th>
-                    <th className="text-left p-3 text-sm font-medium">Items</th>
-                    <th className="text-right p-3 text-sm font-medium">Total</th>
-                    <th className="text-right p-3 text-sm font-medium">Discount</th>
-                    <th className="text-right p-3 text-sm font-medium">Final</th>
-                    <th className="text-left p-3 text-sm font-medium">Payment</th>
-                    <th className="text-left p-3 text-sm font-medium">User</th>
+                    <th className="text-left p-3 text-sm font-medium">{t.orderNumber}</th>
+                    <th className="text-left p-3 text-sm font-medium">{t.date}</th>
+                    <th className="text-left p-3 text-sm font-medium">{t.orderItems}</th>
+                    <th className="text-right p-3 text-sm font-medium">{t.totalAmount}</th>
+                    <th className="text-right p-3 text-sm font-medium">{t.discountAmount}</th>
+                    <th className="text-right p-3 text-sm font-medium">{t.finalAmount}</th>
+                    <th className="text-left p-3 text-sm font-medium">{t.paymentMethod}</th>
+                    <th className="text-left p-3 text-sm font-medium">{t.userName}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -215,7 +217,7 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="p-3">
                         <div className="text-sm">
-                          {order.items.length} item(s)
+                          {order.items.length} {t.orderItems}
                           <div className="text-xs text-muted-foreground mt-1">
                             {order.items.slice(0, 2).map((item: any, idx: number) => (
                               <div key={idx}>
@@ -258,9 +260,7 @@ export default function AdminOrdersPage() {
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
-                Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-                {pagination.total} items
+                {t.loading}
               </div>
               <div className="flex gap-2">
                 <button
@@ -270,7 +270,7 @@ export default function AdminOrdersPage() {
                   disabled={pagination.page === 1}
                   className="px-4 py-2 border rounded disabled:opacity-50"
                 >
-                  Previous
+                  {t.cancel || "Previous"}
                 </button>
                 <button
                   onClick={() =>
@@ -282,7 +282,7 @@ export default function AdminOrdersPage() {
                   disabled={pagination.page >= pagination.totalPages}
                   className="px-4 py-2 border rounded disabled:opacity-50"
                 >
-                  Next
+                  {t.save || "Next"}
                 </button>
               </div>
             </div>

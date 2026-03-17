@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { CookingLoader } from "@/components/cooking-loader"
+import { I18nProvider } from "@/lib/i18n/context"
 
 export default function AdminLayout({
   children,
@@ -87,23 +88,25 @@ export default function AdminLayout({
   // Show admin panel immediately when admin data is available
   if (admin) {
     return (
-      <SidebarProvider>
-        <div className={cn("flex h-svh w-full overflow-hidden bg-white dark:bg-gray-900")}>
-          <AdminSidebar userName={admin.name || admin.email} />
-          <SidebarInset className="w-full flex-1 min-w-0 bg-white dark:bg-gray-900">
-            <DashboardHeader
-              userName={admin.name || admin.email}
-              onMenuToggle={() => {}}
-              onLogout={handleLogout}
-            />
-            <main className="flex-1 overflow-y-auto w-full h-full bg-white dark:bg-gray-900">
-              <div className="w-full h-full p-0">
-                {children}
-              </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <I18nProvider>
+        <SidebarProvider>
+          <div className={cn("flex h-svh w-full overflow-hidden bg-white dark:bg-gray-900")}>
+            <AdminSidebar userName={admin.name || admin.email} />
+            <SidebarInset className="w-full flex-1 min-w-0 bg-white dark:bg-gray-900">
+              <DashboardHeader
+                userName={admin.name || admin.email}
+                onMenuToggle={() => {}}
+                onLogout={handleLogout}
+              />
+              <main className="flex-1 overflow-y-auto w-full h-full bg-white dark:bg-gray-900">
+                <div className="w-full h-full p-0">
+                  {children}
+                </div>
+              </main>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </I18nProvider>
     )
   }
 
