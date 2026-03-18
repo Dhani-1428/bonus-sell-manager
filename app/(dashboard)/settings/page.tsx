@@ -167,6 +167,7 @@ export default function SettingsPage() {
               <Label htmlFor="profile-name">Name</Label>
               <Input
                 id="profile-name"
+                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={profile.name}
                 onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
               />
@@ -176,11 +177,16 @@ export default function SettingsPage() {
               <Input
                 id="profile-email"
                 type="email"
+                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={profile.email}
                 onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
               />
             </div>
-            <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
+            <Button
+              onClick={saveProfile}
+              disabled={savingProfile}
+              className="w-full bg-green-800 text-white hover:bg-green-900"
+            >
               {savingProfile ? "Saving..." : "Save details"}
             </Button>
           </CardContent>
@@ -196,6 +202,7 @@ export default function SettingsPage() {
               <Label htmlFor="rest-name">Restaurant Name</Label>
               <Input
                 id="rest-name"
+                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={restaurantSettings.name}
                 onChange={(e) => setRestaurantSettings((s) => ({ ...s, name: e.target.value }))}
               />
@@ -204,6 +211,7 @@ export default function SettingsPage() {
               <Label htmlFor="rest-address">Address</Label>
               <Input
                 id="rest-address"
+                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={restaurantSettings.address}
                 onChange={(e) => setRestaurantSettings((s) => ({ ...s, address: e.target.value }))}
               />
@@ -212,11 +220,16 @@ export default function SettingsPage() {
               <Label htmlFor="rest-contact">Contact Number</Label>
               <Input
                 id="rest-contact"
+                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={restaurantSettings.contactNumber}
                 onChange={(e) => setRestaurantSettings((s) => ({ ...s, contactNumber: e.target.value }))}
               />
             </div>
-            <Button onClick={saveRestaurant} disabled={savingRestaurant} className="w-full">
+            <Button
+              onClick={saveRestaurant}
+              disabled={savingRestaurant}
+              className="w-full bg-green-800 text-white hover:bg-green-900"
+            >
               {savingRestaurant ? "Saving..." : "Save restaurant details"}
             </Button>
           </CardContent>
@@ -233,15 +246,26 @@ export default function SettingsPage() {
               <Input
                 id="current-password"
                 type="password"
+                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New password</Label>
-              <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+              <Input
+                id="new-password"
+                type="password"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
             </div>
-            <Button onClick={handleResetPassword} disabled={resettingPassword} className="w-full">
+            <Button
+              onClick={handleResetPassword}
+              disabled={resettingPassword}
+              className="w-full bg-green-800 text-white hover:bg-green-900"
+            >
               {resettingPassword ? "Updating..." : "Update password"}
             </Button>
           </CardContent>
