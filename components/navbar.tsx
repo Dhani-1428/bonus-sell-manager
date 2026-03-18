@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 
@@ -37,19 +36,10 @@ export function Navbar({
           : "bg-transparent"
       }`}
     >
-      <nav className="mx-auto flex h-24 max-w-6xl items-center justify-between px-4 lg:px-6">
-        {/* Logo */}
-        <a href="#" className="flex items-center gap-4">
-          <div className="relative h-16 w-[360px] overflow-hidden rounded-lg bg-transparent">
-            <Image
-              src="/placeholder-logo.png"
-              alt="Bonus Food Sell Manager logo"
-              fill
-              sizes="360px"
-              className="object-contain"
-              priority
-            />
-          </div>
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6">
+        {/* Brand (text only) */}
+        <a href="#" className="flex items-center gap-2.5">
+          <span className="text-lg font-bold text-foreground">Bonus Food Sell Manager</span>
         </a>
 
         {/* Desktop Nav */}

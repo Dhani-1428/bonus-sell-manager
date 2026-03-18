@@ -1,19 +1,9 @@
-import Image from "next/image"
-
 export function Footer() {
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-10 lg:flex-row lg:justify-between lg:px-6">
         <div className="flex items-center gap-2.5">
-          <div className="relative h-16 w-[420px] overflow-hidden rounded-lg bg-transparent">
-            <Image
-              src="/placeholder-logo.png"
-              alt="Bonus Food Sell Manager logo"
-              fill
-              sizes="420px"
-              className="object-contain"
-            />
-          </div>
+          <span className="text-sm font-bold text-foreground">Bonus Food Sell Manager</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
           <a href="#about" className="transition-colors hover:text-foreground">About</a>
