@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, MapPin, Send } from "lucide-react"
+import { Mail, Phone, Send } from "lucide-react"
 import { toast } from "sonner"
 
 export function ContactSection() {
@@ -50,16 +50,16 @@ export function ContactSection() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-foreground">Email</p>
-                <p className="text-sm text-muted-foreground">hello@salesrocket.app</p>
+                <p className="text-sm text-muted-foreground">bonusfoodsellmanager.com</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <MapPin className="h-5 w-5 text-primary" />
+                <Phone className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Office</p>
-                <p className="text-sm text-muted-foreground">Berlin, Germany</p>
+                <p className="text-sm font-semibold text-foreground">Contact</p>
+                <p className="text-sm text-muted-foreground">+351 939947595</p>
               </div>
             </div>
             <div className="mt-4 rounded-xl border border-border bg-card p-5">
