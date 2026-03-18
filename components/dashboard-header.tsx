@@ -3,6 +3,7 @@
 import { LogOut, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useI18n } from "@/lib/i18n/context"
 
 export function DashboardHeader({
   userName,
@@ -14,6 +15,7 @@ export function DashboardHeader({
   onLogout: () => void
 }) {
   const { theme, setTheme } = useTheme()
+  const { t } = useI18n()
 
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar bg-sidebar px-4">
@@ -35,10 +37,10 @@ export function DashboardHeader({
         <button
           onClick={onLogout}
           className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-white hover:bg-white/10 transition-colors"
-          aria-label="Log out"
+          aria-label={t.logout}
         >
           <LogOut className="h-4 w-4" />
-          <span className="hidden sm:inline">Log out</span>
+          <span className="hidden sm:inline">{t.logout}</span>
         </button>
       </div>
     </header>

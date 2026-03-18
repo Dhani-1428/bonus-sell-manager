@@ -111,9 +111,36 @@ export interface Translations {
   revenue: string
   orders: string
   discounts: string
+
+  // Settings (dashboard) panel
+  settingsTitle: string
+  languageSectionTitle: string
+  languageSectionDescription: string
+  accountDetailsTitle: string
+  accountDetailsDescription: string
+  nameLabel: string
+  emailLabel: string
+  saveDetails: string
+  savingProfile: string
+  restaurantDetailsTitle: string
+  restaurantDetailsDescription: string
+  restaurantNameLabel: string
+  addressLabel: string
+  contactNumberLabel: string
+  saveRestaurantDetails: string
+  savingRestaurant: string
+  resetPasswordTitle: string
+  resetPasswordDescription: string
+  currentPasswordLabel: string
+  newPasswordLabel: string
+  updatePassword: string
+  updatingPassword: string
+  loadingSettings: string
+
+  settingsPageDescription: string
 }
 
-const translations: Record<string, Translations> = {
+const translations: Record<string, Partial<Translations>> = {
   en: {
     dashboard: 'Dashboard',
     users: 'Users',
@@ -171,6 +198,32 @@ const translations: Record<string, Translations> = {
     revenue: 'Revenue',
     orders: 'Orders',
     discounts: 'Discounts',
+
+    // Settings (dashboard) panel
+    settingsTitle: 'Settings',
+    languageSectionTitle: 'Language',
+    languageSectionDescription: 'Your preferred language for the whole panel',
+    accountDetailsTitle: 'Account Details',
+    accountDetailsDescription: 'Edit your name and email',
+    nameLabel: 'Name',
+    emailLabel: 'Email',
+    saveDetails: 'Save details',
+    savingProfile: 'Saving...',
+    restaurantDetailsTitle: 'Restaurant Details',
+    restaurantDetailsDescription: 'Shown on your dashboard and customer communications',
+    restaurantNameLabel: 'Restaurant Name',
+    addressLabel: 'Address',
+    contactNumberLabel: 'Contact Number',
+    saveRestaurantDetails: 'Save restaurant details',
+    savingRestaurant: 'Saving...',
+    resetPasswordTitle: 'Reset Password',
+    resetPasswordDescription: 'Change your password from inside your panel',
+    currentPasswordLabel: 'Current password',
+    newPasswordLabel: 'New password',
+    updatePassword: 'Update password',
+    updatingPassword: 'Updating...',
+    loadingSettings: 'Loading settings...',
+    settingsPageDescription: 'Update language, account details, and restaurant information.',
   },
   pt: {
     dashboard: 'Painel',
@@ -1103,7 +1156,9 @@ const translations: Record<string, Translations> = {
 }
 
 export function getTranslations(lang: string): Translations {
-  return translations[lang] || translations.en
+  // Merge with English so newly added keys always have a fallback even
+  // if the selected language object is missing some translations.
+  return { ...translations.en, ...(translations[lang] || {}) } as Translations
 }
 
 export function getLanguageFromCode(code: string): Language {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { LanguageSwitcher } from "@/components/admin/language-switcher"
+import { useI18n } from "@/lib/i18n/context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,6 +12,7 @@ import { toast } from "sonner"
 
 export default function SettingsPage() {
   const { session } = useAuth()
+  const { t } = useI18n()
 
   const [profile, setProfile] = useState<{ name: string; email: string }>({ name: "", email: "" })
   const [restaurantSettings, setRestaurantSettings] = useState<{ name: string; address: string; contactNumber: string }>({
@@ -136,21 +138,21 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return <div className="py-10 text-center text-muted-foreground">Loading settings...</div>
+    return <div className="py-10 text-center text-muted-foreground">{t.loadingSettings}</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-black">Settings</h1>
-        <p className="text-sm text-gray-600">Update language, account details, and restaurant information.</p>
+        <h1 className="text-3xl font-bold text-black">{t.settingsTitle}</h1>
+        <p className="text-sm text-gray-600">{t.settingsPageDescription}</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="text-black">Language</CardTitle>
-            <CardDescription>Your preferred language for the whole panel</CardDescription>
+            <CardTitle className="text-black">{t.languageSectionTitle}</CardTitle>
+            <CardDescription>{t.languageSectionDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <LanguageSwitcher />
@@ -159,12 +161,12 @@ export default function SettingsPage() {
 
         <Card className="bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="text-black">Account Details</CardTitle>
-            <CardDescription>Edit your name and email</CardDescription>
+            <CardTitle className="text-black">{t.accountDetailsTitle}</CardTitle>
+            <CardDescription>{t.accountDetailsDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="profile-name">Name</Label>
+              <Label htmlFor="profile-name">{t.nameLabel}</Label>
               <Input
                 id="profile-name"
                   className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
@@ -173,7 +175,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="profile-email">Email</Label>
+              <Label htmlFor="profile-email">{t.emailLabel}</Label>
               <Input
                 id="profile-email"
                 type="email"
@@ -187,19 +189,19 @@ export default function SettingsPage() {
               disabled={savingProfile}
               className="w-full bg-green-800 text-white hover:bg-green-900"
             >
-              {savingProfile ? "Saving..." : "Save details"}
+              {savingProfile ? t.savingProfile : t.saveDetails}
             </Button>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="text-black">Restaurant Details</CardTitle>
-            <CardDescription>Shown on your dashboard and customer communications</CardDescription>
+            <CardTitle className="text-black">{t.restaurantDetailsTitle}</CardTitle>
+            <CardDescription>{t.restaurantDetailsDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="rest-name">Restaurant Name</Label>
+              <Label htmlFor="rest-name">{t.restaurantNameLabel}</Label>
               <Input
                 id="rest-name"
                   className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
@@ -208,7 +210,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rest-address">Address</Label>
+              <Label htmlFor="rest-address">{t.addressLabel}</Label>
               <Input
                 id="rest-address"
                   className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
@@ -217,7 +219,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rest-contact">Contact Number</Label>
+              <Label htmlFor="rest-contact">{t.contactNumberLabel}</Label>
               <Input
                 id="rest-contact"
                   className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
@@ -230,19 +232,19 @@ export default function SettingsPage() {
               disabled={savingRestaurant}
               className="w-full bg-green-800 text-white hover:bg-green-900"
             >
-              {savingRestaurant ? "Saving..." : "Save restaurant details"}
+              {savingRestaurant ? t.savingRestaurant : t.saveRestaurantDetails}
             </Button>
           </CardContent>
         </Card>
 
         <Card className="bg-white border border-gray-200">
           <CardHeader>
-            <CardTitle className="text-black">Reset Password</CardTitle>
-            <CardDescription>Change your password from inside your panel</CardDescription>
+            <CardTitle className="text-black">{t.resetPasswordTitle}</CardTitle>
+            <CardDescription>{t.resetPasswordDescription}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="current-password">Current password</Label>
+              <Label htmlFor="current-password">{t.currentPasswordLabel}</Label>
               <Input
                 id="current-password"
                 type="password"
@@ -252,7 +254,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-password">New password</Label>
+              <Label htmlFor="new-password">{t.newPasswordLabel}</Label>
               <Input
                 id="new-password"
                 type="password"
@@ -266,7 +268,7 @@ export default function SettingsPage() {
               disabled={resettingPassword}
               className="w-full bg-green-800 text-white hover:bg-green-900"
             >
-              {resettingPassword ? "Updating..." : "Update password"}
+              {resettingPassword ? t.updatingPassword : t.updatePassword}
             </Button>
           </CardContent>
         </Card>
