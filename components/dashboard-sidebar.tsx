@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/components/auth-provider"
 import { getRestaurantSettings } from "@/lib/api-store"
 import { useI18n } from "@/lib/i18n/context"
-import { LanguageSwitcher } from "@/components/admin/language-switcher"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -104,9 +103,7 @@ export function DashboardSidebar({
         </div>
         <div>
           {!isCollapsed && (
-            <div className="mb-4 px-3">
-              <LanguageSwitcher />
-            </div>
+            null
           )}
           <SidebarLink
             link={{

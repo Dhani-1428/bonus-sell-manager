@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useAuth } from "@/components/auth-provider"
-import { LanguageSwitcher } from "@/components/admin/language-switcher"
 import { useI18n } from "@/lib/i18n/context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -149,16 +148,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="bg-white border border-gray-200">
-          <CardHeader>
-            <CardTitle className="text-black">{t.languageSectionTitle}</CardTitle>
-            <CardDescription>{t.languageSectionDescription}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <LanguageSwitcher />
-          </CardContent>
-        </Card>
-
         <Card className="bg-white border border-gray-200">
           <CardHeader>
             <CardTitle className="text-black">{t.accountDetailsTitle}</CardTitle>

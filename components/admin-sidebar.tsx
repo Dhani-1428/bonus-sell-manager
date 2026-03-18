@@ -7,7 +7,6 @@ import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/s
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/lib/i18n/context"
-import { LanguageSwitcher } from "@/components/admin/language-switcher"
 
 const navItems = [
   { href: "/admin/dashboard", key: "dashboard", icon: LayoutDashboard },
@@ -73,9 +72,7 @@ export function AdminSidebar({
         </div>
         <div>
           {!isCollapsed && (
-            <div className="mb-4 px-3">
-              <LanguageSwitcher />
-            </div>
+            null
           )}
           <SidebarLink
             link={{
