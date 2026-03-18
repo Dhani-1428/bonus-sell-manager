@@ -2,6 +2,7 @@
 
 import { useMemo, useEffect, useState, useCallback } from "react"
 import { AnimatePresence, motion } from "motion/react"
+import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/api-store"
 import type { Order, OrderItem, MenuItem } from "@/lib/types"
@@ -116,6 +117,7 @@ function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; in
 
 export default function AllOrdersPage() {
   const { session } = useAuth()
+  const pathname = usePathname()
   const [orders, setOrders] = useState<Order[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
@@ -147,7 +149,7 @@ export default function AllOrdersPage() {
       }
     }
     loadData()
-  }, [session])
+  }, [session, pathname])
 
   const refreshOrders = useCallback(async () => {
     if (session) {
