@@ -280,20 +280,45 @@ export async function getOrders(userId: string): Promise<Order[]> {
       [userId]
     )
 
-    return orders.map(order => ({
-      id: order.id,
-      orderNumber: order.order_number,
-      date: order.date.toISOString(),
-      items: JSON.parse(order.items),
-      totalAmount: order.total_amount,
-      discountAmount: order.discount_amount,
-      finalAmount: order.final_amount,
-      paymentMethod: order.payment_method,
-      createdAt: order.created_at.toISOString(),
-    }))
+    return orders.map((order) => {
+      // MySQL JSON columns can come back as either a string or an already-parsed object.
+      // Be defensive so we don't return an empty list due to JSON parsing issues.
+      let parsedItems: any[] = []
+      try {
+        if (Array.isArray((order as any).items)) {
+          parsedItems = (order as any).items
+        } else if (typeof (order as any).items === "string") {
+          parsedItems = JSON.parse((order as any).items || "[]")
+        } else {
+          parsedItems = []
+        }
+      } catch (err) {
+        console.warn("[db-store:getOrders] Failed to parse order.items JSON", {
+          orderId: order.id,
+          error: (err as any)?.message || err,
+        })
+        parsedItems = []
+      }
+
+      const dateObj = order.date instanceof Date ? order.date : new Date((order as any).date)
+      const createdObj =
+        order.created_at instanceof Date ? order.created_at : new Date((order as any).created_at)
+
+      return {
+        id: order.id,
+        orderNumber: order.order_number,
+        date: isNaN(dateObj.getTime()) ? new Date().toISOString() : dateObj.toISOString(),
+        items: parsedItems,
+        totalAmount: Number(order.total_amount),
+        discountAmount: Number(order.discount_amount),
+        finalAmount: Number(order.final_amount),
+        paymentMethod: order.payment_method,
+        createdAt: isNaN(createdObj.getTime()) ? new Date().toISOString() : createdObj.toISOString(),
+      }
+    })
   } catch (error) {
     console.error('Error getting orders:', error)
-    return []
+    throw error
   }
 }
 
