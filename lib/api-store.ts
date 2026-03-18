@@ -141,14 +141,20 @@ export async function getOrders(userId: string): Promise<Order[]> {
       cache: 'no-store'
     })
     if (!response.ok) {
-      console.error("Error fetching orders:", response.statusText)
-      return []
+      const errorData = await response.json().catch(() => ({}))
+      const message =
+        (errorData && errorData.error) ||
+        `Failed to fetch orders: ${response.status} ${response.statusText}`
+      throw new Error(message)
     }
     const data = await response.json()
-    return data.orders || []
+    if (!Array.isArray(data.orders)) {
+      throw new Error("Invalid orders response format")
+    }
+    return data.orders
   } catch (error) {
     console.error("Error getting orders:", error)
-    return []
+    throw error
   }
 }
 

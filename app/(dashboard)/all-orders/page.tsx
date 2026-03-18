@@ -119,6 +119,7 @@ export default function AllOrdersPage() {
   const { session } = useAuth()
   const pathname = usePathname()
   const [orders, setOrders] = useState<Order[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -131,21 +132,26 @@ export default function AllOrdersPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (session) {
-        try {
-          const [allOrders, items] = await Promise.all([
-            getOrders(session.userId),
-            getMenuItems(session.userId)
-          ])
-          setOrders(allOrders)
-          setMenuItems(items)
-        } catch (error) {
-          console.error("Error loading orders and menu items:", error)
-          toast.error("Failed to load data")
-        }
-      } else {
+      if (!session) {
         setOrders([])
         setMenuItems([])
+        setLoadingOrders(false)
+        return
+      }
+
+      setLoadingOrders(true)
+      try {
+        const [allOrders, items] = await Promise.all([
+          getOrders(session.userId),
+          getMenuItems(session.userId)
+        ])
+        setOrders(allOrders)
+        setMenuItems(items)
+      } catch (error) {
+        console.error("Error loading orders and menu items:", error)
+        toast.error("Failed to load orders")
+      } finally {
+        setLoadingOrders(false)
       }
     }
     loadData()
@@ -665,7 +671,13 @@ export default function AllOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length === 0 ? (
+              {loadingOrders ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-white/80">
+                    Loading orders...
+                  </td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center text-sm text-white/80">
                     {searchTerm ? "No orders found matching your search." : "No orders yet. Create your first order!"}
