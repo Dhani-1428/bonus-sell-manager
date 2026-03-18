@@ -37,15 +37,15 @@ export function Navbar({
           : "bg-transparent"
       }`}
     >
-      <nav className="mx-auto flex h-28 max-w-6xl items-center justify-between px-4 lg:px-6">
+      <nav className="mx-auto flex h-24 max-w-6xl items-center justify-between px-4 lg:px-6">
         {/* Logo */}
         <a href="#" className="flex items-center gap-4">
-          <div className="relative h-[76px] w-[560px] overflow-hidden rounded-lg bg-transparent">
+          <div className="relative h-16 w-[360px] overflow-hidden rounded-lg bg-transparent">
             <Image
               src="/placeholder-logo.png"
               alt="Bonus Food Sell Manager logo"
               fill
-              sizes="560px"
+              sizes="360px"
               className="object-contain"
               priority
             />
