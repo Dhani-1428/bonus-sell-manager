@@ -798,3 +798,74 @@ Please do not reply to this email.
     })
   }
 }
+
+/**
+ * Send "Contact Us" messages from the landing page.
+ */
+export async function sendContactEmail(params: {
+  fromName: string
+  fromEmail: string
+  message: string
+}): Promise<void> {
+  const { fromName, fromEmail, message } = params
+
+  if (!fromName || !fromEmail || !message) {
+    console.error("❌ Cannot send contact email: missing fields", {
+      fromName,
+      fromEmail,
+    })
+    return
+  }
+
+  const toEmail = process.env.CONTACT_TO_EMAIL || "bonusfoodsellmanager@gmail.com"
+  const emailUser = process.env.EMAIL_USER || "bonusfoodsellmanager@gmail.com"
+
+  try {
+    const transporter = createTransporter()
+    const mailOptions = {
+      from: `"Bonus Food Sell Manager" <${emailUser}>`,
+      to: toEmail,
+      replyTo: fromEmail,
+      subject: `📩 Contact form message from ${fromName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Contact Us</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="margin: 0 0 16px;">Contact Us Message</h2>
+            <p style="margin: 0 0 8px;"><strong>Name:</strong> ${fromName}</p>
+            <p style="margin: 0 0 16px;"><strong>Email:</strong> ${fromEmail}</p>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;">
+              <p style="margin:0;white-space:pre-wrap;">${message}</p>
+            </div>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+            <p style="font-size:12px;color:#999;margin:0;">
+              This email was sent from the Bonus Food Sell Manager contact form.
+            </p>
+          </body>
+        </html>
+      `.trim(),
+      text: `
+Contact Us Message
+Name: ${fromName}
+Email: ${fromEmail}
+
+Message:
+${message}
+
+— Bonus Food Sell Manager
+`.trim(),
+    }
+
+    await transporter.sendMail(mailOptions)
+  } catch (error: any) {
+    console.error("❌ Failed to send contact email:", {
+      error: error?.message,
+      toEmail,
+    })
+  }
+}
