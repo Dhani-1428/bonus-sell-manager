@@ -1,4 +1,6 @@
-export type Language = 'en' | 'pt' | 'es' | 'nl' | 'hi' | 'pa' | 'ur' | 'fr' | 'de' | 'it' | 'pl' | 'ro' | 'cs' | 'sv' | 'no' | 'da' | 'fi'
+// Use string codes so we can offer many languages even if we only ship full
+// translations for a subset (fallback to `en`).
+export type Language = string
 
 export const languages: { code: Language; name: string; nativeName: string }[] = [
   { code: 'en', name: 'English', nativeName: 'English' },
@@ -11,9 +13,28 @@ export const languages: { code: Language; name: string; nativeName: string }[] =
   { code: 'fr', name: 'French', nativeName: 'Français' },
   { code: 'de', name: 'German', nativeName: 'Deutsch' },
   { code: 'it', name: 'Italian', nativeName: 'Italiano' },
+  { code: 'el', name: 'Greek', nativeName: 'Ελληνικά' },
   { code: 'pl', name: 'Polish', nativeName: 'Polski' },
   { code: 'ro', name: 'Romanian', nativeName: 'Română' },
   { code: 'cs', name: 'Czech', nativeName: 'Čeština' },
+  { code: 'sk', name: 'Slovak', nativeName: 'Slovenčina' },
+  { code: 'hu', name: 'Hungarian', nativeName: 'Magyar' },
+  { code: 'hr', name: 'Croatian', nativeName: 'Hrvatski' },
+  { code: 'sl', name: 'Slovenian', nativeName: 'Slovenščina' },
+  { code: 'bg', name: 'Bulgarian', nativeName: 'Български' },
+  { code: 'tr', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'uk', name: 'Ukrainian', nativeName: 'Українська' },
+  { code: 'sr', name: 'Serbian', nativeName: 'Српски' },
+  { code: 'ca', name: 'Catalan', nativeName: 'Català' },
+  { code: 'eu', name: 'Basque', nativeName: 'Euskara' },
+  { code: 'gl', name: 'Galician', nativeName: 'Galego' },
+  { code: 'et', name: 'Estonian', nativeName: 'Eesti' },
+  { code: 'lv', name: 'Latvian', nativeName: 'Latviešu' },
+  { code: 'lt', name: 'Lithuanian', nativeName: 'Lietuvių' },
+  { code: 'is', name: 'Icelandic', nativeName: 'Íslenska' },
+  { code: 'mt', name: 'Maltese', nativeName: 'Malti' },
+  { code: 'cy', name: 'Welsh', nativeName: 'Cymraeg' },
+  { code: 'ga', name: 'Irish', nativeName: 'Gaeilge' },
   { code: 'sv', name: 'Swedish', nativeName: 'Svenska' },
   { code: 'no', name: 'Norwegian', nativeName: 'Norsk' },
   { code: 'da', name: 'Danish', nativeName: 'Dansk' },
@@ -92,7 +113,7 @@ export interface Translations {
   discounts: string
 }
 
-const translations: Record<Language, Translations> = {
+const translations: Record<string, Translations> = {
   en: {
     dashboard: 'Dashboard',
     users: 'Users',
@@ -1081,7 +1102,7 @@ const translations: Record<Language, Translations> = {
   },
 }
 
-export function getTranslations(lang: Language): Translations {
+export function getTranslations(lang: string): Translations {
   return translations[lang] || translations.en
 }
 

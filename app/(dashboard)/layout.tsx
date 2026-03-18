@@ -6,6 +6,7 @@ import { CookingLoader } from "@/components/cooking-loader"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { I18nProvider } from "@/lib/i18n/context"
 import { useState, useEffect, type ReactNode } from "react"
 import { getUserById, getSubscriptionStatus } from "@/lib/subscription"
 import { cn } from "@/lib/utils"
@@ -201,26 +202,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const userName = session.name || "User"
     
     return (
-      <SidebarProvider>
-        <div className={cn("flex h-svh w-full overflow-hidden bg-white")}>
-          <DashboardSidebar userName={userName} />
-          <SidebarInset className="w-full flex-1 min-w-0 bg-white">
-            <DashboardHeader
-              userName={userName}
-              onMenuToggle={() => {}}
-              onLogout={() => {
-                logout()
-                router.push("/")
-              }}
-            />
-            <main className="flex-1 overflow-y-auto w-full h-full bg-white">
-              <div className="w-full h-full p-4 lg:p-6">
-                {children}
-              </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <I18nProvider>
+        <SidebarProvider>
+          <div className={cn("flex h-svh w-full overflow-hidden bg-white")}>
+            <DashboardSidebar userName={userName} />
+            <SidebarInset className="w-full flex-1 min-w-0 bg-white">
+              <DashboardHeader
+                userName={userName}
+                onMenuToggle={() => {}}
+                onLogout={() => {
+                  logout()
+                  router.push("/")
+                }}
+              />
+              <main className="flex-1 overflow-y-auto w-full h-full bg-white">
+                <div className="w-full h-full p-4 lg:p-6">
+                  {children}
+                </div>
+              </main>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </I18nProvider>
     )
   }
 
@@ -233,25 +236,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return <CookingLoader text="Redirecting..." />
 
   return (
-    <SidebarProvider>
-      <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
-        <DashboardSidebar userName={userName} />
-        <SidebarInset className="w-full flex-1 min-w-0">
-          <DashboardHeader
-            userName={userName}
-            onMenuToggle={() => {}}
-            onLogout={() => {
-              logout()
-              router.push("/")
-            }}
-          />
-          <main className="flex-1 overflow-y-auto w-full h-full">
-            <div className="w-full h-full p-4 lg:p-6">
-              {children}
-            </div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <I18nProvider>
+      <SidebarProvider>
+        <div className={cn("flex h-svh w-full overflow-hidden bg-background")}>
+          <DashboardSidebar userName={userName} />
+          <SidebarInset className="w-full flex-1 min-w-0">
+            <DashboardHeader
+              userName={userName}
+              onMenuToggle={() => {}}
+              onLogout={() => {
+                logout()
+                router.push("/")
+              }}
+            />
+            <main className="flex-1 overflow-y-auto w-full h-full">
+              <div className="w-full h-full p-4 lg:p-6">
+                {children}
+              </div>
+            </main>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    </I18nProvider>
   )
 }

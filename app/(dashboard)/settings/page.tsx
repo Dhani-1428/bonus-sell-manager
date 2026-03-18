@@ -1,0 +1,253 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { useAuth } from "@/components/auth-provider"
+import { LanguageSwitcher } from "@/components/admin/language-switcher"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+
+export default function SettingsPage() {
+  const { session } = useAuth()
+
+  const [profile, setProfile] = useState<{ name: string; email: string }>({ name: "", email: "" })
+  const [restaurantSettings, setRestaurantSettings] = useState<{ name: string; address: string; contactNumber: string }>({
+    name: "",
+    address: "",
+    contactNumber: "",
+  })
+
+  const [loading, setLoading] = useState(true)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingRestaurant, setSavingRestaurant] = useState(false)
+
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [resettingPassword, setResettingPassword] = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      if (!session) return
+
+      setLoading(true)
+      try {
+        const [profileRes, settingsRes] = await Promise.all([
+          fetch("/api/auth/profile", { method: "GET" }),
+          fetch(`/api/users/${session.userId}/settings`, { method: "GET" }),
+        ])
+
+        if (!profileRes.ok) {
+          throw new Error("Failed to load profile")
+        }
+        if (!settingsRes.ok) {
+          throw new Error("Failed to load restaurant settings")
+        }
+
+        const profileData = await profileRes.json()
+        const settingsData = await settingsRes.json()
+
+        setProfile({
+          name: profileData?.name || session.name || "",
+          email: profileData?.email || session.email || "",
+        })
+
+        const s = settingsData?.settings
+        setRestaurantSettings({
+          name: s?.name || session.name || "",
+          address: s?.address || "",
+          contactNumber: s?.contactNumber || "",
+        })
+      } catch (err: any) {
+        console.error("Settings load error:", err)
+        toast.error(err?.message || "Failed to load settings")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+  }, [session])
+
+  const saveProfile = async () => {
+    if (!session) return
+    setSavingProfile(true)
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: profile.name, email: profile.email }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update profile")
+      }
+      toast.success("Profile updated")
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update profile")
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  const saveRestaurant = async () => {
+    if (!session) return
+    setSavingRestaurant(true)
+    try {
+      const res = await fetch(`/api/users/${session.userId}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(restaurantSettings),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update restaurant settings")
+      }
+      toast.success("Restaurant details updated")
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update restaurant details")
+    } finally {
+      setSavingRestaurant(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!session) return
+    setResettingPassword(true)
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to reset password")
+      }
+      setCurrentPassword("")
+      setNewPassword("")
+      toast.success("Password updated successfully")
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to reset password")
+    } finally {
+      setResettingPassword(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="py-10 text-center text-muted-foreground">Loading settings...</div>
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-black">Settings</h1>
+        <p className="text-sm text-gray-600">Update language, account details, and restaurant information.</p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="bg-white border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-black">Language</CardTitle>
+            <CardDescription>Your preferred language for the whole panel</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <LanguageSwitcher />
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-black">Account Details</CardTitle>
+            <CardDescription>Edit your name and email</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="profile-name">Name</Label>
+              <Input
+                id="profile-name"
+                value={profile.name}
+                onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-email">Email</Label>
+              <Input
+                id="profile-email"
+                type="email"
+                value={profile.email}
+                onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
+              />
+            </div>
+            <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
+              {savingProfile ? "Saving..." : "Save details"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-black">Restaurant Details</CardTitle>
+            <CardDescription>Shown on your dashboard and customer communications</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="rest-name">Restaurant Name</Label>
+              <Input
+                id="rest-name"
+                value={restaurantSettings.name}
+                onChange={(e) => setRestaurantSettings((s) => ({ ...s, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rest-address">Address</Label>
+              <Input
+                id="rest-address"
+                value={restaurantSettings.address}
+                onChange={(e) => setRestaurantSettings((s) => ({ ...s, address: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rest-contact">Contact Number</Label>
+              <Input
+                id="rest-contact"
+                value={restaurantSettings.contactNumber}
+                onChange={(e) => setRestaurantSettings((s) => ({ ...s, contactNumber: e.target.value }))}
+              />
+            </div>
+            <Button onClick={saveRestaurant} disabled={savingRestaurant} className="w-full">
+              {savingRestaurant ? "Saving..." : "Save restaurant details"}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-black">Reset Password</CardTitle>
+            <CardDescription>Change your password from inside your panel</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current password</Label>
+              <Input
+                id="current-password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New password</Label>
+              <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+            </div>
+            <Button onClick={handleResetPassword} disabled={resettingPassword} className="w-full">
+              {resettingPassword ? "Updating..." : "Update password"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+

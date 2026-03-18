@@ -3,12 +3,14 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, CreditCard, LogOut } from "lucide-react"
+import { LayoutDashboard, PlusCircle, UtensilsCrossed, BarChart3, Receipt, CreditCard, LogOut, Settings } from "lucide-react"
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from "@/components/ui/sidebar"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/components/auth-provider"
 import { getRestaurantSettings } from "@/lib/api-store"
+import { useI18n } from "@/lib/i18n/context"
+import { LanguageSwitcher } from "@/components/admin/language-switcher"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -17,6 +19,7 @@ const navItems = [
   { href: "/menu", label: "Menu", icon: UtensilsCrossed },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/subscription", label: "Subscription", icon: CreditCard },
+  { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 export function DashboardSidebar({
@@ -29,6 +32,7 @@ export function DashboardSidebar({
   const { logout, session } = useAuth()
   const { state } = useSidebar()
   const isCollapsed = state === 'collapsed'
+  const { t } = useI18n()
   const [restaurantName, setRestaurantName] = useState<string | null>(null)
 
   useEffect(() => {
@@ -53,7 +57,19 @@ export function DashboardSidebar({
   }
 
   const links = navItems.map((item) => ({
-    label: item.label,
+    // Translate the most important labels (others will remain in English).
+    label:
+      item.href === "/dashboard"
+        ? t.dashboard
+        : item.href === "/all-orders"
+          ? t.orders
+          : item.href === "/menu"
+            ? t.menuItems
+            : item.href === "/reports"
+              ? t.analytics
+              : item.href === "/subscription"
+                ? t.subscriptions
+                : item.label,
     href: item.href,
     icon: (
       <item.icon className="h-5 w-5 shrink-0 text-green-800" />
@@ -87,6 +103,11 @@ export function DashboardSidebar({
           </div>
         </div>
         <div>
+          {!isCollapsed && (
+            <div className="mb-4 px-3">
+              <LanguageSwitcher />
+            </div>
+          )}
           <SidebarLink
             link={{
               label: userName,
@@ -103,7 +124,7 @@ export function DashboardSidebar({
             className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-white text-black transition-colors hover:bg-green-800 hover:text-white"
           >
             <LogOut className="h-5 w-5 shrink-0 text-green-800 group-hover:text-white" />
-            {!isCollapsed && <span>Logout</span>}
+            {!isCollapsed && <span>{t.logout}</span>}
           </button>
         </div>
       </SidebarBody>
