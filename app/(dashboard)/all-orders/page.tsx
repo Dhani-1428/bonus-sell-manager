@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useEffect, useState, useCallback } from "react"
-import { AnimatePresence, motion } from "motion/react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { getOrders, updateOrder, getMenuItems, getRestaurantSettings } from "@/lib/api-store"
@@ -28,45 +27,36 @@ import { toast } from "sonner"
 
 const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR" })
 
-function OrderRowWithHover({ order, index, onEdit, onPrint }: { order: Order; index: number; onEdit: (order: Order) => void; onPrint: (order: Order) => void }) {
-  const [hovered, setHovered] = useState(false)
+function formatOrderNumber(value: string) {
+  const raw = (value || "").toString().trim()
+  if (!raw) return "N/A"
 
+  // Always display as a 4-digit sequence.
+  if (/^\d+$/.test(raw)) {
+    return String(Number(raw)).padStart(4, "0")
+  }
+
+  return raw
+}
+
+function OrderRow({ order, index, onEdit, onPrint }: { order: Order; index: number; onEdit: (order: Order) => void; onPrint: (order: Order) => void }) {
   return (
     <tr
-      className={`border-b border-sidebar-accent transition-colors hover:bg-sidebar-primary relative group ${
+      className={`border-b border-sidebar-accent ${
         index % 2 === 0 ? "bg-sidebar" : "bg-sidebar-accent"
       }`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
-      <AnimatePresence>
-        {hovered && (
-          <motion.span
-            className="absolute inset-0 h-full w-full bg-neutral-200 dark:bg-slate-800/[0.8] block rounded-lg -z-10"
-            layoutId={`hoverBackground-${order.id}`}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: 1,
-              transition: { duration: 0.15 },
-            }}
-            exit={{
-              opacity: 0,
-              transition: { duration: 0.15, delay: 0.2 },
-            }}
-          />
-        )}
-      </AnimatePresence>
-      <td className="border-r border-sidebar-accent px-4 py-3 text-sm font-semibold text-white relative z-10">
-        {order.orderNumber || "N/A"}
+      <td className="border-r border-sidebar-accent px-4 py-3 text-sm font-semibold text-white">
+        {formatOrderNumber(order.orderNumber)}
       </td>
-      <td className="border-r border-sidebar-accent px-4 py-3 text-sm text-white relative z-10">
+      <td className="border-r border-sidebar-accent px-4 py-3 text-sm text-white">
         {new Date(order.date).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "numeric",
         })}
       </td>
-      <td className="border-r border-sidebar-accent px-4 py-3 text-sm text-white relative z-10">
+      <td className="border-r border-sidebar-accent px-4 py-3 text-sm text-white">
         <div className="max-w-xs">
           {order.items.map((item, idx) => (
             <div key={idx} className="truncate">
@@ -685,7 +675,7 @@ export default function AllOrdersPage() {
                 </tr>
               ) : (
                 filteredOrders.map((order, index) => (
-                  <OrderRowWithHover 
+                  <OrderRow
                     key={order.id} 
                     order={order} 
                     index={index}
