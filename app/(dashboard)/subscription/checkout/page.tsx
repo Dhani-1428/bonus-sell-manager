@@ -67,10 +67,12 @@ export default function MbwayCheckoutPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-        <Card className="h-full">
+        <Card className="h-full bg-white text-black border border-gray-200">
           <CardHeader>
-            <CardTitle>Subscription Summary</CardTitle>
-            <CardDescription>Your selected subscription plan</CardDescription>
+            <CardTitle className="text-black">Subscription Summary</CardTitle>
+            <CardDescription className="text-gray-600">
+              Your selected subscription plan
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -89,10 +91,12 @@ export default function MbwayCheckoutPage() {
           </CardContent>
         </Card>
 
-        <Card className="h-full">
+        <Card className="h-full bg-white text-black border border-gray-200">
           <CardHeader>
-            <CardTitle>MB WAY Payment</CardTitle>
-            <CardDescription>Proceed to pay and confirm your request</CardDescription>
+            <CardTitle className="text-black">MB WAY Payment</CardTitle>
+            <CardDescription className="text-gray-600">
+              Proceed to pay and confirm your request
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
