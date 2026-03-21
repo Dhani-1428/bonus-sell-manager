@@ -71,9 +71,6 @@ export function AdminSidebar({
           </div>
         </div>
         <div>
-          {!isCollapsed && (
-            null
-          )}
           <SidebarLink
             link={{
               label: userName,

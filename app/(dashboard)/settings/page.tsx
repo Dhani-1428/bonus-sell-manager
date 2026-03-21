@@ -141,13 +141,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-black">{t.settingsTitle}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-black">{t.settingsTitle}</h1>
         <p className="text-sm text-gray-600">{t.settingsPageDescription}</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card className="bg-white border border-gray-200">
           <CardHeader>
             <CardTitle className="text-black">{t.accountDetailsTitle}</CardTitle>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
               <Label htmlFor="profile-name">{t.nameLabel}</Label>
               <Input
                 id="profile-name"
-                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={profile.name}
                 onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
               />
@@ -168,7 +168,7 @@ export default function SettingsPage() {
               <Input
                 id="profile-email"
                 type="email"
-                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={profile.email}
                 onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
               />
@@ -193,7 +193,7 @@ export default function SettingsPage() {
               <Label htmlFor="rest-name">{t.restaurantNameLabel}</Label>
               <Input
                 id="rest-name"
-                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={restaurantSettings.name}
                 onChange={(e) => setRestaurantSettings((s) => ({ ...s, name: e.target.value }))}
               />
@@ -202,7 +202,7 @@ export default function SettingsPage() {
               <Label htmlFor="rest-address">{t.addressLabel}</Label>
               <Input
                 id="rest-address"
-                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={restaurantSettings.address}
                 onChange={(e) => setRestaurantSettings((s) => ({ ...s, address: e.target.value }))}
               />
@@ -211,7 +211,7 @@ export default function SettingsPage() {
               <Label htmlFor="rest-contact">{t.contactNumberLabel}</Label>
               <Input
                 id="rest-contact"
-                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={restaurantSettings.contactNumber}
                 onChange={(e) => setRestaurantSettings((s) => ({ ...s, contactNumber: e.target.value }))}
               />
@@ -237,7 +237,7 @@ export default function SettingsPage() {
               <Input
                 id="current-password"
                 type="password"
-                  className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
+                className="bg-white text-black border border-gray-300 placeholder:text-gray-400"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
               />

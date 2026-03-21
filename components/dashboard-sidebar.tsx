@@ -102,9 +102,6 @@ export function DashboardSidebar({
           </div>
         </div>
         <div>
-          {!isCollapsed && (
-            null
-          )}
           <SidebarLink
             link={{
               label: userName,

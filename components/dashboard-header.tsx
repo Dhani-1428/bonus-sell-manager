@@ -18,11 +18,11 @@ export function DashboardHeader({
   const { t } = useI18n()
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-sidebar bg-sidebar px-4">
+    <header className="flex min-h-14 shrink-0 items-center justify-between border-b border-sidebar bg-sidebar px-3 py-2 sm:px-4">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-white hover:bg-white/10" />
-        <div className="hidden lg:block">
-          <p className="text-sm font-medium text-white">{userName}</p>
+        <div className="hidden sm:block max-w-[45vw]">
+          <p className="truncate text-sm font-medium text-white">{userName}</p>
         </div>
       </div>
 
@@ -36,7 +36,7 @@ export function DashboardHeader({
         </button>
         <button
           onClick={onLogout}
-          className="flex h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-white hover:bg-white/10 transition-colors"
+          className="flex h-10 items-center gap-2 rounded-lg px-2 sm:px-3 text-sm font-medium text-white hover:bg-white/10 transition-colors"
           aria-label={t.logout}
         >
           <LogOut className="h-4 w-4" />
