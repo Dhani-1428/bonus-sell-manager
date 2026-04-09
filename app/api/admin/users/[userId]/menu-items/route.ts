@@ -101,7 +101,7 @@ export async function POST(
 
     try {
       const id = `menu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      const createdAt = new Date().toISOString()
+      const createdAtDate = new Date()
 
       await connection.execute(
         `INSERT INTO menu_items (id, user_id, name, price, category, extras, created_at)
@@ -113,7 +113,7 @@ export async function POST(
           price,
           category,
           extras ? JSON.stringify(extras) : null,
-          createdAt,
+          createdAtDate,
         ]
       )
 
@@ -124,7 +124,7 @@ export async function POST(
           price,
           category,
           extras,
-          createdAt,
+          createdAt: createdAtDate.toISOString(),
         },
       }, { status: 201 })
     } finally {
@@ -192,7 +192,7 @@ export async function PUT(
       // Insert new items
       for (const item of items) {
         const id = item.id || `menu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-        const createdAt = item.createdAt || new Date().toISOString()
+        const createdAtDate = item.createdAt ? new Date(item.createdAt) : new Date()
 
         await connection.execute(
           `INSERT INTO menu_items (id, user_id, name, price, category, extras, created_at)
@@ -204,7 +204,7 @@ export async function PUT(
             item.price,
             item.category,
             item.extras ? JSON.stringify(item.extras) : null,
-            createdAt,
+            createdAtDate,
           ]
         )
       }

@@ -77,7 +77,7 @@ export async function saveMenuItems(userId: string, items: MenuItem[]): Promise<
 
 export async function addMenuItem(userId: string, item: Omit<MenuItem, 'id' | 'createdAt'>): Promise<MenuItem> {
   const id = `menu_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  const createdAt = new Date().toISOString()
+  const createdAtDate = new Date()
 
   const pool = getPool()
   const connection = await pool.getConnection()
@@ -94,7 +94,7 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, 'id' | 'c
         item.price,
         item.category,
         item.extras ? JSON.stringify(item.extras) : null,
-        createdAt,
+        createdAtDate,
       ]
     )
     console.log(`[db-store] ✅ Menu item inserted successfully: ${id}`)
@@ -114,7 +114,7 @@ export async function addMenuItem(userId: string, item: Omit<MenuItem, 'id' | 'c
     return {
       ...item,
       id,
-      createdAt,
+      createdAt: createdAtDate.toISOString(),
     }
   } catch (error: any) {
     console.error('❌ Error adding menu item:', error)
@@ -384,7 +384,7 @@ async function getNextOrderNumber(userId: string): Promise<string> {
 export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderNumber' | 'createdAt'>): Promise<Order> {
   const id = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   const orderNumber = await getNextOrderNumber(userId)
-  const createdAt = new Date().toISOString()
+  const createdAtDate = new Date()
 
   const pool = getPool()
   const connection = await pool.getConnection()
@@ -406,7 +406,7 @@ export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderN
         order.discountAmount,
         order.finalAmount,
         order.paymentMethod,
-        createdAt,
+        createdAtDate,
       ]
     )
     console.log(`[db-store] ✅ Order inserted successfully: ${id}`)
@@ -427,7 +427,7 @@ export async function addOrder(userId: string, order: Omit<Order, 'id' | 'orderN
       ...order,
       id,
       orderNumber,
-      createdAt,
+      createdAt: createdAtDate.toISOString(),
     }
   } catch (error: any) {
     console.error('❌ Error adding order:', error)
